@@ -26,12 +26,14 @@
 ```bash
 python3 tools/catalog.py render
 python3 tools/check.py --core-only
-# 安装 requirements-site.txt 后：
+# 安装 requirements-site.txt 并准备 Node.js 22+ 后：
 python3 tools/check.py
 python3 tools/build_site.py
 ```
 
 `docs/projects.md` 是生成投影：分组和面向读者的中文边界摘要编辑 `catalog/index.json`，事实来自相应日期的结构化来源。阅读站 `_site/` 只由 builder 生成；不要同时维护 Markdown 和 HTML 两套正文。英文 README 保持能力、命令、边界与中文版一致，其余详细正文当前以中文为准。
+
+首页的三组数字来自 `research/2026-10-08/reanalysis/sys1_reanalysis.json`；交互练习选取 `experiments/next-action/cases.json` 中的三个 dev cases，标签与理由随构建投影。修改这些源时同时检查首页显示；不要在 HTML 或浏览器脚本里另写答案副本。站点脚本变更会生成新的资源版本 URL，供浏览器区分构建后的缓存。完整验证包含无网络 JavaScript 行为检查；排版、手机断行和实际点击仍需浏览器检视。
 
 ## 新结果要回答什么
 

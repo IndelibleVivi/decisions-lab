@@ -28,6 +28,10 @@ The opt-in live collector has native profiles for TypeSafe Jev and OpenAI Decisi
 
 ## Build and check the reader
 
+The home page presents three historical result groups and three original synthetic cases: choose a next action and compare it with the editorial labels and rationale. Articles have section navigation, reading progress, code copying and scrollable tables. Project search offers direct links to matching rows while retaining limitations and source notes.
+
+Building requires Python 3.11+ and `requirements-site.txt`; full verification also requires Node.js 22+, with no npm packages. Answers are not stored. Article content and case material remain readable without JavaScript.
+
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-site.txt

@@ -98,7 +98,7 @@
         "source_ref": "https://example.invalid/changelog#timeout"
       },
       "acceptable": ["compare_contract", "read_in_context"],
-      "rationale": "同一来源中文变体，同一 split。文档声明破坏性变更，claim 与之矛盾。",
+      "rationale": "文档声明默认值变化会影响长耗时调用方，与“无行为变化”的主张矛盾；可比较新旧契约，也可结合调用场景继续阅读。",
       "notes": "language variant."
     },
     {

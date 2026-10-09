@@ -45,7 +45,9 @@ live collector 支持 TypeSafe Jev 与 OpenAI Decisions 的原生 HTTP 形状；
 
 ## 阅读站与验证
 
-阅读站从同一份 Markdown 和 catalog 构建，浏览器不请求模型，也不加载外部字体、分析脚本或 CDN。
+阅读站从同一份 Markdown 和 catalog 构建。首页展示三组历史复算结果，并提供三个原创合成案例，可选择下一步动作、查看编辑标签和理由。长文支持章节目录、阅读进度、代码复制和表格内横向滚动；项目地图可检索并跳到匹配行，原有局限和来源说明始终保留。
+
+浏览器不请求模型，不加载外部字体、分析脚本或 CDN，不保存练习答案。关闭 JavaScript 后正文与案例材料仍可阅读。构建需要 Python 3.11+ 与 `requirements-site.txt`；完整验证另外需要 Node.js 22+，无需安装 npm packages。
 
 ```bash
 python3 -m venv .venv

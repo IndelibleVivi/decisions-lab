@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse
 import html
+import hashlib
 import json
 import posixpath
 import re
@@ -27,12 +28,9 @@ SNAPSHOT_FILES = (
     'reanalysis/provenance.json', 'reanalysis/recompute_sys1.py',
     'reanalysis/sys1_reanalysis.json',
 )
-ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/flow.svg',
+ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/reader.js', 'site/lab.js', 'site/flow.svg',
           'catalog/index.json', 'experiments/next-action/cases.json') + tuple(
               'research/2026-10-08/' + p for p in SNAPSHOT_FILES)
-NAV = (('index.html','首页'), ('research/2026-10-08/README.html','研究'),
-       ('docs/projects.html','项目'), ('experiments/next-action/README.html','实验'),
-       ('docs/integration.html','接入'))
 
 
 def slug(text):
@@ -66,21 +64,84 @@ def render_markdown(source, current):
     return title, md.renderer.render(tokens, md.options, {}), toc
 
 
+PAGE_CONTEXT = {
+    'README.html': ('00', '开始使用', 'Guide'),
+    'README.en.html': ('00', 'Getting started', 'Guide'),
+    'research/2026-10-08/README.html': ('01', '研究档案', 'Research'),
+    'research/2026-10-08/report.html': ('01', '决策 API 调查', 'Research'),
+    'docs/projects.html': ('02', '相关项目', 'Directory'),
+    'experiments/next-action/README.html': ('03', 'Next-action 实验', 'Experiment'),
+    'docs/method.html': ('04', '评估方法', 'Method'),
+    'docs/integration.html': ('05', '工作流接入', 'Integration'),
+    'docs/maintenance.html': ('06', '维护与更新', 'Maintenance'),
+    'docs/current-state.html': ('07', '当前状态', 'Status'),
+    'LICENSING.html': ('08', '许可与归属', 'Colophon'),
+    'LICENSE-DOCUMENTATION.html': ('08', '文档许可', 'Colophon'),
+}
+
+
 def shell(title, body, current, toc=()):
     prefix = '../' * current.count('/')
-    nav = ''.join(f'<a href="{prefix}{p}"'+(' aria-current="page"' if p == current else '')+f'>{t}</a>' for p,t in NAV)
-    contents = ''.join(f'<a href="#{html.escape(a)}">{html.escape(t)}</a>' for a,t in toc)
-    return f'''<!doctype html><html lang="{'en' if current == 'README.en.html' else 'zh-CN'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Decisions Lab</title><meta name="description" content="决策模型、API 契约和可复现实验。"><link rel="icon" href="data:,"><link rel="stylesheet" href="{prefix}site/style.css"><script defer src="{prefix}site/filter.js"></script></head><body><a class="skip" href="#content">跳到正文</a><header><a class="brand" href="{prefix}index.html"><span class="mark" aria-hidden="true">⌁</span> DECISIONS LAB</a><nav aria-label="主导航">{nav}</nav><a class="language" href="{prefix}README.en.html" lang="en">EN ↗</a></header><main id="content" class="{'landing' if current == 'index.html' else 'reader'}">{body}</main>{f'<aside class="toc" aria-label="本页目录"><span>ON THIS PAGE</span>{contents}</aside>' if contents else ''}<footer><span>Decisions Lab · 可检查的判断</span><a href="{prefix}LICENSING.html">许可与来源</a><a href="{prefix}docs/current-state.html">当前状态</a><span>研究截点 2026-10-08</span></footer></body></html>'''
+    def asset(path):
+        # Bind browser caches to the actual public asset, including local rebuilds.
+        version = hashlib.sha256((ROOT/path).read_bytes()).hexdigest()[:12]
+        return prefix + path + '?v=' + version
+    is_home = current == 'index.html'
+    is_en = current == 'README.en.html'
+    number, section, english = PAGE_CONTEXT.get(current, ('00', '研究索引', 'Index'))
+    nav_items = (('index.html', '索引'), ('research/2026-10-08/README.html', '研究'),
+                 ('docs/projects.html', '项目'), ('experiments/next-action/README.html', '实验'),
+                 ('docs/method.html', '方法'))
+    nav = ''.join(f'<a href="{prefix}{path}"' +
+                  (' aria-current="page"' if current == path or (path.startswith('research/') and current.startswith('research/')) else '') +
+                  f'>{label}</a>' for path, label in nav_items)
+    toc = [(anchor, re.sub(r'^\d{2}\s*[·.]\s*', '', label)) for anchor, label in toc]
+    entries = ''.join(f'<a href="#{html.escape(anchor)}"><span>{i:02}</span>{html.escape(label)}</a>'
+                      for i, (anchor, label) in enumerate(toc, 1))
+    toc_html = f'<details class="mobile-contents toc-details"><summary>本页目录 <span>{len(toc):02} 节</span></summary><nav class="toc" aria-label="本页目录">{entries}</nav></details>' if toc else ''
+    sidebar = f'<aside class="reading-rail"><a class="back-index" href="{prefix}index.html">← 研究索引</a><p class="rail-label">{english.upper()} / {number}</p><nav class="toc" aria-label="章节导航">{entries}</nav><div class="rail-bottom"><a href="{prefix}{current.removesuffix(".html")}.md">Markdown ↗</a></div></aside>'
+    # Source links go to the canonical public repository; Markdown is not duplicated in the site.
+    sidebar = sidebar.replace(f'href="{prefix}{current.removesuffix(".html")}.md"', f'href="https://github.com/IndelibleVivi/decisions-lab/blob/main/{current.removesuffix(".html")}.md"')
+    if not is_home:
+        body = f'<div class="page-heading"><span>{number} / {section}</span><span>{english.upper()}</span></div>{toc_html}<div class="reading-layout">{sidebar}<article>{body}</article></div>'
+    lab_script = f'<script defer src="{asset("site/lab.js")}"></script>' if is_home else ''
+    return f'''<!doctype html>
+<html lang="{'en' if is_en else 'zh-CN'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Decisions Lab</title><meta name="description" content="决策模型、API 契约和可复现实验。"><meta name="theme-color" content="#f1f0f4"><link rel="icon" href="data:,"><link rel="stylesheet" href="{asset('site/style.css')}"><script defer src="{asset('site/filter.js')}"></script><script defer src="{asset('site/reader.js')}"></script>{lab_script}</head>
+<body class="{'is-home' if is_home else 'is-reader'}"><a class="skip" href="#content">{'Skip to content' if is_en else '跳到正文'}</a>
+<header class="site-header"><a class="brand" href="{prefix}index.html" aria-label="Decisions Lab 首页"><span class="brand-symbol" aria-hidden="true">d.</span><span>Decisions Lab</span></a><nav class="primary-nav" aria-label="主导航">{nav}</nav><div class="header-links"><a href="https://github.com/IndelibleVivi/decisions-lab">GitHub ↗</a><a href="{prefix}{'README.html' if is_en else 'README.en.html'}" lang="{'zh' if is_en else 'en'}">{'中文' if is_en else 'EN'}</a></div><div class="reading-progress" aria-hidden="true"></div></header>
+<main id="content" class="{'landing' if is_home else 'reader'}">{body}</main>
+<footer class="site-footer"><a class="footer-name" href="{prefix}index.html">Decisions Lab<span>有限判断的研究与实践</span></a><div><a href="{prefix}docs/maintenance.html">维护方式</a><a href="{prefix}docs/current-state.html">当前状态</a><a href="{prefix}LICENSING.html">许可与来源</a></div><p>METHODS ENDURE.<br>EVIDENCE HAS A DATE.</p></footer></body></html>'''
 
 
 def home():
-    data = json.loads((ROOT/'research/2026-10-08/metadata.json').read_text())
-    return f'''<section class="hero"><div class="eyebrow"><span class="dot"></span> RESEARCH / CONTRACTS / EXPERIMENTS</div><h1>每一次判断，<br>都值得<span class="accent">被检查。</span></h1><div class="hero-bottom"><p>决策模型正在进入软件。<br>这里保存它们的承诺、证据与失误，<br>也实验下一步，究竟该往哪里走。</p><a class="primary" href="experiments/next-action/README.html">运行第一个实验 <span>↗</span></a></div><div class="branch" aria-hidden="true"><svg viewBox="0 0 430 340"><path d="M15 170H125Q155 170 175 140L245 45H407M125 170Q155 170 175 195L245 290H407M170 170H407"/><circle cx="15" cy="170" r="7"/><circle cx="407" cy="45" r="7"/><circle cx="407" cy="170" r="9" class="chosen"/><circle cx="407" cy="290" r="7"/></svg><span class="branch-note">EVIDENCE → CHOICE → REVIEW</span></div></section>
-<section class="issue"><span>FIELD NOTES / 001</span><span>2026.10.08</span><p>第一期调查：<strong>{data['research_entities']}</strong> 个实体 · <strong>{data['repository_index_entries']}</strong> 个项目 · <strong>{data['source_urls']}</strong> 条来源</p><a href="research/2026-10-08/report.html">阅读完整研究 →</a></section>
-<section class="paths" aria-labelledby="paths"><div class="section-intro"><span class="eyebrow">THREE WAYS IN</span><h2 id="paths">从问题进入。</h2><p>找到资料只是开始。<br>把它变成可比较、可重放的证据。</p></div><div class="path-list"><a href="research/2026-10-08/README.html"><span class="number">01</span><div><h3>读清楚，一个领域</h3><p>原生 API、托管路线、开放模型。带日期与边界的研究快照。</p></div><span>↗</span></a><a href="docs/projects.html"><span class="number">02</span><div><h3>找到，值得拆开的机制</h3><p>从 SDK、决策头、运行时、工作流到评测，按用途浏览项目。</p></div><span>↗</span></a><a href="experiments/next-action/README.html"><span class="number">03</span><div><h3>运行，然后看见错误</h3><p>25 个合成案例。baseline、record、replay 与明确的 unknown。</p></div><span>↗</span></a></div></section>
-<section class="experiment"><div><span class="eyebrow">EXPERIMENT 01 / NEXT ACTION</span><h2>新材料到了。<br>下一步，先核对什么？</h2><p>给定文档与任务上下文，推荐一个阅读或核对动作。<br>保留理由的边界，让人决定是否采用。</p><a href="docs/integration.html">查看接入思路 →</a></div><div class="terminal"><span>OFFLINE · NO API KEY</span><pre><code>python3 -m decision_lab validate
-python3 -m decision_lab demo \\\n  --run-dir runs/demo-001
-python3 -m decision_lab replay \\\n  runs/demo-001</code></pre><p>合成演示包含错误与 unknown，<br>不代表任何模型的实测表现。</p></div></section><section class="last-note"><h2>信息会变，证据要留得住。</h2><p>方法持续修订。调查按日期保存。实验每次留下新记录。</p><a href="docs/maintenance.html">了解维护方式 →</a></section>'''
+    metadata = json.loads((ROOT/'research/2026-10-08/metadata.json').read_text())
+    results = json.loads((ROOT/'research/2026-10-08/reanalysis/sys1_reanalysis.json').read_text())['results']
+    measurements = []
+    for key, code, name in (('A_model_router', 'A', '模型路由'), ('B_tool_selection', 'B', '工具选择'), ('F_cardinality_multilingual', 'F', '高候选数 / 多语单选')):
+        row, score = results[key], results[key]['jev']
+        percentage = score['original_accuracy'] * 100
+        measurements.append(f'''<div class="measurement"><div class="measurement-name"><span>{code}</span>{name}</div><p class="measurement-value">{percentage:g}<span>%</span></p><div class="measurement-track" aria-hidden="true"><span style="width:{percentage:g}%"></span></div><p class="measurement-count">{score['original_correct']} / {row['cases']} 判断正确</p><p class="measurement-note">高 maxP 中错误 <strong>{score['high_confidence_errors']} / {score['high_confidence_n']}</strong></p></div>''')
+    suite = json.loads((ROOT/'experiments/next-action/cases.json').read_text())
+    ids = ('relnote-field-zh', 'missing-doc-placeholder-zh', 'changelog-breaking-zh')
+    cases = [next(c for c in suite['cases'] if c['id'] == wanted) for wanted in ids]
+    payload = json.dumps(cases, ensure_ascii=False).replace('<', '\\u003c')
+    initial = cases[0]
+    task = initial['task']
+    def fragment(text):
+        return MarkdownIt('commonmark', {'html': False}).renderInline(text)
+    actions = [('inspect_source', '核对来源', '01'), ('compare_contract', '比较契约', '02'),
+               ('read_in_context', '结合上下文阅读', '03'), ('needs_more_context', '先补信息', '04'),
+               ('unknown', '没有合适选项', '05')]
+    buttons = ''.join(f'<button type="button" data-action="{key}"><span>{num}</span>{label}<span class="choice-arrow" aria-hidden="true">↗</span></button>' for key, label, num in actions)
+    return f'''<section class="masthead" aria-labelledby="site-title"><div class="masthead-meta"><span>独立研究 / 开放记录</span><span>VOL. 01 — OCT 2026</span></div><h1 id="site-title">Decisions <em>Lab</em><span class="title-period">.</span></h1><div class="masthead-bottom"><p>决策模型 · 接口契约 · 可复现实验</p><a href="README.html">关于这个项目 <span>↗</span></a></div></section>
+<section class="evidence-feature" aria-labelledby="evidence-title"><div class="feature-heading"><div><p class="kicker">观察 001 / HISTORICAL EVIDENCE</p><h2 id="evidence-title">同一个模型，<br>为什么差这么多？</h2></div><div class="feature-summary"><p>判断的质量，取决于具体任务。<br>从三组历史结果，重新认识“高置信度”。</p><a href="research/2026-10-08/report.html">进入研究 <span>↗</span></a></div></div><div class="measurements">{''.join(measurements)}</div><div class="evidence-caption"><span>Jev · 历史数据复算</span><p>maxP ≥ 0.9；各任务样本与条件不同。数据来自 sys1-eval，不是当前模型排名。</p><a href="research/2026-10-08/README.html">来源与复算 ↗</a></div></section>
+<section class="index-section" aria-labelledby="index-title"><div class="section-heading"><h2 id="index-title">继续调查<span>THE INDEX</span></h2><p>沿着一个问题，找到下一份证据。</p></div><div class="index-rows">
+<a class="index-row" href="research/2026-10-08/report.html"><span class="index-no">01</span><h3>决策 API，究竟承诺了什么？</h3><p>原生接口、托管路线与开放模型</p><span class="index-meta">{metadata['research_entities']} 个实体</span><span class="row-arrow">↗</span></a>
+<a class="index-row" href="docs/projects.html"><span class="index-no">02</span><h3>有哪些项目，值得真正拆开？</h3><p>SDK、决策头、运行时与评测</p><span class="index-meta">{metadata['repository_index_entries']} 个项目</span><span class="row-arrow">↗</span></a>
+<a class="index-row" href="docs/method.html"><span class="index-no">03</span><h3>怎样分辨，一个判断是否可靠？</h3><p>正确率、覆盖率、校准与错误代价</p><span class="index-meta">评估方法</span><span class="row-arrow">↗</span></a>
+<a class="index-row" href="docs/integration.html"><span class="index-no">04</span><h3>然后，把判断接进工作流。</h3><p>从离线回放到旁路建议</p><span class="index-meta">接入设计</span><span class="row-arrow">↗</span></a></div></section>
+<section class="decision-exercise" aria-labelledby="exercise-title"><div class="section-heading"><h2 id="exercise-title">轮到你判断<span>EXPERIMENT 01</span></h2><p>合成用例 · 浏览器内完成 · 无模型调用</p></div><div class="exercise-layout"><div class="specimen"><div class="specimen-top"><span>阅读材料</span><label class="case-selector" hidden>切换用例 <select id="sample-case"><option value="0">01 / 字段更名</option><option value="1">02 / 信息缺失</option><option value="2">03 / 默认值变化</option></select></label></div><p id="sample-document">{fragment(task['document'])}</p><div class="claim"><span>待核对的主张</span><p id="sample-claim">{fragment(task['claim'])}</p></div><p class="sample-source">原创合成输入；来源地址为占位符。</p></div><div class="exercise-actions" hidden><p class="action-prompt">下一步，你会先做什么？</p><div class="choice-list">{buttons}</div><div id="sample-feedback" role="status" aria-live="polite"><span>选择一个动作，查看编辑标签与理由。</span></div></div><noscript><p class="no-script">启用 JavaScript 可在本页选择动作；也可以直接<a href="experiments/next-action/README.html">阅读完整实验</a>。</p></noscript></div><div class="exercise-footer"><p>{len(suite['cases'])} 个合成案例，允许多个合理动作。人工标签可讨论，不等于模型实测。</p><a href="experiments/next-action/README.html">运行完整实验 <span>↗</span></a></div><script id="sample-data" type="application/json">{payload}</script></section>
+<section class="archive-strip"><span class="archive-symbol" aria-hidden="true">↳</span><h2>信息会变。<br>把证据留下。</h2><div><p>方法持续修订，调查按日期保存。<br>每一次实验，都有可以重新打开的记录。</p><a href="docs/maintenance.html">我们怎样维护这份研究 ↗</a></div><p class="archive-date">2026<br><span>10.08</span><small>首期研究截点</small></p></section>'''
 
 
 def build(output):
@@ -105,11 +166,11 @@ def build(output):
         title, body, toc = render_markdown((ROOT/rel).read_text(encoding='utf-8'), rel)
         if rel == 'docs/projects.md':
             # Progressive enhancement; all research remains readable without JavaScript.
-            body = '<div class="filter" hidden><label for="project-filter">在项目地图中查找</label><input id="project-filter" type="search" placeholder="试试 calibration、Laya、SDK…"><p id="filter-result" role="status"></p></div>' + body
+            body = body.replace('</h1>', '</h1><div class="filter" hidden><label for="project-filter">查找项目或机制</label><div class="filter-field"><input id="project-filter" type="search" placeholder="calibration、Laya、SDK…"><button id="filter-clear" type="button">清空</button></div><p id="filter-result" role="status"></p><nav id="filter-matches" aria-label="匹配项目，可跳到表格行" hidden></nav></div>', 1)
         dest = rel.removesuffix('.md')+'.html'
         (output/dest).parent.mkdir(parents=True, exist_ok=True)
-        (output/dest).write_text(shell(title, '<article>'+body+'</article>', dest, toc), encoding='utf-8')
-    (output/'index.html').write_text(shell('每一次判断，都值得被检查', home(), 'index.html'), encoding='utf-8')
+        (output/dest).write_text(shell(title, body.replace('<table>', '<div class="table-wrap" tabindex="0" role="region" aria-label="数据表，可横向滚动"><table>').replace('</table>', '</table></div>'), dest, toc), encoding='utf-8')
+    (output/'index.html').write_text(shell('研究索引', home(), 'index.html'), encoding='utf-8')
     print(f'Built {len(PAGES)+1} pages in _site/ (explicit public allowlist; no network).')
 
 
