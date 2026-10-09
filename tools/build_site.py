@@ -4,6 +4,7 @@ import argparse
 import html
 import hashlib
 import json
+import math
 import posixpath
 import re
 import shutil
@@ -28,7 +29,7 @@ SNAPSHOT_FILES = (
     'reanalysis/provenance.json', 'reanalysis/recompute_sys1.py',
     'reanalysis/sys1_reanalysis.json',
 )
-ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/reader.js', 'site/lab.js', 'site/flow.svg',
+ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/reader.js', 'site/lab.js', 'site/field.js', 'site/evidence.js', 'site/orbit.js', 'site/theme.js', 'site/flow.svg',
           'catalog/index.json', 'experiments/next-action/cases.json') + tuple(
               'research/2026-10-08/' + p for p in SNAPSHOT_FILES)
 
@@ -104,44 +105,112 @@ def shell(title, body, current, toc=()):
     sidebar = sidebar.replace(f'href="{prefix}{current.removesuffix(".html")}.md"', f'href="https://github.com/IndelibleVivi/decisions-lab/blob/main/{current.removesuffix(".html")}.md"')
     if not is_home:
         body = f'<div class="page-heading"><span>{number} / {section}</span><span>{english.upper()}</span></div>{toc_html}<div class="reading-layout">{sidebar}<article>{body}</article></div>'
-    lab_script = f'<script defer src="{asset("site/lab.js")}"></script>' if is_home else ''
+    lab_script = ''.join(f'<script defer src="{asset(path)}"></script>' for path in ('site/orbit.js', 'site/field.js', 'site/evidence.js', 'site/lab.js')) if is_home else ''
     return f'''<!doctype html>
-<html lang="{'en' if is_en else 'zh-CN'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Decisions Lab</title><meta name="description" content="决策模型、API 契约和可复现实验。"><meta name="theme-color" content="#f1f0f4"><link rel="icon" href="data:,"><link rel="stylesheet" href="{asset('site/style.css')}"><script defer src="{asset('site/filter.js')}"></script><script defer src="{asset('site/reader.js')}"></script>{lab_script}</head>
+<html lang="{'en' if is_en else 'zh-CN'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Decisions Lab</title><meta name="description" content="决策模型、API 契约和可复现实验。"><meta name="theme-color" content="#f3f6f8"><script src="{asset('site/theme.js')}"></script><link rel="icon" href="data:,"><link rel="stylesheet" href="{asset('site/style.css')}"><script defer src="{asset('site/filter.js')}"></script><script defer src="{asset('site/reader.js')}"></script>{lab_script}<noscript><style>.evidence-pixels{{display:none}}.evidence-stage{{display:block}}</style></noscript></head>
 <body class="{'is-home' if is_home else 'is-reader'}"><a class="skip" href="#content">{'Skip to content' if is_en else '跳到正文'}</a>
-<header class="site-header"><a class="brand" href="{prefix}index.html" aria-label="Decisions Lab 首页"><span class="brand-symbol" aria-hidden="true">d.</span><span>Decisions Lab</span></a><nav class="primary-nav" aria-label="主导航">{nav}</nav><div class="header-links"><a href="https://github.com/IndelibleVivi/decisions-lab">GitHub ↗</a><a href="{prefix}{'README.html' if is_en else 'README.en.html'}" lang="{'zh' if is_en else 'en'}">{'中文' if is_en else 'EN'}</a></div><div class="reading-progress" aria-hidden="true"></div></header>
+<header class="site-header"><a class="brand" href="{prefix}index.html" aria-label="Decisions Lab 首页"><span class="brand-symbol" aria-hidden="true">{pixel_mark()}</span><span>decisions<span class="brand-slash">/</span>lab</span></a><nav class="primary-nav" aria-label="主导航">{nav}</nav><div class="header-links"><a href="https://github.com/IndelibleVivi/decisions-lab">GitHub ↗</a><a href="{prefix}{'README.html' if is_en else 'README.en.html'}" lang="{'zh' if is_en else 'en'}">{'中文' if is_en else 'EN'}</a><button id="theme-toggle" type="button" hidden aria-label="切换到夜间模式" aria-pressed="false"><i aria-hidden="true"></i><span>NIGHT</span></button></div><div class="reading-progress" aria-hidden="true"></div></header>
 <main id="content" class="{'landing' if is_home else 'reader'}">{body}</main>
 <footer class="site-footer"><a class="footer-name" href="{prefix}index.html">Decisions Lab<span>有限判断的研究与实践</span></a><div><a href="{prefix}docs/maintenance.html">维护方式</a><a href="{prefix}docs/current-state.html">当前状态</a><a href="{prefix}LICENSING.html">许可与来源</a></div><p>METHODS ENDURE.<br>EVIDENCE HAS A DATE.</p></footer></body></html>'''
+
+
+def pixel_mark():
+    rows = ('1100011', '1100011', '0010100', '0001000', '0001000', '0011100', '0011100')
+    rects = ''.join(f'<rect x="{x*4}" y="{y*4}" width="3" height="3"/>' for y,row in enumerate(rows) for x,c in enumerate(row) if c=='1')
+    return f'<svg viewBox="0 0 28 28" fill="currentColor" aria-hidden="true">{rects}</svg>'
+
+
+def tile_art(kind):
+    cells = []
+    for y in range(18):
+        for x in range(28):
+            u, v = (x-13.5)/10, (y-8.5)/8
+            if kind == 0:
+                value = math.sin(u*4+v*2) * math.cos(v*4-u) + .15
+            elif kind == 1:
+                value = math.cos(math.hypot(u,v)*11) - .25
+            elif kind == 2:
+                value = .55-abs(v-.5*math.sin(u*5))
+            else:
+                value = math.cos((abs(u)-v*.8)*8)*math.exp(-abs(v)*.4)
+            if value > .05 and u*u+v*v < 2.15:
+                size = 3 if value < .45 else 5
+                cells.append(f'<rect x="{x*7+8}" y="{y*7+8}" width="{size}" height="{size}"/>')
+    return f'<svg viewBox="0 0 212 140" aria-hidden="true" fill="currentColor">{"".join(cells)}</svg>'
+
+
+def field_fallback():
+    cells = []
+    peaks = ((-.5,-.3),(.48,-.28),(.04,.53))
+    colors = ('#244fc6','#da7766','#2f8576')
+    for y in range(55):
+        for x in range(55):
+            u,v = (x/54-.5)*2.5,(y/54-.5)*2.5
+            fields = [math.exp(-7*((u-a)**2+(v-b)**2)) for a,b in peaks]
+            if max(fields)<.035: continue
+            parts = [a*b for a,b in zip(fields,(.72,.2,.08))]
+            px = 600+(u-v)*306
+            py = 307+(u+v)*63-sum(parts)*344
+            color = colors[parts.index(max(parts))]
+            cells.append(f'<rect x="{px:.1f}" y="{py:.1f}" width="2.5" height="2.5" fill="{color}"/>')
+    return f'<svg class="field-fallback" viewBox="0 0 1200 420" role="img" aria-label="示意概率地形，A 72%、B 20%、C 8%，并非真实模型输出">{"".join(cells)}</svg>'
+
+
+def orbit_fallback():
+    cells = []
+    for i in range(1600):
+        r = .23 + ((i*137 % 1601)/1601)**.78*.86
+        angle = (i%3)*math.tau/3 + r*4.8 + ((i*71%101)/101-.5)*(.22+r*.50)
+        x, y = math.cos(angle)*r, math.sin(angle)*r
+        cells.append(f'<rect x="{600+(x*.94-y*.25)*440:.1f}" y="{355+(x*.22+y*.6)*440:.1f}" width="2" height="2"/>')
+    return f'<svg class="orbit-fallback" viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">{"".join(cells)}</svg>'
 
 
 def home():
     metadata = json.loads((ROOT/'research/2026-10-08/metadata.json').read_text())
     results = json.loads((ROOT/'research/2026-10-08/reanalysis/sys1_reanalysis.json').read_text())['results']
-    measurements = []
-    for key, code, name in (('A_model_router', 'A', '模型路由'), ('B_tool_selection', 'B', '工具选择'), ('F_cardinality_multilingual', 'F', '高候选数 / 多语单选')):
+    evidence = []
+    for key, label in (('A_model_router','模型路由'),('B_tool_selection','工具选择'),('F_cardinality_multilingual','多语单选')):
         row, score = results[key], results[key]['jev']
-        percentage = score['original_accuracy'] * 100
-        measurements.append(f'''<div class="measurement"><div class="measurement-name"><span>{code}</span>{name}</div><p class="measurement-value">{percentage:g}<span>%</span></p><div class="measurement-track" aria-hidden="true"><span style="width:{percentage:g}%"></span></div><p class="measurement-count">{score['original_correct']} / {row['cases']} 判断正确</p><p class="measurement-note">高 maxP 中错误 <strong>{score['high_confidence_errors']} / {score['high_confidence_n']}</strong></p></div>''')
+        evidence.append(dict(id=key, label=label, total=row['cases'], correct=score['original_correct'], highTotal=score['high_confidence_n'], highErrors=score['high_confidence_errors']))
+    evidence_json = json.dumps(evidence, ensure_ascii=False).replace('<','\\u003c')
+    task_buttons = ''.join(f'<button type="button" data-evidence-task="{row["id"]}">{row["id"][0]} / {row["label"]}</button>' for i,row in enumerate(evidence))
+    initial = evidence[0]
+    source_rows = ''.join(f'<tr><td>{r["label"]}</td><td>{r["correct"]} / {r["total"]}</td><td>{r["highErrors"]} / {r["highTotal"]}</td></tr>' for r in evidence)
     suite = json.loads((ROOT/'experiments/next-action/cases.json').read_text())
-    ids = ('relnote-field-zh', 'missing-doc-placeholder-zh', 'changelog-breaking-zh')
-    cases = [next(c for c in suite['cases'] if c['id'] == wanted) for wanted in ids]
-    payload = json.dumps(cases, ensure_ascii=False).replace('<', '\\u003c')
-    initial = cases[0]
-    task = initial['task']
-    def fragment(text):
-        return MarkdownIt('commonmark', {'html': False}).renderInline(text)
-    actions = [('inspect_source', '核对来源', '01'), ('compare_contract', '比较契约', '02'),
-               ('read_in_context', '结合上下文阅读', '03'), ('needs_more_context', '先补信息', '04'),
-               ('unknown', '没有合适选项', '05')]
-    buttons = ''.join(f'<button type="button" data-action="{key}"><span>{num}</span>{label}<span class="choice-arrow" aria-hidden="true">↗</span></button>' for key, label, num in actions)
-    return f'''<section class="masthead" aria-labelledby="site-title"><div class="masthead-meta"><span>独立研究 / 开放记录</span><span>VOL. 01 — OCT 2026</span></div><h1 id="site-title">Decisions <em>Lab</em><span class="title-period">.</span></h1><div class="masthead-bottom"><p>决策模型 · 接口契约 · 可复现实验</p><a href="README.html">关于这个项目 <span>↗</span></a></div></section>
-<section class="evidence-feature" aria-labelledby="evidence-title"><div class="feature-heading"><div><p class="kicker">观察 001 / HISTORICAL EVIDENCE</p><h2 id="evidence-title">同一个模型，<br>为什么差这么多？</h2></div><div class="feature-summary"><p>判断的质量，取决于具体任务。<br>从三组历史结果，重新认识“高置信度”。</p><a href="research/2026-10-08/report.html">进入研究 <span>↗</span></a></div></div><div class="measurements">{''.join(measurements)}</div><div class="evidence-caption"><span>Jev · 历史数据复算</span><p>maxP ≥ 0.9；各任务样本与条件不同。数据来自 sys1-eval，不是当前模型排名。</p><a href="research/2026-10-08/README.html">来源与复算 ↗</a></div></section>
-<section class="index-section" aria-labelledby="index-title"><div class="section-heading"><h2 id="index-title">继续调查<span>THE INDEX</span></h2><p>沿着一个问题，找到下一份证据。</p></div><div class="index-rows">
-<a class="index-row" href="research/2026-10-08/report.html"><span class="index-no">01</span><h3>决策 API，究竟承诺了什么？</h3><p>原生接口、托管路线与开放模型</p><span class="index-meta">{metadata['research_entities']} 个实体</span><span class="row-arrow">↗</span></a>
-<a class="index-row" href="docs/projects.html"><span class="index-no">02</span><h3>有哪些项目，值得真正拆开？</h3><p>SDK、决策头、运行时与评测</p><span class="index-meta">{metadata['repository_index_entries']} 个项目</span><span class="row-arrow">↗</span></a>
-<a class="index-row" href="docs/method.html"><span class="index-no">03</span><h3>怎样分辨，一个判断是否可靠？</h3><p>正确率、覆盖率、校准与错误代价</p><span class="index-meta">评估方法</span><span class="row-arrow">↗</span></a>
-<a class="index-row" href="docs/integration.html"><span class="index-no">04</span><h3>然后，把判断接进工作流。</h3><p>从离线回放到旁路建议</p><span class="index-meta">接入设计</span><span class="row-arrow">↗</span></a></div></section>
-<section class="decision-exercise" aria-labelledby="exercise-title"><div class="section-heading"><h2 id="exercise-title">轮到你判断<span>EXPERIMENT 01</span></h2><p>合成用例 · 浏览器内完成 · 无模型调用</p></div><div class="exercise-layout"><div class="specimen"><div class="specimen-top"><span>阅读材料</span><label class="case-selector" hidden>切换用例 <select id="sample-case"><option value="0">01 / 字段更名</option><option value="1">02 / 信息缺失</option><option value="2">03 / 默认值变化</option></select></label></div><p id="sample-document">{fragment(task['document'])}</p><div class="claim"><span>待核对的主张</span><p id="sample-claim">{fragment(task['claim'])}</p></div><p class="sample-source">原创合成输入；来源地址为占位符。</p></div><div class="exercise-actions" hidden><p class="action-prompt">下一步，你会先做什么？</p><div class="choice-list">{buttons}</div><div id="sample-feedback" role="status" aria-live="polite"><span>选择一个动作，查看编辑标签与理由。</span></div></div><noscript><p class="no-script">启用 JavaScript 可在本页选择动作；也可以直接<a href="experiments/next-action/README.html">阅读完整实验</a>。</p></noscript></div><div class="exercise-footer"><p>{len(suite['cases'])} 个合成案例，允许多个合理动作。人工标签可讨论，不等于模型实测。</p><a href="experiments/next-action/README.html">运行完整实验 <span>↗</span></a></div><script id="sample-data" type="application/json">{payload}</script></section>
-<section class="archive-strip"><span class="archive-symbol" aria-hidden="true">↳</span><h2>信息会变。<br>把证据留下。</h2><div><p>方法持续修订，调查按日期保存。<br>每一次实验，都有可以重新打开的记录。</p><a href="docs/maintenance.html">我们怎样维护这份研究 ↗</a></div><p class="archive-date">2026<br><span>10.08</span><small>首期研究截点</small></p></section>'''
+    ids = ('relnote-field-zh','missing-doc-placeholder-zh','changelog-breaking-zh')
+    cases = [next(c for c in suite['cases'] if c['id']==wanted) for wanted in ids]
+    payload = json.dumps(cases,ensure_ascii=False).replace('<','\\u003c')
+    task = cases[0]['task']
+    def fragment(value): return MarkdownIt('commonmark',{'html':False}).renderInline(value)
+    actions = [('inspect_source','核对来源','01'),('compare_contract','比较契约','02'),('read_in_context','结合上下文阅读','03'),('needs_more_context','先补信息','04'),('unknown','没有合适选项','05')]
+    buttons = ''.join(f'<button type="button" data-action="{key}"><span>{num}</span>{label}<span class="choice-arrow" aria-hidden="true">↗</span></button>' for key,label,num in actions)
+    paths = (
+        ('research/2026-10-08/report.html','读清接口的承诺','原生 API、托管路线与开放模型',f'{metadata["research_entities"]} ENTITIES','research'),
+        ('docs/projects.html','拆开有趣的项目','SDK、决策头、运行时与评测',f'{metadata["repository_index_entries"]} PROJECTS','projects'),
+        ('docs/method.html','重新认识“可靠”','正确率、覆盖率、校准与错误代价','METHOD NOTES','method'),
+        ('docs/integration.html','把判断接入日常','从离线回放走到旁路建议','INTEGRATION','integration'),
+    )
+    index = ''.join(f'<a class="directory-item directory-{kind}" href="{url}"><div class="directory-art">{tile_art(i)}</div><span class="directory-id">0{i+1} / {meta}</span><h3>{title}<span>↗</span></h3><p>{description}</p></a>' for i,(url,title,description,meta,kind) in enumerate(paths))
+    return f'''<section class="orbit-stage" aria-labelledby="orbit-title">
+<div class="orbit-edge"><span>INDEPENDENT RESEARCH / EST. 2026</span><span>FINITE CHOICES. OPEN POSSIBILITIES.</span></div>
+{orbit_fallback()}<canvas id="orbit-canvas" aria-hidden="true" hidden></canvas>
+<div class="orbit-title"><p class="orbit-kicker">DECISIONS LAB</p><h1 id="orbit-title">每一个选择，<br>都有引力<span>.</span></h1><p class="orbit-subtitle">关于决策模型，和那些尚未发生的可能。</p></div>
+<div class="orbit-caption"><span class="orbit-cross" aria-hidden="true">+</span><span>FIELD 001<br>THE GRAVITY OF CHOICE</span></div>
+<a class="orbit-enter" href="#explore">进入实验室<span aria-hidden="true">↓</span></a>
+<div class="orbit-bottom"><span>生成式点阵作品 · 非模型数据</span><button type="button" id="orbit-pause" hidden>暂停粒子运动</button></div>
+</section>
+
+<section id="explore" class="directory-section" aria-labelledby="directory-title"><div class="section-heading"><h2 id="directory-title">去哪里探索<span>THE FIELD GUIDE</span></h2><a href="README.html">关于这个项目 ↗</a></div><div class="directory-grid">{index}</div></section>
+<section class="field-section" id="probability-artifact" aria-labelledby="field-title">
+<div class="field-heading"><div><p class="eyebrow">INTERACTIVE ARTIFACT / 01</p><h2 id="field-title">判断的形状<span class="pixel-stop">.</span></h2></div><p>三座山，三个候选。<br>拖动，改变它们的可能性。</p></div>
+<div class="field-stage"><span class="stage-coordinate">FIG. 01 — POSSIBILITY SPACE</span>{field_fallback()}<canvas id="probability-field" role="img" hidden></canvas><div class="field-annotation"><span>01</span><p>同一组候选。<br>不同的可能性。</p></div><div class="field-scale"><span>高</span><i></i><span>低</span><small>概率 / 示意</small></div><div class="field-values"><span><i class="color-a"></i>A <b data-field-value>72.0%</b></span><span><i class="color-b"></i>B <b data-field-value>20.0%</b></span><span><i class="color-c"></i>C <b data-field-value>8.0%</b></span></div></div>
+<div class="field-controls" hidden><div class="field-presets" role="group" aria-label="切换示意分布"><button data-field-preset="0" aria-pressed="true">一边倒</button><button data-field-preset="1" aria-pressed="false">难分高下</button><button data-field-preset="2" aria-pressed="false">双峰</button></div><label class="field-slider" for="field-bias"><span>偏向 A <output id="field-bias-value">72%</output></span><input id="field-bias" type="range" min="0" max="100" value="72"></label><div class="field-stat"><span>maxP</span><b id="field-max">0.72</b></div><div class="field-stat"><span>熵 / bits</span><b id="field-entropy">1.10</b></div><button type="button" id="field-pause">暂停动态</button></div>
+<div class="field-foot"><p>拖动看看：概率改变了形状，却不能独自证明判断正确。</p><span>交互示意 · 无模型调用</span></div><p id="field-summary" class="sr-only" role="status"></p>
+</section>
+<section class="evidence-section" aria-labelledby="evidence-title"><div class="section-heading"><h2 id="evidence-title">把错误，一格一格摆出来<span>HISTORICAL EVIDENCE</span></h2><a href="research/2026-10-08/report.html">阅读完整研究 ↗</a></div><div class="evidence-controls" hidden><div class="evidence-tasks" role="group" aria-label="历史任务">{task_buttons}</div><div class="evidence-scopes" role="group" aria-label="筛选历史记录"><button data-evidence-scope="all">全部记录</button><button data-evidence-scope="high">只看 maxP ≥ 0.9</button></div></div><div class="evidence-stage"><div class="evidence-pixels"><svg id="evidence-grid" viewBox="0 0 400 400" role="img" aria-label="历史结果像素图，启用 JavaScript 后可切换"></svg><div class="evidence-legend"><span><i class="color-a"></i>正确</span><span><i class="color-b"></i>错误</span><span><i class="color-muted"></i>筛选外</span></div></div><div class="evidence-reading"><p class="eyebrow">JEV / 2026.10.08 SNAPSHOT</p><p class="evidence-number"><strong id="evidence-accuracy">{initial["correct"]/initial["total"]:.1%}</strong><span>判断正确</span></p><div class="evidence-counts"><p><span id="evidence-correct">{initial["correct"]}</span> / <span id="evidence-total">{initial["total"]}</span><small>选中记录中判断正确</small></p><p><span id="evidence-errors">{initial["total"]-initial["correct"]}</span><small>选中记录中判断错误</small></p></div><p id="evidence-summary" role="status">{initial["label"]}：{initial["correct"]} / {initial["total"]} 判断正确。切换任务，看看同一模型在不同问题上的落差。</p><p class="evidence-note">每格是一条记录的计数；按汇总结果分组排布，位置不代表原始样本顺序。高 maxP 也可能答错。</p></div></div><details class="evidence-source"><summary>展开原始汇总与来源</summary><div class="table-wrap"><table><thead><tr><th>历史任务</th><th>全部记录：正确 / 总数</th><th>高 maxP：错误 / 总数</th></tr></thead><tbody>{source_rows}</tbody></table></div><p>来源：<a href="research/2026-10-08/README.html">sys1-eval 历史复算</a>。任务、样本和条件不同，不是当前模型排名；没有重新调用模型。</p></details><script id="evidence-data" type="application/json">{evidence_json}</script></section>
+<section class="decision-exercise" aria-labelledby="exercise-title"><div class="section-heading"><h2 id="exercise-title">这一次，轮到你判断<span>TRY A SMALL DECISION</span></h2><p>三个合成案例 · 选择后查看理由</p></div><div class="exercise-layout"><div class="specimen"><div class="specimen-top"><span>INPUT / 阅读材料</span><label class="case-selector" hidden>切换用例 <select id="sample-case"><option value="0">01 / 字段更名</option><option value="1">02 / 信息缺失</option><option value="2">03 / 默认值变化</option></select></label></div><p id="sample-document">{fragment(task['document'])}</p><div class="claim"><span>待核对的主张</span><p id="sample-claim">{fragment(task['claim'])}</p></div><p class="sample-source">原创合成输入；来源地址为占位符。</p></div><div class="exercise-actions" hidden><p class="action-prompt">NEXT ACTION / 下一步，先做什么？</p><div class="choice-list">{buttons}</div><div id="sample-feedback" role="status" aria-live="polite">选择一个动作，查看编辑标签与理由。</div></div><noscript><p>启用 JavaScript 可在本页选择动作，也可以直接<a href="experiments/next-action/README.html">阅读完整实验</a>。</p></noscript></div><div class="exercise-footer"><p>{len(suite['cases'])} 个原创合成案例，允许多个合理动作。人工标签可讨论。</p><a href="experiments/next-action/README.html">运行完整实验 ↗</a></div><script id="sample-data" type="application/json">{payload}</script></section>
+<section class="archive-strip"><div class="archive-art">{tile_art(1)}</div><div><p class="eyebrow">A LIVING LAB, DATED EVIDENCE</p><h2>信息会变。<br>好奇心和证据，留在这里。</h2><a href="docs/maintenance.html">我们怎样维护这份研究 ↗</a></div><p class="archive-date">2026<span>10.08</span><small>首期调查截点</small></p></section>'''
 
 
 def build(output):
@@ -164,6 +233,10 @@ def build(output):
         shutil.copyfile(source, target)
     for rel in PAGES:
         title, body, toc = render_markdown((ROOT/rel).read_text(encoding='utf-8'), rel)
+        if rel == 'docs/integration.md':
+            # Inline only this owned figure so the reader's theme tokens reach it.
+            body, count = re.subn(r'<img src="\.\./site/flow\.svg"[^>]*>', lambda _: (ROOT/'site/flow.svg').read_text(), body)
+            if count != 1: raise ValueError('integration figure must have one canonical source')
         if rel == 'docs/projects.md':
             # Progressive enhancement; all research remains readable without JavaScript.
             body = body.replace('</h1>', '</h1><div class="filter" hidden><label for="project-filter">查找项目或机制</label><div class="filter-field"><input id="project-filter" type="search" placeholder="calibration、Laya、SDK…"><button id="filter-clear" type="button">清空</button></div><p id="filter-result" role="status"></p><nav id="filter-matches" aria-label="匹配项目，可跳到表格行" hidden></nav></div>', 1)

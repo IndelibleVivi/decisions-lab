@@ -28,9 +28,9 @@ The opt-in live collector has native profiles for TypeSafe Jev and OpenAI Decisi
 
 ## Build and check the reader
 
-The home page presents three historical result groups and three original synthetic cases: choose a next action and compare it with the editorial labels and rationale. Articles have section navigation, reading progress, code copying and scrollable tables. Project search offers direct links to matching rows while retaining limitations and source notes.
+The home page opens with a full-screen generative particle field. Scroll to the research guide, an illustrative probability landscape with presets, a bias slider, maxP and entropy, and a historical pixel matrix with task and high-maxP subset controls. Three original synthetic cases let you choose a next action and compare it with editorial labels and rationale. The opening artwork and probability landscape are not model outputs. Articles have section navigation, reading progress, code copying and scrollable tables. Project search offers direct links to matching rows while retaining limitations and source notes.
 
-Building requires Python 3.11+ and `requirements-site.txt`; full verification also requires Node.js 22+, with no npm packages. Answers are not stored. Article content and case material remain readable without JavaScript.
+Building requires Python 3.11+ and `requirements-site.txt`; full verification also requires Node.js 22+, with no npm packages. Answers are not stored. Only a manually selected day/night appearance is saved locally; the initial theme follows the system and applies throughout the reader. Motion can be paused, respects reduced-motion preferences, and stops while offscreen or in a background tab. Static artwork, historical aggregates, articles and case material remain available without JavaScript.
 
 ```bash
 python3 -m venv .venv

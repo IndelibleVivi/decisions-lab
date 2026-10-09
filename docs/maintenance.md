@@ -33,7 +33,17 @@ python3 tools/build_site.py
 
 `docs/projects.md` 是生成投影：分组和面向读者的中文边界摘要编辑 `catalog/index.json`，事实来自相应日期的结构化来源。阅读站 `_site/` 只由 builder 生成；不要同时维护 Markdown 和 HTML 两套正文。英文 README 保持能力、命令、边界与中文版一致，其余详细正文当前以中文为准。
 
-首页的三组数字来自 `research/2026-10-08/reanalysis/sys1_reanalysis.json`；交互练习选取 `experiments/next-action/cases.json` 中的三个 dev cases，标签与理由随构建投影。修改这些源时同时检查首页显示；不要在 HTML 或浏览器脚本里另写答案副本。站点脚本变更会生成新的资源版本 URL，供浏览器区分构建后的缓存。完整验证包含无网络 JavaScript 行为检查；排版、手机断行和实际点击仍需浏览器检视。
+历史矩阵的三组数字来自 `research/2026-10-08/reanalysis/sys1_reanalysis.json`；交互练习选取 `experiments/next-action/cases.json` 中的三个 dev cases，标签与理由随构建投影。矩阵每格代表一条记录的计数，按汇总结果分组，不声称恢复原始样本身份或顺序。修改这些源时同时检查首页显示；不要在 HTML 或浏览器脚本里另写答案副本。站点脚本变更会生成新的资源版本 URL，供浏览器区分构建后的缓存。完整验证包含无网络 JavaScript 行为检查；排版、手机断行和实际点击仍需浏览器检视。
+
+## 图形与外观的维护边界
+
+`site/orbit.js` 的粒子轨道是原创生成式作品，不承载模型数据。`site/field.js` 的三个高斯山峰由示意候选概率加权，maxP 和 Shannon entropy 使用同一分布计算；几何投影不等于概率校准。`site/evidence.js` 只投影构建时传入的历史汇总，切换高 maxP 时保留完整格子位置并淡化筛选外记录。三者的作品／示意／历史标签需要一起保留。
+
+`site/theme.js` 在样式加载前读取本地外观选择，未选择时跟随系统；只写入 `decisions-theme`，不储存输入或练习答案。接入说明的原创 `site/flow.svg` 在构建时内联，随同一主题变色；原 SVG 仍是唯一编辑源。两幅 Canvas 都提供暂停，遵循减少动态效果偏好，并在后台／视野外停止。无 JavaScript 时保留内嵌 SVG 和静态汇总。
+
+视觉研究参考了 [TypeSafe Jev](https://typesafe.ai/) 的点阵语汇、[tixy](https://tixy.land/) 的参数驱动画面，以及 [Seeing Theory](https://seeing-theory.brown.edu/) 把概率概念做成可操作对象的方式。本项目图形与交互独立实现，未复制上述项目的代码或素材；参考不构成对模型效果的背书。
+
+改动图形时同时看日间、夜间、桌面、手机、静止和运动状态；自动化行为检查不能替代视觉检查。首屏高度、下滑入口、长文阅读和控件反馈应在同一次浏览器检查中连起来使用。
 
 ## 新结果要回答什么
 
