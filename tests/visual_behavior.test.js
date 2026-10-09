@@ -30,7 +30,7 @@ function motionTest(file,prefix) {
     const doc=new Node();doc.hidden=false;doc.documentElement={dataset:{theme:'light'}};
     doc.querySelector=get;doc.querySelectorAll=selector=>[0,1,2].map(i=>get(selector+i));
     let draws=0; const context=new Proxy({}, {get:(_,key)=>key==='clearRect'?()=>draws++:()=>{},set:()=>true});
-    const canvas=get(prefix==='orbit'?'#orbit-canvas':'#probability-field');canvas.getContext=()=>context;
+    const canvas=get(prefix==='sculpture'?'#sculpture-canvas':'#probability-field');canvas.getContext=()=>context;
     const media=new Node();media.matches=reduce;
     let intersect;let id=0;const pending=new Map();
     const env={document:doc,matchMedia:()=>media,devicePixelRatio:1,console,
@@ -61,7 +61,7 @@ function motionTest(file,prefix) {
   const before=runtime.draws();runtime.doc.documentElement.dataset.theme='dark';runtime.doc.fire('themechange');
   check(runtime.draws()>before&&runtime.pending.size===0,`${file}: theme repaints paused artwork without restarting`);
 }
-motionTest('orbit.js','orbit');motionTest('field.js','field');
+motionTest('sculpture.js','sculpture');motionTest('field.js','field');
 function themeTest(storageFails=false) {
   const doc=new Node();doc.documentElement={dataset:{}};const nodes=new Map();doc.querySelector=key=>{if(!nodes.has(key))nodes.set(key,new Node());return nodes.get(key);};
   const media=new Node();media.matches=true;const writes=[];

@@ -9,7 +9,7 @@
 - `catalog/` 拥有模型、服务路线、相关项目与来源的结构化索引。官方文档、原作者报告、历史数据复算与本项目实测是不同证据。
 - `decision_lab/` 拥有实验 CLI；`experiments/next-action/` 拥有原创合成任务、标签和实验说明；`tests/` 提供相应行为证据。
 - `tools/` 拥有内容投影与统一检查入口；构建输出和真实运行记录不提交。正文和 catalog 是编辑源，生成页不另行维护。
-- `site/` 拥有阅读站昼夜样式、渐进搜索、目录/复制交互、合成案例练习与原创图示；`tools/build_site.py` 的显式 allowlist 决定站点内容。首页粒子作品不编码事实；概率地形仅为数学示意。历史像素矩阵数字来自复算 JSON，练习来自既有 dev cases；不另存事实副本。`theme.js` 仅保存外观偏好，动画尊重减少动态效果、暂停及前后台状态。`docs/projects.md` 由 catalog 生成，`_site/` 是忽略的构建输出。
+- `site/` 拥有阅读站昼夜样式、渐进搜索、目录/复制交互、合成案例练习与原创图示；`tools/build_site.py` 的显式 allowlist 决定站点内容。首页编织像素曲面不编码事实；分类入口由 catalog 分组及 repositories 快照生成，`atlas.js` 只切换展示；概率地形仅为数学示意。历史像素矩阵数字来自复算 JSON，练习来自既有 dev cases；不另存事实副本。`theme.js` 仅保存外观偏好，动画尊重减少动态效果、暂停及前后台状态。`docs/projects.md` 由 catalog 生成，`_site/` 是忽略的构建输出。
 - 原始 chat、私人采用记录、账号、凭据、个人路径与 continuity 不进入仓库。公共实例只使用公开或原创合成输入。
 - 模型判断是建议；实验不执行其建议，不变更外部系统。unknown、refusal、调用失败与正常答案分别记录。
 - 离线演示、fixture 验证、HTTP 模拟与真实 provider 调用分别报告。没有真实运行证据，不宣称 API 可用、模型质量、实际价格或生产效果。
