@@ -1,0 +1,603 @@
+{
+  "meta": {
+    "route_count": 15,
+    "canonical_slug_count": 14,
+    "warning": "This is one aggregator catalogue snapshot, not number of independent model families in the whole market. Context0 means unknown/sentinel. generic max_completion_tokens/web_search pricing metadata not treated as capabilities.",
+    "raw_route_namespace_count": 11,
+    "normalized_originator_namespace_count": 10,
+    "namespace_normalization": "Strip leading tilde from rolling-alias namespace; namespace count is not independent model-family count."
+  },
+  "routes": [
+    {
+      "id": "upstage/solar-decide-flash",
+      "canonical_slug": "upstage/solar-decide-flash-20261008",
+      "name": "Upstage: Solar Decide Flash",
+      "hugging_face_id": null,
+      "provider_namespace": "upstage",
+      "created_utc": "2026-10-08T00:39:43+00:00",
+      "context_tokens": 524288,
+      "raw_context_value": 524288,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.05,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.00000005",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "cached_input",
+          "value": 0.05,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 cached_input tokens",
+          "raw_price_usd_per_token": "0.00000005",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "perplexity/pplx-decider-v1.1-27b",
+      "canonical_slug": "perplexity/pplx-decider-v1.1-27b-20261006",
+      "name": "Perplexity: Decider V1.1 27B",
+      "hugging_face_id": null,
+      "provider_namespace": "perplexity",
+      "created_utc": "2026-10-07T15:41:40+00:00",
+      "context_tokens": 262144,
+      "raw_context_value": 262144,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.02,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.00000002",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "openai/gpt-6-luna-decisions",
+      "canonical_slug": "openai/gpt-6-luna-decisions-20261006",
+      "name": "OpenAI: GPT-6 Luna Decisions",
+      "hugging_face_id": null,
+      "provider_namespace": "openai",
+      "created_utc": "2026-10-06T21:19:18+00:00",
+      "context_tokens": 1050000,
+      "raw_context_value": 1050000,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.1,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.0000001",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "cached_input",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 cached_input tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "liquid/d1",
+      "canonical_slug": "liquid/d1-20260930",
+      "name": "LiquidAI: d1",
+      "hugging_face_id": null,
+      "provider_namespace": "liquid",
+      "created_utc": "2026-10-01T18:18:31+00:00",
+      "context_tokens": 65536,
+      "raw_context_value": 65536,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.04,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.00000004",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "cached_input",
+          "value": 0.04,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 cached_input tokens",
+          "raw_price_usd_per_token": "0.00000004",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "cloudflare/clef-flash",
+      "canonical_slug": "cloudflare/clef-flash",
+      "name": "Cloudflare: Clef Flash",
+      "hugging_face_id": "Cloudflare/clef-flash",
+      "provider_namespace": "cloudflare",
+      "created_utc": "2026-10-01T16:09:33+00:00",
+      "context_tokens": 65536,
+      "raw_context_value": 65536,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.09,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.00000009",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "cloudflare/clef",
+      "canonical_slug": "cloudflare/clef",
+      "name": "Cloudflare: Clef",
+      "hugging_face_id": "Cloudflare/clef",
+      "provider_namespace": "cloudflare",
+      "created_utc": "2026-10-01T16:09:32+00:00",
+      "context_tokens": 65536,
+      "raw_context_value": 65536,
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.24,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.00000024",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "togethercomputer/tev1-4b-experimental",
+      "canonical_slug": "togethercomputer/tev1-4b-experimental-20260923",
+      "name": "Together: Tev1 4B Experimental",
+      "hugging_face_id": "togethercomputer/Tev1-4B-experimental",
+      "provider_namespace": "togethercomputer",
+      "created_utc": "2026-09-30T19:10:29+00:00",
+      "context_tokens": 32768,
+      "raw_context_value": 32768,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.042,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.000000042",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "inception/mercury-decide:free",
+      "canonical_slug": "inception/mercury-decide-20260930",
+      "name": "Inception: Mercury Decide (free)",
+      "hugging_face_id": null,
+      "provider_namespace": "inception",
+      "created_utc": "2026-09-30T17:28:54+00:00",
+      "context_tokens": 32768,
+      "raw_context_value": 32768,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "upstage/solar-decide",
+      "canonical_slug": "upstage/solar-decide-20260928",
+      "name": "Upstage: Solar Decide",
+      "hugging_face_id": null,
+      "provider_namespace": "upstage",
+      "created_utc": "2026-09-28T10:50:57+00:00",
+      "context_tokens": 524288,
+      "raw_context_value": 524288,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.05,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.00000005",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "cached_input",
+          "value": 0.05,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 cached_input tokens",
+          "raw_price_usd_per_token": "0.00000005",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "respan/span-01",
+      "canonical_slug": "respan/span-01-20260925",
+      "name": "Respan: Span-01",
+      "hugging_face_id": null,
+      "provider_namespace": "respan",
+      "created_utc": "2026-09-26T01:52:30+00:00",
+      "context_tokens": null,
+      "raw_context_value": 0,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.02,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.00000002",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "respan/span-01-lite",
+      "canonical_slug": "respan/span-01-lite-20260925",
+      "name": "Respan: Span-01 Lite",
+      "hugging_face_id": null,
+      "provider_namespace": "respan",
+      "created_utc": "2026-09-26T01:52:22+00:00",
+      "context_tokens": null,
+      "raw_context_value": 0,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "respan/span-01-lite:free",
+      "canonical_slug": "respan/span-01-lite-20260925",
+      "name": "Respan: Span-01 Lite (free)",
+      "hugging_face_id": null,
+      "provider_namespace": "respan",
+      "created_utc": "2026-09-26T01:52:22+00:00",
+      "context_tokens": null,
+      "raw_context_value": 0,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "jaredpalmer/kev-4b",
+      "canonical_slug": "jaredpalmer/kev-4b-20260924",
+      "name": "Jared Palmer: Kev 4B",
+      "hugging_face_id": "jaredpalmer/kev-4b",
+      "provider_namespace": "jaredpalmer",
+      "created_utc": "2026-09-25T16:37:13+00:00",
+      "context_tokens": 8192,
+      "raw_context_value": 8192,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.042,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.000000042",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "~typesafe/jev-latest",
+      "canonical_slug": "~typesafe/jev-latest",
+      "name": "TypeSafe: Jev Latest",
+      "hugging_face_id": null,
+      "provider_namespace": "~typesafe",
+      "created_utc": "2026-09-18T00:01:25+00:00",
+      "context_tokens": 32000,
+      "raw_context_value": 32000,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.042,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.000000042",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    },
+    {
+      "id": "typesafe/jev-1.13",
+      "canonical_slug": "typesafe/jev-1.13-20260917",
+      "name": "TypeSafe: Jev 1.13",
+      "hugging_face_id": null,
+      "provider_namespace": "typesafe",
+      "created_utc": "2026-09-18T00:01:24+00:00",
+      "context_tokens": 32000,
+      "raw_context_value": 32000,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "decisions"
+      ],
+      "pricing": [
+        {
+          "kind": "input",
+          "value": 0.042,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 input tokens",
+          "raw_price_usd_per_token": "0.000000042",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        },
+        {
+          "kind": "output",
+          "value": 0.0,
+          "currency": "USD",
+          "price_unit": "per 1,000,000 output tokens",
+          "raw_price_usd_per_token": "0",
+          "billing_rule": "OpenRouter route metadata rate. Native-provider billing rules not automatically transferred."
+        }
+      ],
+      "per_request_limits": null,
+      "source_url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "snapshot_fetched_at": "2026-10-08T15:42:15.944163+00:00"
+    }
+  ]
+}

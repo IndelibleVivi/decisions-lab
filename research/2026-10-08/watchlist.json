@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "as_of": "2026-10-08",
+    "meaning": "Discovery/exclusion ledger. None of the unverified names is counted as an independently confirmed current provider/model in census."
+  },
+  "unverified_candidates": [
+    {
+      "name": "SecJev",
+      "lead_url": "https://arxiv.org/abs/2610.03073",
+      "status": "Paper surfaced and a Kev-derivative research lead; originating checkpoint/repo/license not traced in this workstream",
+      "next_check": "Follow paper-author release link and map exact Kev checkpoint; security eval is separate from generic decisions quality."
+    },
+    {
+      "name": "arXiv2610.00346 comparative decision-model sample",
+      "lead_url": "https://arxiv.org/abs/2610.00346",
+      "status": "Research discovery lead; do not treat paper's market sample as census"
+    },
+    {
+      "name": "Mapika Decider",
+      "lead_url": "https://github.com/Mapika/decider",
+      "status": "Original-author GitHub surfaced; not source-audited before scope lock. Ollaya/Liquid comparisons mention multiple sizes; exact family/runtime/license left pending"
+    },
+    {
+      "name": "JevK5, Winnow-E4B, Jeb/Jebadiah, Jeeves, Decima, Cygnet, Arbiter, Snap, Von",
+      "lead_url": "https://github.com/ollaya-dev/ollaya/blob/main/crates/ollaya-decision/src/lib.rs",
+      "status": "Runtime has named adapter modules; not sufficient proof of current original-model identity/capability/licensing; route/runtime support must not be counted as originator"
+    },
+    {
+      "name": "githubnext/localjev",
+      "lead_url": "https://github.com/githubnext/localjev",
+      "status": "Linked by xuhaodev author card; no source audit in this workstream"
+    },
+    {
+      "name": "joyfox/Qwen3.5-0.8B-JEV",
+      "lead_url": "https://huggingface.co/joyfox/Qwen3.5-0.8B-JEV",
+      "status": "HF author-card discovery; customhead/runtime warning surfaced; exact license/contract not followed"
+    },
+    {
+      "name": "xuhaodev/Qwen3-1.7B-Jev",
+      "lead_url": "https://huggingface.co/xuhaodev/Qwen3-1.7B-Jev",
+      "status": "Related Chinese author family discovered; only4Bcard deeplyread. Do not infer4Bcapabilities"
+    },
+    {
+      "name": "browser-use/jev-ultrafast",
+      "lead_url": "https://github.com/browser-use/jev-ultrafast",
+      "status": "Original-source links in LayaREADME; practice/fine-tuning candidate, not audited here"
+    },
+    {
+      "name": "tycoding/jev-java-sdk",
+      "lead_url": "https://github.com/tycoding/jev-java-sdk",
+      "status": "README inspected and saved; name saysJev but localLayaONNX viareceptron/laya-onnx, notprovenTypeSafeHTTPclient. Not inselected10codeaudits"
+    },
+    {
+      "name": "gliner-decide-metal",
+      "lead_url": "https://github.com/shantanugoel/gliner-decide-metal",
+      "status": "AppleMLXruntimecandidate; no code audit"
+    },
+    {
+      "name": "Bespoke Nimble commercial API",
+      "lead_url": "https://nimble.bespokelabs.ai/",
+      "status": "Website web extraction failed; legal terms mentionNimbleAPI; only originalrepo publicdemo verified. No price/SLA inferred"
+    },
+    {
+      "name": "Perplexity Decider v1.1 open weights",
+      "lead_url": "https://docs.perplexity.ai/docs/decisions/quickstart",
+      "status": "v1.1nativeAPIverified; v1openweights mentioned elsewhere, do not assumev1.1checkpoint/license identical"
+    },
+    {
+      "name": "Solar Decide Flash direct Upstage contract",
+      "lead_url": "https://console.upstage.ai/docs/models/solar-decide",
+      "status": "OpenRouterrouteverifiedOct8; directdocs currentlyonlysolar-decide; routefacts kept separate"
+    },
+    {
+      "name": "EmpirioLabs Decide1, Decide1Omni, Aplomb1Omni legacy pages",
+      "lead_url": "https://docs.empiriolabs.ai/models/aplomb-1",
+      "status": "CurrentunifiedAplomb1verified; olderpagessearch-indexed but notcountedasseparatecurrentlyofferedcheckpoints"
+    },
+    {
+      "name": "CJ-Dataset",
+      "lead_url": "https://huggingface.co/datasets/bbldCVer-hf/CJ-Dataset",
+      "status": "Trainingdata discovery, notprovider; mixed/research/NC licenses require per-sourceaudit"
+    },
+    {
+      "name": "zh-decision-bench",
+      "lead_url": "https://huggingface.co/datasets/CodyQin/zh-decision-bench",
+      "status": "Chinese evaluation discovery; not deeply inspected in this snapshot; dataset notmodel"
+    },
+    {
+      "name": "Chinese/regional vendors beyond Alibaba/Tencent",
+      "status": "No systematic negative claim. English/Chinese queries found these two confirmed entries, not proof Baidu/Volcengine/SiliconFlow or Japanese/Russian ecosystems lack offerings."
+    }
+  ],
+  "excluded_or_adjacent": [
+    {
+      "name": "Decisions workflow/rules platform",
+      "url": "https://documentation.decisions.com/docs/en/api-and-authentication",
+      "reason": "Namecollision: legacy businessworkflow/rulesengineAPI; outside boundedneuraltypeddecisionmodelcensus"
+    },
+    {
+      "name": "OPA/Cedar/general deterministic policy engines",
+      "reason": "Useful control-plane baselines, but not learned decisions model providers; keep separate if discussingexecutionauthorization"
+    },
+    {
+      "name": "Regular LLM JSON mode / generic structured outputs",
+      "reason": "Adjacent fallback/retrofit control, not automatically a dedicated decision model. Some checkpoint-specific scorers included because mechanism is explicit"
+    },
+    {
+      "name": "Generic moderation/reranking/NER APIs",
+      "reason": "Adjacent specialized baselines; not enumerated as everydomainAPI. GLiNER2.5-Decideincludedbecauseauthor explicitlyreleasesgeneral-labeldecisionclassifier"
+    },
+    {
+      "name": "decisions-api.org / decisions-api.dev / decisions-api.net and similarly named catalogues",
+      "reason": "Discoveryonlywithoutverifiedoriginalmodelprovenance; mayaggregate/resell. Prices cannot bepromoted tooriginationfacts. OpenRouter/Vercel routes separatelyverified viaownmetadata"
+    },
+    {
+      "name": "awesome-jev lists and ecosystem surveys",
+      "urls": [
+        "https://github.com/notsointresting/awesome-jev-family",
+        "https://github.com/cl-victor1/jev-ecosystem-survey",
+        "https://github.com/Eurekaleo/awesome-jev-survey"
+      ],
+      "reason": "Discoveryindexes; authororiginalrepositoryorcardneededforeachclaim. Claimedprojectcountsnotmarketcountsevidence"
+    },
+    {
+      "name": "LLM2Jev paper 2610.02076",
+      "url": "https://arxiv.org/abs/2610.02076",
+      "reason": "Authors differ fromtwoexaminedGitHubrepos; do not equate namingwithoutoriginalauthorprojectlink"
+    }
+  ],
+  "coverage": {
+    "discovery_channels": [
+      "Officialproviderdocs/product/modelpages",
+      "Original-authorGitHubREADMEs andcode/tests",
+      "HuggingFaceoriginalmodelcards",
+      "OpenRouterpublicGETmodelmetadata",
+      "Vercelroutecatalogue",
+      "EnglishandChinesekeywordsearch"
+    ],
+    "cross_checks": [
+      "Provider-versus-routeprices",
+      "Family/checkpoint/alias/runtimeidentity",
+      "Native-versusprojectedAPIsemantics",
+      "READMEversuscodeconfidence/calibration",
+      "Publishedlimitsversusqualityvalidatedlimits",
+      "Baseversusfine-tunedlicense",
+      "Currentversuslegacycards"
+    ],
+    "stopping_rule": "Deep source audit closed at the listed entities; residual leads remain explicit. This is a broad snapshot, not proof of an exhaustive universe."
+  }
+}

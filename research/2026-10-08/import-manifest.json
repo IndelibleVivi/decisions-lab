@@ -1,0 +1,40 @@
+{
+  "schema": "decisions-lab.snapshot-import/1",
+  "source_cutoff": "2026-10-08",
+  "edited_on": "2026-10-09",
+  "included": [
+    "calculations.json",
+    "calculations.py",
+    "census.json",
+    "llamacpp_route.json",
+    "metadata.json",
+    "openai_decisions_record.json",
+    "openrouter_routes.json",
+    "practice_evidence.json",
+    "public_probe_protocol.json",
+    "reanalysis/author_numbers.json",
+    "reanalysis/provenance.json",
+    "reanalysis/recompute_sys1.py",
+    "reanalysis/sys1_reanalysis.json",
+    "report.md",
+    "report_verification.json",
+    "repositories.json",
+    "source_index.json",
+    "verification.json",
+    "watchlist.json"
+  ],
+  "excluded": [
+    "companion conversation",
+    "raw historical prediction projection",
+    "original absolute build path",
+    "internal browser reference ids",
+    "original ZIP checksum manifest"
+  ],
+  "transformations": [
+    "nine HTML narrative sections converted to Markdown",
+    "numbered source anchors resolved to canonical URLs",
+    "internal orchestration wording made reader-facing",
+    "original report appendix records retained in structured JSON"
+  ],
+  "claim_boundary": "Import does not reverify provider facts or run models."
+}

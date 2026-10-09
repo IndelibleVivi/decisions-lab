@@ -1,0 +1,119 @@
+{
+  "id": "openai-decisions-luna-native",
+  "originator": "OpenAI",
+  "model": "gpt-6-luna",
+  "route": "OpenAI native API",
+  "endpoint": "POST /v1/decisions",
+  "status": "public beta, documentation verified; not live-tested in this research",
+  "as_of_utc": "2026-10-08",
+  "price": {
+    "currency": "USD",
+    "input_per_million_tokens": 0.1,
+    "output_charged": false,
+    "cache_read_write_charged": false,
+    "conditions": "Regional processing premiums and long-context input multipliers apply. Do not transfer model-level Batch/Flex discounts to this endpoint."
+  },
+  "inputs": [
+    "text string",
+    "user messages with input_text and inline input_image"
+  ],
+  "input_limits": {
+    "images": 128,
+    "image_urls": "inline data URLs only; no hosted URL/file_id",
+    "model_level_context_tokens": 1050000,
+    "endpoint_context_tokens": "not separately established; model context is not an endpoint limit guarantee",
+    "unsupported": [
+      "non-user roles",
+      "files",
+      "audio",
+      "function calls",
+      "item references"
+    ]
+  },
+  "questions": {
+    "types": [
+      "predicate",
+      "choice",
+      "score"
+    ],
+    "choice_count": {
+      "min": 2,
+      "max": 255
+    },
+    "values": "string or boolean; typed values are distinct",
+    "score": "probability-weighted expected index of ordered levels, not free numeric regression",
+    "question_count_max": "not documented in inspected reference",
+    "score_level_max": "not documented in inspected reference",
+    "multi_question": "guide recommends independent questions sharing input; dependent decisions use sequential requests"
+  },
+  "response": {
+    "answers": "ordered array",
+    "refusal": "per-question typed refusal; may coexist with scored answers",
+    "probabilities": "choice and score expose distribution",
+    "confidence": "separate field on choice/score; formula not established from inspected docs",
+    "usage": "input/output/total token counters and details; counters do not imply output billing"
+  },
+  "engineering": {
+    "python_sdk_min": "3.26.0",
+    "javascript_sdk_min": "7.30.0",
+    "go_sdk_min": "3.73.0",
+    "ruby_sdk_min": "0.101.0",
+    "java_sdk_min": "4.78.0",
+    "batch": "not in the currently supported Batch endpoint list or SDK enum",
+    "streaming": "SDK lazy-response wrapper exists; no Decisions stream/event contract established",
+    "rate_limits": "account/model-dependent; no endpoint-specific numeric throughput established",
+    "latency": "vendor claim approximately 10x Responses; no numeric shared benchmark established",
+    "language": "Chinese/mixed-language performance not independently established by this research"
+  },
+  "sources": [
+    {
+      "id": "OAI-GUIDE",
+      "url": "https://developers.openai.com/api/docs/guides/decisions",
+      "evidence": "official guide"
+    },
+    {
+      "id": "OAI-REF",
+      "url": "https://developers.openai.com/api/reference/resources/decisions/methods/create",
+      "evidence": "official endpoint reference"
+    },
+    {
+      "id": "OAI-MODEL",
+      "url": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "evidence": "model-level pricing/context, not endpoint feature inheritance"
+    },
+    {
+      "id": "OAI-SDK",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/resources/decisions.py",
+      "evidence": "source inspected",
+      "blob_sha": "75b1af56cd9a0670588eaec8fb110768e5cca40b"
+    },
+    {
+      "id": "OAI-PARAMS",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision_create_params.py",
+      "evidence": "source inspected",
+      "blob_sha": "b260a3c22de4dcc1baf347053aa153d8ae82dc09"
+    },
+    {
+      "id": "OAI-RESP",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision.py",
+      "evidence": "source inspected",
+      "blob_sha": "a2358185f49d1c59d4b729e4b07be333e3a9811a"
+    },
+    {
+      "id": "OAI-BATCH-SDK",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/batch_create_params.py",
+      "evidence": "supported endpoint enum inspected",
+      "blob_sha": "ed55c0dfe5a5a8a2be40476d72e79951c239ecc0"
+    },
+    {
+      "id": "OAI-BATCH",
+      "url": "https://developers.openai.com/api/docs/guides/batch",
+      "evidence": "official guide"
+    },
+    {
+      "id": "OAI-CHANGELOG",
+      "url": "https://developers.openai.com/api/docs/changelog",
+      "evidence": "official changelog dates public beta to 2026-10-06"
+    }
+  ]
+}

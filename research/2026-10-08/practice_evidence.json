@@ -1,0 +1,442 @@
+{
+  "as_of_utc": "2026-10-08",
+  "studies": [
+    {
+      "id": "practice_sys1_eval",
+      "title": "Fast Models, Slow Evidence: A Paired and Self-Audited Evaluation of System-1 Decision Models for LLM Agent Harnesses",
+      "authors": [
+        "Jiawei Li"
+      ],
+      "publication": {
+        "paper_date": "2026-10-01",
+        "arxiv_version": "v1",
+        "repository_version": "2.0.0",
+        "repository_date_released": "2026-09-30"
+      },
+      "canonical_urls": [
+        "https://arxiv.org/abs/2610.02267",
+        "https://github.com/David-DL-Space/sys1-eval"
+      ],
+      "evidence_level": [
+        "author_measurement",
+        "source_code_inspection",
+        "independent_offline_recalculation_of_public_records"
+      ],
+      "models": [
+        "Jev jev-1.13.0 (hosted)",
+        "Laya 0.3.21 english checkpoint (local)",
+        "DeepSeek-V4.1-Flash and other reference judges for selected controls"
+      ],
+      "inspected_implementation_urls": [
+        "https://github.com/David-DL-Space/sys1-eval/blob/main/paper/analysis.py",
+        "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/build_cases_large.mjs",
+        "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/build_flip_large.mjs",
+        "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/slim_routerbench.py"
+      ],
+      "result_claims": [
+        {
+          "claim_id": "P1.1",
+          "type": "independent_offline_recalculation",
+          "claim": "Original tool-selection accuracy is Jev 398/400 (99.5%) vs Laya 336/400 (84.0%).",
+          "source": "reanalysis/sys1_reanalysis.json"
+        },
+        {
+          "claim_id": "P1.2",
+          "type": "independent_offline_recalculation",
+          "claim": "Original routing accuracy is Jev 200/400 (50%) vs Laya 194/400 (48.5%).",
+          "source": "scripts/slim_routerbench.py; scripts/build_cases_large.mjs; reanalysis/provenance.json"
+        },
+        {
+          "claim_id": "P1.3",
+          "type": "independent_offline_recalculation",
+          "claim": "After reversing choice criteria order, B tool selection changes 0/400 Jev and 76/400 Laya. F high-cardinality/multilingual single-choice intent classification changes 17/200 Jev and 106/200 Laya.",
+          "source": "reanalysis/sys1_reanalysis.json"
+        },
+        {
+          "claim_id": "P1.4",
+          "type": "independent_source_code_finding",
+          "claim": "The A routing order variant also removes the original difficulty question, because build_flip_large.mjs retains only the first choice question. The aggregate 30.3% Laya / 1.8% Jev answer-change rates reproduce numerically but cannot be attributed solely to candidate order for A/ALL.",
+          "source": "scripts/build_flip_large.mjs; scripts/build_cases_large.mjs"
+        },
+        {
+          "claim_id": "P1.5",
+          "type": "author_measurement_plus_accounting_code_inspection",
+          "claim": "In the study's 540-case safety cascade at threshold 0.1, omitting the screen cost suggests 23.9% savings; including it leaves about 4.3%.",
+          "source": "paper/analysis.py; paper/numbers.json"
+        },
+        {
+          "claim_id": "P1.6",
+          "type": "independent_offline_recalculation",
+          "claim": "In the routing subset Jev has 184 errors among 375 answers with max option probability >=0.9; in tool selection it has 0 errors among 391 such answers.",
+          "source": "reanalysis/sys1_reanalysis.json"
+        }
+      ],
+      "limits": [
+        "Independent work here reproduces arithmetic on historical public records; no model inference or present-day service validation.",
+        "Routing descriptions, clipped inputs and historical gold strongly limit generalization.",
+        "Confidence thresholds are workload-specific; some safety labels/controls are model-assisted.",
+        "Open benchmarks may be in training data; variants are correlated."
+      ],
+      "key_conditions": {
+        "our_reanalysis": "1,000 choice cases: RouterBench 400; BFCL 400; BANKING77/MASSIVE 200, four saved response records each",
+        "score_semantics": "Top-option probability; Laya's own confidence field uses a different scale and is not substituted in our measurements"
+      }
+    },
+    {
+      "id": "practice_jev_37",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "authors": [
+        "Tobias Deußer",
+        "Lorenz Sparrenberg",
+        "Rafet Sifa"
+      ],
+      "publication": {
+        "paper_date": "2026-09-29",
+        "arxiv_version": "v1",
+        "dataset_audit_date": "2026-09-24",
+        "run_completed": "2026-09-27"
+      },
+      "canonical_urls": [
+        "https://arxiv.org/abs/2609.37647",
+        "https://arxiv.org/html/2609.37647v1",
+        "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking",
+        "https://doi.org/10.5281/zenodo.23039006"
+      ],
+      "evidence_level": [
+        "author_measurement",
+        "source_code_inspection",
+        "published_aggregate_result_inspection"
+      ],
+      "models": [
+        "jev-1.13.0",
+        "Qwen3.8-27B",
+        "Gemma-4-E4B"
+      ],
+      "inspected_implementation_urls": [
+        "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/jev_benchmarking/thresholds.py",
+        "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/results/eval/thresholds.json",
+        "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/results/eval/unfair_tos.json",
+        "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/docs/datasets.md"
+      ],
+      "result_claims": [
+        {
+          "claim_id": "P2.1",
+          "type": "author_measurement",
+          "claim": "Jev's pooled Choice ECE is 0.028; mean per-dataset ECE is 0.061. Three large datasets provide 63% of pooled answers.",
+          "source": "paper §4.3"
+        },
+        {
+          "claim_id": "P2.2",
+          "type": "author_measurement_with_code_and_result_crosscheck",
+          "claim": "UNFAIR-ToS micro-F1 rises from 0.499274 to 0.748166 after dev-only per-question threshold tuning, with no model change.",
+          "source": "results/eval/unfair_tos.json; results/eval/thresholds.json; jev_benchmarking/thresholds.py"
+        },
+        {
+          "claim_id": "P2.3",
+          "type": "author_measurement",
+          "claim": "Main evaluation costs $9.15; whole study including pilot/additional analysis $9.40.",
+          "source": "paper §4.7"
+        }
+      ],
+      "limits": [
+        "Prompts were designed for Jev; not optimized for the open baselines.",
+        "No reasoning-enabled proprietary comparator and no repeated requests.",
+        "The suite contains no dedicated relevance-judgment task.",
+        "The public response dataset has a separate restrictive Jev Responses License; code MIT does not make all responses unrestricted.",
+        "We read implementation and aggregate results; we did not download/recompute all 346,009 responses."
+      ],
+      "key_conditions": {
+        "sample": "346,009 requests across 37 public datasets; 22 Choice datasets contain 279,925 answers for pooled calibration.",
+        "thresholds": "Per-question thresholds use 1,000 dev examples on four datasets, grid 0.02..0.98 in steps of .01, maximize F1 with ties closest to .5; evaluated unchanged on held-out split."
+      }
+    },
+    {
+      "id": "practice_political_replications",
+      "title": "JEV versus LLMs: Accuracy, Cost and Calibration on Seven Political Science Replications",
+      "authors": [
+        "Steven Denney",
+        "Matthew DiGiuseppe"
+      ],
+      "publication": {
+        "paper_v1": "2026-10-05",
+        "paper_v2": "2026-10-06",
+        "author_blog": "2026-10-07"
+      },
+      "canonical_urls": [
+        "https://arxiv.org/abs/2610.06625",
+        "https://arxiv.org/html/2610.06625v2",
+        "https://www.pixelsandpatterns.org/p/jev-is-fast-is-it-better-than-llms"
+      ],
+      "evidence_level": [
+        "author_measurement",
+        "full_paper_method_table_appendix_reading",
+        "author_clarification"
+      ],
+      "models": [
+        "Jev 1.13, commonly via OpenRouter; responses typesafe/jev-1.13-20260917",
+        "GPT-6 Luna through its generative Batch/API route, reasoning none",
+        "Qwen3.8-27B via OpenRouter/Parasail FP8, reasoning off"
+      ],
+      "inspected_implementation_urls": [],
+      "result_claims": [
+        {
+          "claim_id": "P3.1",
+          "type": "author_measurement",
+          "claim": "Jev has no consistent cost advantage over Luna Batch on these tasks; at synchronous Standard prices it is cheaper on six of seven.",
+          "source": "paper Table 2; author blog"
+        },
+        {
+          "claim_id": "P3.2",
+          "type": "author_measurement",
+          "claim": "Measured sequential Jev median latency spans 0.09–0.27 s vs Luna 0.75–1.04 s and Qwen 0.39–0.87 s.",
+          "source": "paper Table 2"
+        },
+        {
+          "claim_id": "P3.3",
+          "type": "author_measurement",
+          "claim": "Jev's choice probabilities calibrate better than Luna's first-answer-token probabilities in single-pass reading tasks, but not uniformly better than Qwen. Averaging both presentation orders narrows the difference.",
+          "source": "paper calibration sections; author blog"
+        },
+        {
+          "claim_id": "P3.4",
+          "type": "author_explicit_clarification",
+          "claim": "The authors did not test the OpenAI Decisions endpoint released October 6.",
+          "source": "author blog footnote 1"
+        }
+      ],
+      "limits": [
+        "OpenAI's new Decisions API was not evaluated.",
+        "Name-only tasks may recall public benchmark labels seen during training.",
+        "Some original prompts unavailable; reconstructed framing prompts are not comparable with old published numbers.",
+        "Human raters disagree; F1 on first-item preference depends on presentation order.",
+        "Hosted Qwen cost is route-specific, not self-host total cost."
+      ],
+      "key_conditions": {
+        "tasks": "Seven prior political-science annotation/scaling replications plus additional calibration tasks. Includes text-reading tasks and name-only recall tasks, which have different constructs.",
+        "timings": "200 timed items per application, from the Netherlands on 2026-09-29/30; sequential median and concurrency-16 throughput."
+      },
+      "code_availability_limit": "Paper/author post say scripts and responses are in a replication archive; no direct public archive URL was located in the inspected paper HTML or author post. Do not imply independent code/data reproduction."
+    },
+    {
+      "id": "practice_winnow",
+      "title": "winnow — calibrated context sieve for Claude Code",
+      "authors": [
+        "GhalebDweikat (repository author)"
+      ],
+      "publication": {
+        "initial_experiment": "2026-09-16",
+        "open_model_experiment": "2026-09-18",
+        "documented_live_version": "0.5.2",
+        "documented_live_check": "2026-10-05"
+      },
+      "canonical_urls": [
+        "https://github.com/GhalebDweikat/winnow",
+        "https://github.com/GhalebDweikat/winnow/blob/main/docs/DESIGN.md",
+        "https://github.com/GhalebDweikat/winnow/blob/main/docs/WRITEUP.md"
+      ],
+      "evidence_level": [
+        "author_practice_report",
+        "source_code_inspection",
+        "published_aggregate_result_inspection"
+      ],
+      "models": [
+        "Jev through TypeSafe (aggregate score files do not pin returned model version; README default jev-latest)",
+        "Claude Fable 5.1 as the labeler of the 97 decided 'hand' labels",
+        "Local jevlike trial on weak replay labels; lexical baseline"
+      ],
+      "inspected_implementation_urls": [
+        "https://github.com/GhalebDweikat/winnow/blob/main/sidecar/src/winnow/questions.py",
+        "https://github.com/GhalebDweikat/winnow/blob/main/sidecar/src/winnow/policy.py",
+        "https://github.com/GhalebDweikat/winnow/blob/main/sidecar/src/winnow/replay.py",
+        "https://github.com/GhalebDweikat/winnow/blob/main/docs/results/2026-09-16/score-typesafe-strict-hand.json",
+        "https://github.com/GhalebDweikat/winnow/blob/main/docs/results/2026-09-16/score-typesafe-structured-hand.json"
+      ],
+      "result_claims": [
+        {
+          "claim_id": "P4.1",
+          "type": "author_measurement_with_label_provenance_check",
+          "claim": "At p<0.1, strict wording hides 35 labeled blocks; 8/35 (~22.9%) are needed under the model-assisted labels. Structured wording hides 23, with 0 labeled-needed in that small sample.",
+          "source": "docs/results/2026-09-16/score-typesafe-strict-hand.json and score-typesafe-structured-hand.json; docs/DESIGN.md"
+        },
+        {
+          "claim_id": "P4.2",
+          "type": "author_measurement",
+          "claim": "Structured phrasing's population text reduction at threshold .1 is about 4.6%, despite its worse aggregate ECE than the default phrasing.",
+          "source": "docs/DESIGN.md"
+        },
+        {
+          "claim_id": "P4.3",
+          "type": "author_measurement",
+          "claim": "A local weakly trained model attains ECE 0.135 while AUROC is ~0.497: it effectively predicts the base rate and cannot usefully rank blocks.",
+          "source": "docs/DESIGN.md, open-judge experiment"
+        },
+        {
+          "claim_id": "P4.4",
+          "type": "source_code_inspection",
+          "claim": "Question wording, explicit examples and task reconstruction are adjustable inputs to an executable policy; uncertainty and error handling are implemented outside the model.",
+          "source": "sidecar/src/winnow/questions.py; policy.py"
+        }
+      ],
+      "limits": [
+        "Model-assisted labels and tiny human audit; no human-validated broad benchmark.",
+        "Weak reuse labels can mislabel in both directions; not a clean upper bound on regret.",
+        "Shadow mode cannot measure actual recall regret.",
+        "Current Claude Code hook behavior is version-dependent; installing the repository does not prove live integration.",
+        "We inspected code/results, did not install hooks or send private transcripts."
+      ],
+      "key_conditions": {
+        "sample": "300 cases / 1,515 weak-labeled blocks from one developer's history. Probability-stratified sample of 100 blocks labeled by Claude: 47 needed,50 not needed,3 unsure.",
+        "label_warning": "Despite names 'hand'/'blind hand labels', original DESIGN/WRITEUP and raw score note identify Claude as labeler. Later small human audit agreed poorly; not human ground truth."
+      }
+    },
+    {
+      "id": "practice_security",
+      "title": "Evaluating System One Models for Agent Security Decisions: Reliability, Calibration, and Selective Automation",
+      "authors": [
+        "Yixuan Liu"
+      ],
+      "publication": {
+        "paper_initial": "2026-09-27",
+        "paper_current_inspected": "v3, 2026-10-03"
+      },
+      "canonical_urls": [
+        "https://arxiv.org/abs/2609.33401",
+        "https://arxiv.org/pdf/2609.33401",
+        "https://github.com/yxsec/system-one-security-eval"
+      ],
+      "evidence_level": [
+        "author_measurement",
+        "source_code_inspection",
+        "published_aggregate_result_inspection"
+      ],
+      "models": [
+        "Jev 1.13",
+        "Laya English checkpoint",
+        "Mapika Decider ~2B",
+        "Bespoke Nimble ~9B",
+        "Specialized detectors, original parent controls, GPT-4.1/Qwen and five reasoning judges"
+      ],
+      "inspected_implementation_urls": [
+        "https://github.com/yxsec/system-one-security-eval/blob/main/analysis/threshold_sensitivity/analyze.py",
+        "https://github.com/yxsec/system-one-security-eval/blob/main/protocol/analysis_plan.json",
+        "https://github.com/yxsec/system-one-security-eval/blob/main/protocol/model_lock.json",
+        "https://github.com/yxsec/system-one-security-eval/blob/main/results/threshold_sensitivity.csv"
+      ],
+      "result_claims": [
+        {
+          "claim_id": "P5.1",
+          "type": "author_measurement",
+          "claim": "Good global accuracy/calibration can coexist with confident mistakes concentrated in specific attack groups.",
+          "source": "paper RQ1/RQ2"
+        },
+        {
+          "claim_id": "P5.2",
+          "type": "published_numeric_result_and_code_inspection",
+          "claim": "For Jev shipped probabilities on WAInject at 1% miss limit, symmetric selection chooses no automation; independent thresholds yield test coverage 108/1,612 (~6.70%), entirely automatic blocks and zero automatic allows.",
+          "source": "results/threshold_sensitivity.csv; analysis/threshold_sensitivity/analyze.py"
+        },
+        {
+          "claim_id": "P5.3",
+          "type": "author_measurement",
+          "claim": "A reviewer can both recover misses and introduce benign false alarms or share the first model's confident failures; error complementarity must be measured on the actual reviewed subset.",
+          "source": "paper RQ3"
+        },
+        {
+          "claim_id": "P5.4",
+          "type": "source_code_inspection",
+          "claim": "The source-selected policy code checks disjoint partition IDs, fits recalibration on development data and selects thresholds on selection data; unsupported probabilities do not become automatic allows.",
+          "source": "analysis/threshold_sensitivity/analyze.py; protocol/analysis_plan.json"
+        }
+      ],
+      "limits": [
+        "Rare-event error estimates have small independent sample counts; bootstrap is not a certification.",
+        "Some policy analyses are exploratory/retrospective despite held-out calculation.",
+        "Hosted versions change; public datasets may be contaminated and do not model adaptive attackers.",
+        "AgentHarm request harmfulness and WAInject attack-derived text are different positive events.",
+        "No current provider or live agent was tested by this research."
+      ],
+      "key_conditions": {
+        "sample": "2,200 held-out inputs: WAInjectBench-text 1,612; R-Judge 236; AgentHarm 352.",
+        "retrospective_limit": "Repository explicitly states threshold-sensitivity completion/reanalysis followed initial test inspection; not a new prospective validation."
+      }
+    },
+    {
+      "id": "practice_crash",
+      "title": "Calibrated Decisions at Scale: Converting Police Crash Narratives into Probabilistic Crash Variables with a System One Model (Jev)",
+      "authors": [
+        "Amir Rafe",
+        "Subasish Das"
+      ],
+      "publication": {
+        "paper_date": "2026-09-21",
+        "arxiv_inspected": "v1",
+        "repository_last_pushed": "2026-09-23T17:59:31Z"
+      },
+      "canonical_urls": [
+        "https://arxiv.org/abs/2609.24052",
+        "https://arxiv.org/html/2609.24052v1",
+        "https://github.com/pozapas/jev-calibrated-narrative-coding"
+      ],
+      "evidence_level": [
+        "author_measurement",
+        "source_code_inspection",
+        "published_aggregate_result_inspection"
+      ],
+      "models": [
+        "Jev 1.13",
+        "claude-fable-5-1 and gpt-5.6-sol for separate human-reference quality comparison"
+      ],
+      "inspected_implementation_urls": [
+        "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/src/s08_cost_model.py",
+        "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/src/s07_metrics.py",
+        "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/data/cost_model.json",
+        "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/data/gold/gold_design_report.json"
+      ],
+      "result_claims": [
+        {
+          "claim_id": "P6.1",
+          "type": "author_measurement",
+          "claim": "The actual full-coding stage costs $30.22 for 195,857 narratives, about $0.154 per 1,000. The $774 figure is an extrapolation to 5,018,080, not an executed full-corpus bill.",
+          "source": "paper §4.1"
+        },
+        {
+          "claim_id": "P6.2",
+          "type": "code_and_aggregate_result_inspection",
+          "claim": "Published cost-model fit has ~170.7 base tokens +121.5 tokens/question; schema overhead dominates these short narratives. The paper reports an executed screen break-even pass-through fraction of 0.67.",
+          "source": "src/s08_cost_model.py; data/cost_model.json; paper §4.1"
+        },
+        {
+          "claim_id": "P6.3",
+          "type": "author_measurement",
+          "claim": "Jev reaches F1 .908 against the weighted human reference yet fails multiple calibration checks; rare-event prevalence and discrete probability resolution matter.",
+          "source": "paper §4.2–4.4"
+        },
+        {
+          "claim_id": "P6.4",
+          "type": "source_code_inspection",
+          "claim": "Metric functions accept sampling weights; the review budget is defined over flagged records at target precision rather than all-record accuracy.",
+          "source": "src/s07_metrics.py; data/gold/gold_design_report.json"
+        },
+        {
+          "claim_id": "P6.5",
+          "type": "author_explicit_limitation",
+          "claim": "Frontier quality arms have no token accounting, so the separate frontier cost scenarios are not measured costs for those benchmarked arms.",
+          "source": "paper §4.4"
+        }
+      ],
+      "limits": [
+        "Single domain/state; not an all-purpose provider comparison.",
+        "Narrative reference evaluates what a narrative says, not what happened in the world.",
+        "Private underlying narratives/raw responses are not redistributed; only aggregate results and code inspected.",
+        "Do not infer universal calibration from model training labels or vendor claims.",
+        "README's broad whole-corpus language must be read against paper's actually executed sample sizes."
+      ],
+      "key_conditions": {
+        "corpus": "5,018,080 available Texas narratives; actually screened 499,500 and fully coded 195,857. Population extrapolation uses the random stratum of 150,000.",
+        "human_reference": "2,416 usable variable–narrative consensus labels from a sampling design involving 400 narratives; these are not 2,416 distinct crash reports. Probability-stratified selection requires weights."
+      }
+    }
+  ],
+  "method": "Source/code audit and independent arithmetic on historical public outputs; no new inference.",
+  "reanalysis_provenance": "reanalysis/provenance.json"
+}

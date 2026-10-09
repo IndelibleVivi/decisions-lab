@@ -1,0 +1,10 @@
+{
+  "probability_records_validated": 4000,
+  "all_author_summary_checks_match": true,
+  "author_summary_checks": 14,
+  "source_ids_hashed": true,
+  "probabilities_renormalized": false,
+  "public_probe_checks_not_run": 12,
+  "api_calls": 0,
+  "max_original_probability_sum_deviation": 0.010000000000000009
+}

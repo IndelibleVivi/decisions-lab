@@ -1,0 +1,1320 @@
+{
+  "as_of_utc": "2026-10-08",
+  "sources": [
+    {
+      "url": "https://docs.typesafe.ai/models",
+      "title": "TypeSafe Jev 官方模型、上下文与报价",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev",
+        "J03"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/api",
+      "title": "TypeSafe System One API 契约",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev-api",
+        "J04"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/confidence",
+      "title": "Jev confidence 定义",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev-confidence",
+        "J05"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/introduction",
+      "title": "Jev 多问题隔离语义",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev-intro",
+        "J02"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/model-jaggedness/jev-1.13",
+      "title": "Jev 1.13 已知能力边界",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev-jagged",
+        "J11"
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/clef/",
+      "title": "Cloudflare Clef hosted schema",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "cf-clef",
+        "C01"
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/models/clef-flash/",
+      "title": "Cloudflare Clef-flash hosted schema",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "cf-flash",
+        "C02"
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+      "title": "Cloudflare Workers AI 定价",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "cf-price",
+        "C07"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/Cloudflare/clef-flash",
+      "title": "Cloudflare Clef-flash 模型卡",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "cf-card",
+        "C05"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/Cloudflare/clef-flash/blob/41318bf2106d135c7a92da745fec4b255279b4de/joint_schema_model.py",
+      "title": "Clef-flash 固定 revision Python helper",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "cf-code",
+        "C06"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/cloudflare/clef",
+      "title": "OpenRouter Clef routes",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "or-clef",
+        "C11"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/cloudflare/clef-flash",
+      "title": "OpenRouter Clef-flash routes",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "or-flash",
+        "C12"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/community/multimodal-decisions",
+      "title": "OpenRouter 多模态 Decisions 契约与样例",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "or-images",
+        "C13"
+      ]
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/guides/decisions",
+      "title": "OpenAI Decisions guide",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "oai-guide",
+        "OAI-GUIDE"
+      ]
+    },
+    {
+      "url": "https://developers.openai.com/api/reference/resources/decisions/methods/create",
+      "title": "OpenAI Decisions endpoint reference",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "oai-ref",
+        "OAI-REF"
+      ]
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/models/gpt-6-luna",
+      "title": "GPT-6 Luna 模型级报价与上下文",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "oai-model",
+        "OAI-MODEL"
+      ]
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/guides/batch",
+      "title": "OpenAI Batch 支持范围",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "oai-batch",
+        "OAI-BATCH"
+      ]
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/changelog",
+      "title": "OpenAI changelog：2026-10-06 Decisions public beta",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "oai-changelog",
+        "OAI-CHANGELOG"
+      ]
+    },
+    {
+      "url": "https://developers.telnyx.com/docs/inference/decision-models",
+      "title": "Telnyx Decision Models Beta 契约",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "telnyx",
+        "telnyx_api"
+      ]
+    },
+    {
+      "url": "https://docs.fastino.ai/inference/systemone",
+      "title": "Fastino GLiDE System One 契约",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "fastino",
+        "fastino_api"
+      ]
+    },
+    {
+      "url": "https://docs.fastino.ai/pricing",
+      "title": "Fastino 定价",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "fastino-price",
+        "fastino_price"
+      ]
+    },
+    {
+      "url": "https://levanto.ai/pricing",
+      "title": "Levanto Sage 计费与套餐",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "levanto",
+        "levanto_pricing"
+      ]
+    },
+    {
+      "url": "https://docs.liquid.ai/lfm/models/d1.md",
+      "title": "Liquid hosted d1",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid",
+        "liquid_hosted"
+      ]
+    },
+    {
+      "url": "https://vercel.com/ai-gateway/models/d1",
+      "title": "Vercel Liquid d1 route",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid-vercel",
+        "vercel_d1"
+      ]
+    },
+    {
+      "url": "https://docs.liquid.ai/lfm/models/d1-3b.md",
+      "title": "Liquid d1-3B 文档",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid-3b"
+      ]
+    },
+    {
+      "url": "https://docs.liquid.ai/lfm/models/d1-omni-600m.md",
+      "title": "Liquid d1-omni-600M 文档",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid-omni"
+      ]
+    },
+    {
+      "url": "https://docs.empiriolabs.ai/models/aplomb-1",
+      "title": "EmpirioLabs Aplomb 1 官方模型契约",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "aplomb",
+        "empirio_aplomb"
+      ]
+    },
+    {
+      "url": "https://docs.empiriolabs.ai/decisions",
+      "title": "EmpirioLabs Decisions 完整接口与条件分布",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "aplomb-api",
+        "empirio_decisions"
+      ]
+    },
+    {
+      "url": "https://www.respan.ai/docs/documentation/span-01/concept",
+      "title": "Respan span-01 契约与报价",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "respan",
+        "respan_concept"
+      ]
+    },
+    {
+      "url": "https://www.alibabacloud.com/help/en/model-studio/decision-model-preview",
+      "title": "Alibaba Cloud decision-model-preview",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "alibaba",
+        "alibaba_model"
+      ]
+    },
+    {
+      "url": "https://help.aliyun.com/en/model-studio/decision-model-api",
+      "title": "Alibaba Cloud Decision Model API",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "alibaba-api"
+      ]
+    },
+    {
+      "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_decide",
+      "title": "Databricks ai_decide SQL 契约",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "databricks",
+        "databricks_sql"
+      ]
+    },
+    {
+      "url": "https://www.databricks.com/blog/introducing-aidecide-make-fast-decisions-your-governed-data",
+      "title": "Databricks ai_decide 发布说明",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "databricks-launch",
+        "databricks_launch"
+      ]
+    },
+    {
+      "url": "https://console.upstage.ai/docs/models/solar-decide",
+      "title": "Upstage Solar Decide 原厂文档",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "upstage",
+        "solar_doc"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/upstage/solar-decide",
+      "title": "OpenRouter Solar Decide 当前 route",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "upstage-or"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/perplexity/pplx-decider-v1.1-27b",
+      "title": "OpenRouter Perplexity Decider V1.1 27B",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "pplx-or"
+      ]
+    },
+    {
+      "url": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0",
+      "title": "llama.cpp v0.6.0 正式发行",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "llama-release",
+        "L02"
+      ]
+    },
+    {
+      "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+      "title": "llama.cpp 当前 server API 文档",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "llama-api",
+        "L01"
+      ]
+    },
+    {
+      "url": "https://github.com/ggml-org/llama.cpp/pull/29969",
+      "title": "llama.cpp Clef vision 已合并 PR",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "llama-vision",
+        "L03"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2610.02267",
+      "title": "Fast Models, Slow Evidence · 2026-10-01 v1",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "sys1-paper"
+      ]
+    },
+    {
+      "url": "https://github.com/David-DL-Space/sys1-eval",
+      "title": "sys1-eval 原始预测、构造与分析仓库",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "sys1-repo"
+      ]
+    },
+    {
+      "url": "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/build_flip_large.mjs",
+      "title": "sys1-eval 顺序干预生成脚本",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "sys1-flip"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/html/2609.37647v1",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev37"
+      ]
+    },
+    {
+      "url": "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking",
+      "title": "37 数据集评测与阈值选择实现",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev37-repo"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2610.06625",
+      "title": "JEV versus LLMs · 七项政治学复现",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "political"
+      ]
+    },
+    {
+      "url": "https://www.pixelsandpatterns.org/p/jev-is-fast-is-it-better-than-llms",
+      "title": "原作者方法与新 Decisions endpoint 澄清",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "political-update"
+      ]
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow",
+      "title": "winnow 实践与仓库",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "winnow"
+      ]
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/docs/DESIGN.md",
+      "title": "winnow 原始设计、标签和失败分析",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "winnow-design"
+      ]
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/sidecar/src/winnow/policy.py",
+      "title": "winnow 执行策略",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "winnow-policy"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2609.33401",
+      "title": "System One Agent Security Evaluation · v3",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "security"
+      ]
+    },
+    {
+      "url": "https://github.com/yxsec/system-one-security-eval",
+      "title": "Security evaluation 阈值与分区实现",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "security-repo"
+      ]
+    },
+    {
+      "url": "https://arxiv.org/abs/2609.24052",
+      "title": "Calibrated Decisions at Scale · crash narratives",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "crash"
+      ]
+    },
+    {
+      "url": "https://github.com/pozapas/jev-calibrated-narrative-coding",
+      "title": "Crash narrative 编码、加权评估与成本实现",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "crash-repo"
+      ]
+    },
+    {
+      "url": "https://github.com/typesafe-ai/WorkflowEvals",
+      "title": "TypeSafe WorkflowEvals",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "workflow",
+        "R04"
+      ]
+    },
+    {
+      "url": "https://github.com/typesafe-ai/system-one-adapter-python",
+      "title": "TypeSafe System One adapter for ordinary LLMs",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "adapter",
+        "R03"
+      ]
+    },
+    {
+      "url": "https://github.com/typesafe-ai/typesafe-public-examples",
+      "title": "TypeSafe 原厂实践代码",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev-examples",
+        "R05"
+      ]
+    },
+    {
+      "url": "https://vercel.com/ai-gateway/models/jev",
+      "title": "Vercel Jev route 与显示报价",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "jev-vercel",
+        "J21"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/cookbooks/classifying_rag_passages",
+      "title": "TypeSafe RAG passage classification cookbook",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "rag",
+        "J15"
+      ]
+    },
+    {
+      "url": "https://github.com/NandhaKishorM/laya",
+      "title": "Laya 原作者仓库",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "laya",
+        "laya_repo"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/togethercomputer/Tev1-4B-experimental",
+      "title": "Together Tev1-4B-experimental 模型卡",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "tev",
+        "tev_model"
+      ]
+    },
+    {
+      "url": "https://github.com/Yinsongxu/LLM2Jev",
+      "title": "Yinsongxu/LLM2Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "llm2jev-yin"
+      ]
+    },
+    {
+      "url": "https://github.com/tic-top/llm2jev",
+      "title": "tic-top/llm2jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "llm2jev-tic"
+      ]
+    },
+    {
+      "url": "https://blog.cloudflare.com/clef-decision-models/",
+      "title": "Cloudflare original launch; architecture, training and internal domain-classification practice",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "C03"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/Cloudflare/clef",
+      "title": "Original Clef release model card",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "C04"
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/platform/limits/",
+      "title": "Workers AI default task-type limits; no Clef-specific exception shown",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "C08"
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/features/prompt-caching/",
+      "title": "Prefix caching is only enabled for select models",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "C09"
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/features/batch-api/",
+      "title": "Async batch is model-specific; payload under 10 MB",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "C10"
+      ]
+    },
+    {
+      "url": "https://typesafe.ai/",
+      "title": "Original vendor identity and headline price",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J01"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/choice",
+      "title": "255 option maximum and explicit none-of-the-above practice",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J06"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/score",
+      "title": "Ordinal scoring primitive",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J07"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/noul",
+      "title": "Proposition probability; not degree/intensity",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J08"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/concepts/state",
+      "title": "Supported textual state shapes",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J09"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/primitives/advanced",
+      "title": "Structured instructions and criteria",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J10"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/sdk/python/api/retries",
+      "title": "Retry controls and total retry-time budget",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J12"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/patterns/fan-out",
+      "title": "Speculative parallel questions with code deciding applicability",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J13"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/cookbooks/parallel_questions",
+      "title": "Vendor-controlled multi-question cookbook",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J14"
+      ]
+    },
+    {
+      "url": "https://docs.typesafe.ai/legal",
+      "title": "Legal overview; separate enterprise ZDR discussion",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J16"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/typesafe/jev-1.13/",
+      "title": "OpenRouter Jev model page",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J17"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/community/jev",
+      "title": "OpenRouter Decisions route and aliases",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J18"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/docs/guides/community/typesafe-sdk",
+      "title": "Native TypeSafe SDK can target OpenRouter systemone route",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J19"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request",
+      "title": "OpenRouter request schema and published usage/cost/provider fields",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J20"
+      ]
+    },
+    {
+      "url": "https://developers.cloudflare.com/ai/models/typesafe/jev/",
+      "title": "Cloudflare third-party Jev route; envelope, price and ZDR catalog label",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "J22"
+      ]
+    },
+    {
+      "url": "https://github.com/typesafe-ai/typesafe-sdk-python",
+      "title": "Official Python SDK, MIT",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "R01"
+      ]
+    },
+    {
+      "url": "https://github.com/typesafe-ai/typesafe-sdk-js",
+      "title": "Official JS/TS SDK, MIT",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "R02"
+      ]
+    },
+    {
+      "url": "https://github.com/typesafe-ai",
+      "title": "Official org confirms SDK, adapter, examples and n8n repositories",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "R06"
+      ]
+    },
+    {
+      "url": "https://www.alibabacloud.com/help/en/model-studio/decision-model-api",
+      "title": "https://www.alibabacloud.com/help/en/model-studio/decision-model-api",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "alibaba_api"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/LiquidAI/d1-3B",
+      "title": "https://huggingface.co/LiquidAI/d1-3B",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid_open_3b"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/LiquidAI/d1-omni-600M",
+      "title": "https://huggingface.co/LiquidAI/d1-omni-600M",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid_open_omni"
+      ]
+    },
+    {
+      "url": "https://www.liquid.ai/blog/d1-open",
+      "title": "https://www.liquid.ai/blog/d1-open",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid_open_announcement"
+      ]
+    },
+    {
+      "url": "https://docs.liquid.ai/guides/decision-model-guide",
+      "title": "https://docs.liquid.ai/guides/decision-model-guide",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "liquid_guide"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "title": "https://openrouter.ai/api/v1/models?output_modalities=decisions",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "openrouter_models"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/convaiinnovations/laya",
+      "title": "https://huggingface.co/convaiinnovations/laya",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "laya_model"
+      ]
+    },
+    {
+      "url": "https://github.com/NandhaKishorM/laya/blob/3cf26cbcb18725dbc2d127bb8bb2c4c43243ae63/laya/confidence.py",
+      "title": "https://github.com/NandhaKishorM/laya/blob/3cf26cbcb18725dbc2d127bb8bb2c4c43243ae63/laya/confidence.py",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "laya_confidence"
+      ]
+    },
+    {
+      "url": "https://github.com/togethercomputer/tev1",
+      "title": "https://github.com/togethercomputer/tev1",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "tev_repo"
+      ]
+    },
+    {
+      "url": "https://github.com/jaredpalmer/kev",
+      "title": "https://github.com/jaredpalmer/kev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "kev_repo"
+      ]
+    },
+    {
+      "url": "https://github.com/ozlabsai/typical",
+      "title": "https://github.com/ozlabsai/typical",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "typical_repo"
+      ]
+    },
+    {
+      "url": "https://github.com/ozlabsai/typical/blob/main/releases/typical-small.md",
+      "title": "https://github.com/ozlabsai/typical/blob/main/releases/typical-small.md",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "typical_release"
+      ]
+    },
+    {
+      "url": "https://docs.fastino.ai/concepts/glide",
+      "title": "https://docs.fastino.ai/concepts/glide",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "fastino_glide"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/fastino/GLiNER2.5-Decide",
+      "title": "https://huggingface.co/fastino/GLiNER2.5-Decide",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "gliner_card"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/bespokelabs/Bespoke-Nimble-9B",
+      "title": "https://huggingface.co/bespokelabs/Bespoke-Nimble-9B",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "nimble_card"
+      ]
+    },
+    {
+      "url": "https://github.com/bespokelabsai/nimble",
+      "title": "https://github.com/bespokelabsai/nimble",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "nimble_repo"
+      ]
+    },
+    {
+      "url": "https://github.com/bespokelabsai/nimble/blob/main/docs/TRY_NIMBLE.md",
+      "title": "https://github.com/bespokelabsai/nimble/blob/main/docs/TRY_NIMBLE.md",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "nimble_demo"
+      ]
+    },
+    {
+      "url": "https://docs.perplexity.ai/docs/decisions/quickstart",
+      "title": "https://docs.perplexity.ai/docs/decisions/quickstart",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "pplx_api"
+      ]
+    },
+    {
+      "url": "https://console.upstage.ai/api/systemone",
+      "title": "https://console.upstage.ai/api/systemone",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "solar_api"
+      ]
+    },
+    {
+      "url": "https://openrouter.ai/inception/mercury-decide:free",
+      "title": "https://openrouter.ai/inception/mercury-decide:free",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "mercury_route"
+      ]
+    },
+    {
+      "url": "https://www.linkedin.com/posts/inception-labs-ai_introducing-mercury-decide-the-most-intelligent-activity-7511141315691057154-Kq_H",
+      "title": "https://www.linkedin.com/posts/inception-labs-ai_introducing-mercury-decide-the-most-intelligent-activity-7511141315691057154-Kq_H",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "mercury_announcement"
+      ]
+    },
+    {
+      "url": "https://www.respan.ai/docs/apis/gateway/run-span-01",
+      "title": "https://www.respan.ai/docs/apis/gateway/run-span-01",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "respan_scores"
+      ]
+    },
+    {
+      "url": "https://www.respan.ai/docs/documentation/span-01/quickstart",
+      "title": "https://www.respan.ai/docs/documentation/span-01/quickstart",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "respan_quickstart"
+      ]
+    },
+    {
+      "url": "https://levanto.ai/model",
+      "title": "https://levanto.ai/model",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "levanto_model"
+      ]
+    },
+    {
+      "url": "https://platform.levanto.ai/api/intelligence/skill",
+      "title": "https://platform.levanto.ai/api/intelligence/skill",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "levanto_contract"
+      ]
+    },
+    {
+      "url": "https://docs.databricks.com/api/ai-functions/v1/ai-decide",
+      "title": "https://docs.databricks.com/api/ai-functions/v1/ai-decide",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "databricks_rest"
+      ]
+    },
+    {
+      "url": "https://telnyx.com/products/decision-models",
+      "title": "https://telnyx.com/products/decision-models",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "telnyx_product"
+      ]
+    },
+    {
+      "url": "https://cloud.tencent.com/document/product/1552/138731",
+      "title": "https://cloud.tencent.com/document/product/1552/138731",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "tencent_route"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/xuhaodev/Qwen3.5-4B-Jev",
+      "title": "https://huggingface.co/xuhaodev/Qwen3.5-4B-Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "xuhao_card"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/CountingSheep/vev-4b",
+      "title": "https://huggingface.co/CountingSheep/vev-4b",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "vev_card"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/WhaletechAI/W1-JEV",
+      "title": "https://huggingface.co/WhaletechAI/W1-JEV",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "w1_card"
+      ]
+    },
+    {
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/resources/decisions.py",
+      "title": "source inspected",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "OAI-SDK"
+      ],
+      "git_blob_sha": "75b1af56cd9a0670588eaec8fb110768e5cca40b"
+    },
+    {
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision_create_params.py",
+      "title": "source inspected",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "OAI-PARAMS"
+      ],
+      "git_blob_sha": "b260a3c22de4dcc1baf347053aa153d8ae82dc09"
+    },
+    {
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision.py",
+      "title": "source inspected",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "OAI-RESP"
+      ],
+      "git_blob_sha": "a2358185f49d1c59d4b729e4b07be333e3a9811a"
+    },
+    {
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/batch_create_params.py",
+      "title": "supported endpoint enum inspected",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "OAI-BATCH-SDK"
+      ],
+      "git_blob_sha": "ed55c0dfe5a5a8a2be40476d72e79951c239ecc0"
+    },
+    {
+      "url": "https://github.com/ggml-org/llama.cpp/pull/29831",
+      "title": "Clef text joint-head support merged PR；99b9548；列出 Clef 与 Flash 两个官方 GGUF",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "L04"
+      ]
+    },
+    {
+      "url": "https://huggingface.co/ggml-org/Clef-Flash-GGUF",
+      "title": "ggml-org 原作者模型卡正文与量化元数据；不采用页面自动生成的 chat/vLLM 安装示例",
+      "checked_date_utc": "2026-10-08",
+      "aliases": [
+        "L05"
+      ]
+    },
+    {
+      "url": "https://github.com/NandhaKishorM/laya/blob/3cf26cbcb18725dbc2d127bb8bb2c4c43243ae63/tests/test_conformal_abstention.py",
+      "title": "laya implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/jaredpalmer/kev/blob/5e42a7a03f28134853dd3ff77461457e921e5ec1/kev/model.py",
+      "title": "kev implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/jaredpalmer/kev/blob/5e42a7a03f28134853dd3ff77461457e921e5ec1/tests/test_model.py",
+      "title": "kev implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/togethercomputer/tev1/blob/main/examples/decide.py",
+      "title": "tev1 implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/ozlabsai/typical/blob/main/inference/test_parity.py",
+      "title": "typical implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/bespokelabsai/nimble/blob/main/nimble/scoring/parallel_scorer.py",
+      "title": "nimble implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/bespokelabsai/nimble/blob/main/tests/test_parallel_scorer.py",
+      "title": "nimble implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/Yinsongxu/LLM2Jev/blob/main/examples/valen_sokoban_single_step.py",
+      "title": "llm2jev_yinsongxu implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/Yinsongxu/LLM2Jev/blob/main/README.md",
+      "title": "llm2jev_yinsongxu implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/tic-top/llm2jev/blob/main/llm2jev/backends.py",
+      "title": "llm2jev_tic_top implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/tic-top/llm2jev/blob/main/scripts/parity.py",
+      "title": "llm2jev_tic_top implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/ollaya-dev/ollaya",
+      "title": "ollaya repository",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/ollaya-dev/ollaya/blob/main/crates/ollaya-decision/src/lib.rs",
+      "title": "ollaya implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/ollaya-dev/ollaya/blob/main/crates/ollaya-decision/src/answer.rs",
+      "title": "ollaya implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/ollaya-dev/ollaya/blob/main/docs/api.md",
+      "title": "ollaya implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/fastino-ai/GLiNER2",
+      "title": "gliner2 repository",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/fastino-ai/GLiNER2/blob/main/gliner2/auto.py",
+      "title": "gliner2 implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/fastino-ai/GLiNER2/blob/main/gliner2/models/span/model.py",
+      "title": "gliner2 implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://huggingface.co/fastino/GLiNER2.5-Decide/blob/main/README.md",
+      "title": "gliner2 implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/hooks/winnow.ts",
+      "title": "winnow_context implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/tests/winnow.test.ts",
+      "title": "winnow_context implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/README.md",
+      "title": "winnow_context implementation evidence",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/ggml-org/llama.cpp",
+      "title": "llama_cpp repository",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/openai/openai-python",
+      "title": "openai_python repository",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/David-DL-Space/sys1-eval/blob/main/paper/analysis.py",
+      "title": "Fast Models, Slow Evidence: A Paired and Self-Audited Evaluation of System-1 Decision Models for LLM Agent Harnesses",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/build_cases_large.mjs",
+      "title": "Fast Models, Slow Evidence: A Paired and Self-Audited Evaluation of System-1 Decision Models for LLM Agent Harnesses",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/slim_routerbench.py",
+      "title": "Fast Models, Slow Evidence: A Paired and Self-Audited Evaluation of System-1 Decision Models for LLM Agent Harnesses",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://arxiv.org/abs/2609.37647",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://doi.org/10.5281/zenodo.23039006",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/jev_benchmarking/thresholds.py",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/results/eval/thresholds.json",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/results/eval/unfair_tos.json",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking/blob/main/docs/datasets.md",
+      "title": "Evaluating and Benchmarking the System One Model Jev",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://arxiv.org/html/2610.06625v2",
+      "title": "JEV versus LLMs: Accuracy, Cost and Calibration on Seven Political Science Replications",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/docs/WRITEUP.md",
+      "title": "winnow — calibrated context sieve for Claude Code",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/sidecar/src/winnow/questions.py",
+      "title": "winnow — calibrated context sieve for Claude Code",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/sidecar/src/winnow/replay.py",
+      "title": "winnow — calibrated context sieve for Claude Code",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/docs/results/2026-09-16/score-typesafe-strict-hand.json",
+      "title": "winnow — calibrated context sieve for Claude Code",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/GhalebDweikat/winnow/blob/main/docs/results/2026-09-16/score-typesafe-structured-hand.json",
+      "title": "winnow — calibrated context sieve for Claude Code",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://arxiv.org/pdf/2609.33401",
+      "title": "Evaluating System One Models for Agent Security Decisions: Reliability, Calibration, and Selective Automation",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/yxsec/system-one-security-eval/blob/main/analysis/threshold_sensitivity/analyze.py",
+      "title": "Evaluating System One Models for Agent Security Decisions: Reliability, Calibration, and Selective Automation",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/yxsec/system-one-security-eval/blob/main/protocol/analysis_plan.json",
+      "title": "Evaluating System One Models for Agent Security Decisions: Reliability, Calibration, and Selective Automation",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/yxsec/system-one-security-eval/blob/main/protocol/model_lock.json",
+      "title": "Evaluating System One Models for Agent Security Decisions: Reliability, Calibration, and Selective Automation",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/yxsec/system-one-security-eval/blob/main/results/threshold_sensitivity.csv",
+      "title": "Evaluating System One Models for Agent Security Decisions: Reliability, Calibration, and Selective Automation",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://arxiv.org/html/2609.24052v1",
+      "title": "Calibrated Decisions at Scale: Converting Police Crash Narratives into Probabilistic Crash Variables with a System One Model (Jev)",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/src/s08_cost_model.py",
+      "title": "Calibrated Decisions at Scale: Converting Police Crash Narratives into Probabilistic Crash Variables with a System One Model (Jev)",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/src/s07_metrics.py",
+      "title": "Calibrated Decisions at Scale: Converting Police Crash Narratives into Probabilistic Crash Variables with a System One Model (Jev)",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/data/cost_model.json",
+      "title": "Calibrated Decisions at Scale: Converting Police Crash Narratives into Probabilistic Crash Variables with a System One Model (Jev)",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    },
+    {
+      "url": "https://github.com/pozapas/jev-calibrated-narrative-coding/blob/master/data/gold/gold_design_report.json",
+      "title": "Calibrated Decisions at Scale: Converting Police Crash Narratives into Probabilistic Crash Variables with a System One Model (Jev)",
+      "checked_date_utc": "2026-10-08",
+      "aliases": []
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "schema": "decisions-lab.catalog/1",
+  "snapshot": "2026-10-08",
+  "source_root": "research/2026-10-08",
+  "groups": [
+    {
+      "id": "clients",
+      "title": "调用契约与 SDK",
+      "question": "怎样发出一个判断请求，并保留真实返回语义？",
+      "projects": [
+        "typesafe_python",
+        "typesafe_js",
+        "openai_python"
+      ]
+    },
+    {
+      "id": "models",
+      "title": "开放模型与决策头",
+      "question": "模型怎样把输入变成候选概率，哪些条件限制这种计算？",
+      "projects": [
+        "laya",
+        "kev",
+        "typical",
+        "tev1",
+        "nimble",
+        "gliner2"
+      ]
+    },
+    {
+      "id": "runtime",
+      "title": "本地 runtime 与兼容适配",
+      "question": "怎样在自己的机器上运行，协议转换改变了什么？",
+      "projects": [
+        "llama_cpp",
+        "ollaya",
+        "llm2jev_yinsongxu",
+        "llm2jev_tic_top",
+        "typesafe_adapter"
+      ]
+    },
+    {
+      "id": "workflows",
+      "title": "工作流与使用实践",
+      "question": "模型判断怎样进入工作流，失败后怎样找回原文？",
+      "projects": [
+        "winnow_context",
+        "workflow_evals",
+        "typesafe_examples"
+      ]
+    },
+    {
+      "id": "evidence",
+      "title": "评测与领域研究",
+      "question": "一个分数究竟测了什么，阈值与成本怎样复核？",
+      "projects": [
+        "sys1_eval",
+        "jev_benchmarking",
+        "security_eval",
+        "crash_coding"
+      ]
+    }
+  ],
+  "active_routes": [
+    {
+      "id": "typesafe-native-jev",
+      "entity": "typesafe_jev",
+      "purpose": "首项文本实验的原生概率契约参照",
+      "state": "adapter-candidate",
+      "live_verified": false
+    },
+    {
+      "id": "openai-native-decisions",
+      "entity": "openai_decisions",
+      "purpose": "首项文本实验的另一种原生请求与 refusal 契约",
+      "state": "adapter-candidate",
+      "live_verified": false
+    },
+    {
+      "id": "cloudflare-clef-flash",
+      "entity": "cloudflare_clef",
+      "purpose": "后续图文与本地/托管对照",
+      "state": "watch",
+      "live_verified": false
+    }
+  ],
+  "evidence_scope": "日期快照；source inspection 来自原调查。目录纳入不证明当前服务可用或推荐采用。",
+  "editorial_limits_zh": {
+    "laya": "默认窗口较短。支持多语言不意味着各语言准确率相同；决策头预算与长文本截断需要另测。",
+    "kev": "同一问题内部仍可能受选项顺序影响；微调在部分任务上退化，概率校准依赖输入分布。",
+    "typical": "preview 与当前版本的结果不能混算；旧版存在位置和早期证据偏差，公开 JevBench 子集也不是封闭排行榜。",
+    "tev1": "top-5 logprobs 不能当成完整的 255 选项分布；需保留 dev 集使用和权重许可的疑点。调查未执行上游测试。",
+    "nimble": "当前本地 checkpoint 的 8K/255 选项/T=1.0 与 demo 的 8K/26 选项/拟合温度不同；旧 benchmark 和温度不能直接迁移。",
+    "gliner2": "不能把全部 GLiNER 架构视作同一条推理路径，也不能推定其兼容 GLiDE；context 上限和 typed API 投影未完整核查。",
+    "ollaya": "当前 README 与源码注释对 llama.cpp 支持的描述存在新旧差异。运行成功、导出数值一致和任务质量要分别测。",
+    "llm2jev_yinsongxu": "逐候选 yes 概率重新归一化会改变含义，不能视作通用校准分类器；媒体与运行时一致性依赖具体版本。",
+    "llm2jev_tic_top": "调查记录了特定 vLLM/SGLang 版本的媒体忽略、计分与短音频问题。支持的是具体模型和后端组合，不是所有组合。",
+    "winnow_context": "hook 依赖客户端版本。过滤失败时保留原文适合保障上下文可用性，不能直接移植为安全授权的失败策略。"
+  },
+  "editorial_watchlist_zh": {
+    "SecJev": "论文及 Kev 衍生方向的研究线索；原始 checkpoint、仓库与许可尚未追清。",
+    "arXiv2610.00346 comparative decision-model sample": "比较研究线索；论文采用的市场样本不等于完整供应商普查。",
+    "Mapika Decider": "已找到原作者 GitHub；本期未做源码审计，具体家族、runtime 与许可仍待核。",
+    "JevK5, Winnow-E4B, Jeb/Jebadiah, Jeeves, Decima, Cygnet, Arbiter, Snap, Von": "运行时中出现了相应 adapter 名称；这不足以证明各模型的原厂身份、当前能力或许可，不能把 runtime 支持数当作原厂数量。",
+    "githubnext/localjev": "由 xuhaodev 的模型卡链接到此；本期未审读源码。",
+    "joyfox/Qwen3.5-0.8B-JEV": "模型卡发现项，涉及自定义 head/runtime；具体许可和契约尚未继续核查。",
+    "xuhaodev/Qwen3-1.7B-Jev": "同一中文作者家族的线索；本期主要审读 4B 模型卡，不能直接移植 4B 的能力结论。",
+    "browser-use/jev-ultrafast": "Laya README 中的原作者链接；可作为使用实践或微调方向继续看，本期未审计。",
+    "tycoding/jev-java-sdk": "名称含 Jev，但 README 指向通过 receptron/laya-onnx 运行本地 Laya；尚未证明它是 TypeSafe HTTP client，未纳入十项深读。",
+    "gliner-decide-metal": "Apple MLX runtime 线索；本期未审读代码。",
+    "Bespoke Nimble commercial API": "官网文本提取失败，条款提及 Nimble API；目前仅确认原仓库 public demo，不推断商业价格或 SLA。",
+    "Perplexity Decider v1.1 open weights": "已确认 v1.1 原生 API；其他来源提到的 v1 开放权重，不代表 v1.1 checkpoint 和许可相同。",
+    "Solar Decide Flash direct Upstage contract": "10 月 8 日确认了 OpenRouter 路线；原厂文档当时仅明确 solar-decide，Flash 直连接口待核。",
+    "EmpirioLabs Decide1, Decide1Omni, Aplomb1Omni legacy pages": "当前统一 Aplomb1 已核；搜索仍能找到旧页，不将旧名称自动计作不同的当前产品。",
+    "CJ-Dataset": "训练数据线索，不能计作模型供应商；混合、研究用途与非商用条款需要逐来源核查。",
+    "zh-decision-bench": "中文评测数据线索；本期未深入审读，也不是模型条目。",
+    "Chinese/regional vendors beyond Alibaba/Tencent": "调查没有形成穷尽性否定结论；确认 Alibaba/Tencent 不证明其他中国、日本或俄罗斯生态没有产品。"
+  }
+}

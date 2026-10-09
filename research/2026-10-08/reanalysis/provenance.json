@@ -1,0 +1,201 @@
+{
+  "as_of": "2026-10-08",
+  "title": "sys1-eval public historical records: offline reanalysis provenance",
+  "source_repository": "https://github.com/David-DL-Space/sys1-eval",
+  "source_paper": "https://arxiv.org/abs/2610.02267",
+  "observed_repository_tree_sha": "e74dfb6d99ed041f5f5240af386ba5272de84cdd",
+  "source_files": [
+    {
+      "path": "results/jev-all.jsonl",
+      "git_blob_sha": "5307076236168fd6cd479234bdad877b866b1a72",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/5307076236168fd6cd479234bdad877b866b1a72",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/results/jev-all.jsonl",
+      "bytes": 1795715
+    },
+    {
+      "path": "results/laya-all.jsonl",
+      "git_blob_sha": "1e2a041ebc911dc1e45b586c0fafef3c645db138",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/1e2a041ebc911dc1e45b586c0fafef3c645db138",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/results/laya-all.jsonl",
+      "bytes": 1634247
+    },
+    {
+      "path": "results/jev-large-flip.jsonl",
+      "git_blob_sha": "6d3381da254fe357eafa679dd666997c700d360b",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/6d3381da254fe357eafa679dd666997c700d360b",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/results/jev-large-flip.jsonl",
+      "bytes": 831175
+    },
+    {
+      "path": "results/laya-large-flip.jsonl",
+      "git_blob_sha": "30e41cc476f7f37babcac023aa6772c6d1e00f45",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/30e41cc476f7f37babcac023aa6772c6d1e00f45",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/results/laya-large-flip.jsonl",
+      "bytes": 924096
+    },
+    {
+      "path": "bench/cases-large-flip.jsonl",
+      "git_blob_sha": "28138d9b11c7883220de0129295ebc85d821b38b",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/28138d9b11c7883220de0129295ebc85d821b38b",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/bench/cases-large-flip.jsonl",
+      "bytes": 2838975
+    },
+    {
+      "path": "paper/numbers.json",
+      "git_blob_sha": "1eaf432881d8604912c72e41110f69668cb156ce",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/1eaf432881d8604912c72e41110f69668cb156ce",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/paper/numbers.json",
+      "bytes": 28903
+    },
+    {
+      "path": "scripts/build_cases_large.mjs",
+      "git_blob_sha": "b0307d47d72fa6b42936342b7417cfbf39b0ee23",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/b0307d47d72fa6b42936342b7417cfbf39b0ee23",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/build_cases_large.mjs",
+      "bytes": 13251
+    },
+    {
+      "path": "scripts/build_flip_large.mjs",
+      "git_blob_sha": "a972740e0892a552a73537bd4f122efcfe81a8b0",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/a972740e0892a552a73537bd4f122efcfe81a8b0",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/build_flip_large.mjs",
+      "bytes": 710
+    },
+    {
+      "path": "scripts/slim_routerbench.py",
+      "git_blob_sha": "f6cdbe4160ebe2086a95b6cf7995e73d63f4b7c2",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/f6cdbe4160ebe2086a95b6cf7995e73d63f4b7c2",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/scripts/slim_routerbench.py",
+      "bytes": 1617
+    },
+    {
+      "path": "DATA_LICENSE.md",
+      "git_blob_sha": "06e096fb8ad9bc6539995777c44b30024813429b",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/06e096fb8ad9bc6539995777c44b30024813429b",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/DATA_LICENSE.md",
+      "bytes": 1827
+    },
+    {
+      "path": "README.md",
+      "git_blob_sha": "cb799fdd2f4bb40371cd9f3a1c03007a254fd4a2",
+      "immutable_api_url": "https://api.github.com/repos/David-DL-Space/sys1-eval/git/blobs/cb799fdd2f4bb40371cd9f3a1c03007a254fd4a2",
+      "browse_url": "https://github.com/David-DL-Space/sys1-eval/blob/main/README.md",
+      "bytes": 4173
+    }
+  ],
+  "projection": {
+    "input_file": "sys1_order_inputs.jsonl",
+    "row_count": 1000,
+    "join": "Join author gold/IDs from cases-large-flip.jsonl to original and reversed response files by stable id; build_flip_large.mjs preserves id/gold.",
+    "retained_fields": [
+      "id",
+      "track",
+      "dataset",
+      "source_id_sha256",
+      "question_key",
+      "gold",
+      "candidate_count",
+      "model",
+      "choice",
+      "probabilities",
+      "confidence",
+      "usage",
+      "ms",
+      "attempts",
+      "ok"
+    ],
+    "excluded_fields": [
+      "benchmark prompt/state",
+      "tool/function descriptions",
+      "full question wording",
+      "free-text reasoning",
+      "source text",
+      "original source_id text, which can embed benchmark utterances"
+    ],
+    "statement": "All 4,000 retained response records have nonempty option probabilities, so maxP calculations use no confidence-field fallback.",
+    "source_id_transformation": "SHA256 of UTF-8 source_id; stable case IDs remain the join key. Labels and numerical predictions unchanged.",
+    "public_input_sha256": "ad965f2e76d73c1f2033fc178177d8d312e598aab1d1784a5e4feaca882b30f1",
+    "pre_transform_projection_sha256": "321d77a232e2d93e5b778c8a36416e39cf1c3ddf516949d584d2184bd5334e83"
+  },
+  "tracks": {
+    "A_model_router": {
+      "n": 400,
+      "answer_type": "single-choice",
+      "candidate_count": 2,
+      "candidate_count_source": "derived from route choices; original option_count metadata is null",
+      "gold": "200 cheap_score>=0.5 and strong_score>=0.5; 200 cheap_score<0.5 and strong_score>=0.5, selected by eval-name stratification; pilot IDs excluded",
+      "historical_cheap_model": "mistralai/mistral-7b-chat",
+      "historical_strong_model": "gpt-4-1106-preview",
+      "model_descriptions_given": "generic small fast 7B chat model vs frontier model; historical model identities not provided in the question",
+      "state": "Clean serialized prompt; clip to first 1500 JavaScript characters including trailing ellipsis then prepend Request:\\n",
+      "observed_truncated": 17,
+      "original_questions": [
+        "route",
+        "difficulty"
+      ],
+      "reversed_questions": [
+        "route"
+      ],
+      "caveat": "Order intervention also removes the score question. Gold comes from historical RouterBench outcomes, not measured performance of current target models."
+    },
+    "B_tool_selection": {
+      "n": 400,
+      "answer_type": "single-choice",
+      "datasets": {
+        "BFCL_v3_simple": 266,
+        "BFCL_v3_live_simple": 134
+      },
+      "candidate_count_distribution": {
+        "2": 80,
+        "5": 80,
+        "10": 80,
+        "20": 80,
+        "50": 80
+      },
+      "description": "Random distractor tool selection; paper's nearest-neighbor control is a different experiment.",
+      "original_and_reversed_question": "tool"
+    },
+    "F_cardinality_multilingual": {
+      "n": 200,
+      "answer_type": "single-choice intent classification, not multi-label",
+      "datasets": {
+        "BANKING77": 100,
+        "MASSIVE-intent": 100
+      },
+      "candidate_count_distribution": {
+        "60": 100,
+        "77": 100
+      },
+      "massive_languages_each_n10": [
+        "en",
+        "zh-CN",
+        "ja",
+        "de",
+        "ar",
+        "fr",
+        "es",
+        "ko",
+        "pt",
+        "hi"
+      ],
+      "original_and_reversed_question": "intent"
+    }
+  },
+  "verification": {
+    "method": "Independent standard-library Python recalculation of accuracy, answer-change counts and high-confidence errors; compared with author_numbers.json; no author analysis imported.",
+    "model_inference": false,
+    "network_calls_in_recomputation": false,
+    "live_versions_tested": false
+  },
+  "reuse": {
+    "author_code": "MIT",
+    "author_outputs": "README states CC BY 4.0; DATA_LICENSE adds 'as far as providers terms allow'.",
+    "underlying_benchmark_inputs": "Retain their individual original licenses; this projection does not redistribute their text.",
+    "attribution": "Jiawei Li (2026), Fast Models, Slow Evidence; David-DL-Space/sys1-eval. Original model-output/provenance licenses remain relevant to downstream reuse."
+  },
+  "independent_findings": [
+    "Main raw counts reproduce author tables for 1000 cases.",
+    "The A order-flip intervention has an additional question-set change; B/F are the cleaner candidate-order comparisons.",
+    "Do not generalize historical, generic-description routing results to all current routing deployments."
+  ]
+}

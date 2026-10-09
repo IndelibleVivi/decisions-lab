@@ -1,0 +1,415 @@
+{
+  "as_of_utc": "2026-10-08",
+  "repositories": [
+    {
+      "id": "laya",
+      "repo": "https://github.com/NandhaKishorM/laya",
+      "owner_role": "Model originator and multi-runtime serving/training stack",
+      "category": "encoder typed heads + calibration/abstention",
+      "maturity": "Released package with extensive tests/golden fixtures and explicit remaining limitations; no production SLA inferred",
+      "license": "Apache-2.0 per repo/model",
+      "revision": "3cf26cbcb18725dbc2d127bb8bb2c4c43243ae63",
+      "mechanism": "A small encoder classifies multiple named questions; router selects English/multilingual/domain checkpoint. Separate answer_confidence and entropy confidence; per option-count and question-type abstention buckets.",
+      "evidence": [
+        {
+          "url": "https://github.com/NandhaKishorM/laya/blob/3cf26cbcb18725dbc2d127bb8bb2c4c43243ae63/laya/confidence.py",
+          "finding": "answer_confidence_value uses max(p), warns only calibration on held-out deployment-like data earns correctness interpretation; multilingual ships no fitted temperature. Defines bucket validation/resolution and explicit abstention states.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/NandhaKishorM/laya/blob/3cf26cbcb18725dbc2d127bb8bb2c4c43243ae63/tests/test_conformal_abstention.py",
+          "finding": "Checks invalid/unreachable bucket keys and end-to-end gating when confidence is histogram-recalibrated, including coverage loss from global thresholds.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Demonstrates calibration and abstention must be fitted with the actual runtime confidence scale, not pasted from model marketing.",
+      "limits": "Short default windows; multi-language statement is not equal accuracy in100+languages; head budget/long-text truncation require explicit validation.",
+      "summary_role": "模型 + runtime",
+      "summary_value": "校准、confidence、按题型 / 候选数分桶 abstention",
+      "summary_inspection": "固定 revision 源码 / 测试定义已读"
+    },
+    {
+      "id": "kev",
+      "repo": "https://github.com/jaredpalmer/kev",
+      "owner_role": "Model originator; training, serving, evaluation, release artifacts",
+      "category": "LoRA + pointer head + shared prefix",
+      "maturity": "Tagged Kev1.0 family and snapshot/revision support; frozen suites; source-rich research release",
+      "license": "Apache-2.0, dataset terms separate",
+      "revision": "5e42a7a03f28134853dd3ff77461457e921e5ec1",
+      "mechanism": "LoRA plus learned pointer head reading decide/option representations. Branch masking or shared-prefix rows depending on base architecture; fitted temperatures persisted percheckpoint.",
+      "evidence": [
+        {
+          "url": "https://github.com/jaredpalmer/kev/blob/5e42a7a03f28134853dd3ff77461457e921e5ec1/kev/model.py",
+          "finding": "PointerHead explicitly divides inference logits by fitted checkpoint temperature; ContextOverflow and admission separate training/serving budgets; branch mask isolates question branches.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/jaredpalmer/kev/blob/5e42a7a03f28134853dd3ff77461457e921e5ec1/tests/test_model.py",
+          "finding": "Tests merged/unmerged LoRA parity, prefix-cache/full-pass parity and cache reuse, state/branch overflow, row batching versus packed outputs with numeric tolerances.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Good reusable pattern for proving optimization preserves distributions and question independence; hardware support is not validated context quality.",
+      "limits": "README says option order can still matter within a question. Fine-tuning hurts some tasks. Probability calibration is distribution-dependent.",
+      "summary_role": "模型 + 训练 / serving",
+      "summary_value": "pointer head、共享前缀、优化路径概率一致性",
+      "summary_inspection": "固定 revision 源码 / 测试定义已读"
+    },
+    {
+      "id": "tev1",
+      "repo": "https://github.com/togethercomputer/tev1",
+      "owner_role": "Together model/training recipe and reference inference",
+      "category": "small autoregressive answer-token classification",
+      "maturity": "Explicit experimental checkpoint; training and saved-run artifacts; direct example inspected",
+      "license": "Code MIT; model-card weight license not finalized",
+      "mechanism": "Serializes state/question/options into an instruct prompt, requests next answer letter through ChatCompletions; no dedicated scalar head needed in reference.",
+      "evidence": [
+        {
+          "url": "https://github.com/togethercomputer/tev1/blob/main/examples/decide.py",
+          "finding": "Validates2–24options; sets temperature0,max_tokens8,logprobs/top_logprobs5 and disables thinking. Parses answer letter via select().",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Boundary example: Decisions model can use token decoding; route-native structured response can wrap different primitive underneath.",
+      "limits": "Top5 logprobs cannot be assumed a complete255-way distribution. Benchmark dev use and weight licensing need retention as caveats. Guessed tests/test_inference.py path returned404; no test execution claimed.",
+      "summary_role": "模型 + 参考推理",
+      "summary_value": "next-token 字母分类、Chat Completions 参考实现",
+      "summary_inspection": "decide.py / 模型卡；权重许可待定"
+    },
+    {
+      "id": "typical",
+      "repo": "https://github.com/ozlabsai/typical",
+      "owner_role": "Model originator plus standalone inference library",
+      "category": "native contextual candidate head + factored null",
+      "maturity": "Public releases with detailed research history and documented fixes; research-grade with known bias/data-license caveats",
+      "license": "Release notes labelweightsApache2 but explicitly flag uncertain and non-commercial training-source terms",
+      "mechanism": "State cached once, expanded per question without aliasing; explicit null separates unsupported answers; current Noul uses dedicated Bernoulli head instead of order-sensitive yes/no candidates.",
+      "evidence": [
+        {
+          "url": "https://github.com/ozlabsai/typical/blob/main/inference/test_parity.py",
+          "finding": "Tests cache expansion versus deepcopy and non-aliasing; compares public inference wrapper against internal decider; reverses Noul labels and tests invariant probabilities. Preview uses different Choice head path.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/ozlabsai/typical/blob/main/releases/typical-small.md",
+          "finding": "Records model/version-specific architecture, shifted training/data sources, known failures, and unresolved license caveats.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Abstention and label-order tests are architecture-specific; neither compatibility nor family name implies previous checkpoint's semantics.",
+      "limits": "Do not pool preview/current results. Prior releases had positional and early-evidence issues; reportedJevBench is publicsubset, not sealed leaderboard.",
+      "summary_role": "模型 + inference",
+      "summary_value": "state cache、factored null、Noul 不变性",
+      "summary_inspection": "parity 测试定义 / release notes"
+    },
+    {
+      "id": "nimble",
+      "repo": "https://github.com/bespokelabsai/nimble",
+      "owner_role": "Bespoke model, contrastive-data recipe, inference and public demo",
+      "category": "allowed-token scoring + parallel cached suffixes",
+      "maturity": "Published weights, current/original version separation, data and held-out artifacts; serving demos not production SLA",
+      "license": "Apache-2.0 model",
+      "mechanism": "MLX ParallelScorer broadcasts prefix caches and batches question suffixes; candidate-only final projection avoids full vocabulary work. Independent/CachedSerial/Parallel modes support parity control.",
+      "evidence": [
+        {
+          "url": "https://github.com/bespokelabsai/nimble/blob/main/nimble/scoring/parallel_scorer.py",
+          "finding": "Implements three evaluation modes and explicit candidate projection; warns cache broadcasting can allocate and stock append may materialize batch arrays.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/bespokelabsai/nimble/blob/main/tests/test_parallel_scorer.py",
+          "finding": "Tests unequal suffix-length parity, microbatch/one-field behavior, cache not mutated by branches and candidate-only versus full projection.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Shows billing/performance assumptions must follow runtime: MLX prefix sharing differs from PyTorch per-field re-read. Version-specific calibration must be pinned.",
+      "limits": "Current checkpoint8K/255/T1.0 differs from demo doc8K/26/fittedT; earlier benchmark and temperature figures cannot transfer unqualified.",
+      "summary_role": "模型 + runtime",
+      "summary_value": "候选投影、并行后缀、不污染缓存",
+      "summary_inspection": "源码 / 测试定义；demo 另列"
+    },
+    {
+      "id": "llm2jev_yinsongxu",
+      "repo": "https://github.com/Yinsongxu/LLM2Jev",
+      "owner_role": "Independent generic-model retrofit/runtime; not model originator",
+      "category": "candidate-wise yes/no scoring and normalization",
+      "maturity": "Public package with backend docs/tests and visual-agent evaluation; current research/developer tool",
+      "license": "Apache-2.0",
+      "mechanism": "Each candidate scored as an independent yes/no task, then normalized. Text/image backends SGLang,Transformers,MLX; bounded prefix reuse and compatibleHTTPsurface.",
+      "evidence": [
+        {
+          "url": "https://github.com/Yinsongxu/LLM2Jev/blob/main/examples/valen_sokoban_single_step.py",
+          "finding": "Single-step evaluator gathers backend yes_probabilities per candidate, L1-normalizes and chooses argmax; supports option rotations/ensembling, tie-aware optimal action targets, legality and push metrics.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/Yinsongxu/LLM2Jev/blob/main/README.md",
+          "finding": "Declares backend support/HTTP endpoint and separate single-step500-questionSokoban evaluation; includesunittestentrypoint.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Candidate-wise independent yes/no is a different probabilistic construction from one K-way token softmax; tie-aware action evaluation matters in games.",
+      "limits": "Does not supply universal calibrated classifier; re-normalizingcandidate yes scores changes meaning. Media/runtime parity remains version-specific.",
+      "summary_role": "通用模型适配",
+      "summary_value": "逐候选 yes/no 后归一；视觉动作等价解评估",
+      "summary_inspection": "原作者示例代码已读"
+    },
+    {
+      "id": "llm2jev_tic_top",
+      "repo": "https://github.com/tic-top/llm2jev",
+      "owner_role": "Independent retrofit/runtime; formerlyAnyJev; distinct from Yinsongxu project",
+      "category": "single-position label-token softmax",
+      "maturity": "Public backend matrix plus executable parity script with known failure cases",
+      "license": "MIT per repo",
+      "mechanism": "Renders all options in one prompt and reads allowed label token logprobs at one position; temp softmax givesdistribution; startup checks labels tokenize as one token. Choiceargmax/Scoreexpectedindex/entropyconfidence.",
+      "evidence": [
+        {
+          "url": "https://github.com/tic-top/llm2jev/blob/main/llm2jev/backends.py",
+          "finding": "HF/MLX read last-position logits; vLLM chunks requested token IDs when sets exceed chunk size, reusingprefix; media uses different endpoint; backend-specific actual prefill can differ.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/tic-top/llm2jev/blob/main/scripts/parity.py",
+          "finding": "Compares exact rendered prompts againstTransformer reference using logprob gap, probability gap andargmax; includes image/video/audio probes; exits nonzeroonfail.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Strong example of testing an ostensibly compatible inference stack against reference probabilities, including media handling.",
+      "limits": "README documents vLLM0.26acceptingbutignoringmedia; SGLang0.5.9Qwen3.6wrongscoring; shortaudioattentionmask issue. Supportsbackend/version combinations, not all models on all backends.",
+      "summary_role": "通用模型适配",
+      "summary_value": "单位置候选 token softmax；backend / media parity",
+      "summary_inspection": "后端代码 / parity 脚本已读"
+    },
+    {
+      "id": "ollaya",
+      "repo": "https://github.com/ollaya-dev/ollaya",
+      "owner_role": "Local model manager/runtime/gateway; original weights belong to model authors",
+      "category": "download/provenance + ONNX/GGUF + protocol projection",
+      "maturity": "Multi-platform releases; Rust workspace, source-specific adapters and parity/golden-artifact pipeline",
+      "license": "Apache-2.0 runtime; every bundled/referencedmodel retainsownlicense",
+      "mechanism": "Daemon pulls original-author revision/hash-pinned weights; engine-neutral question/calibration/answer layer translates family logits into native,TypeSafe andLaya response contracts.",
+      "evidence": [
+        {
+          "url": "https://github.com/ollaya-dev/ollaya/blob/main/crates/ollaya-decision/src/lib.rs",
+          "finding": "Enumerates separate model-family implementations, typed question parsing, calibration and head budget errors; repository existence is not proof each backend currently works.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/ollaya-dev/ollaya/blob/main/crates/ollaya-decision/src/answer.rs",
+          "finding": "One distribution has two namedconfidence projections:normalizedtopprobabilityforTypeSafe=(K*pmax−1)/(K−1);normalizedentropyforLaya=1−H/logK. Scoreisexpectedindex; mapswirefields.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/ollaya-dev/ollaya/blob/main/docs/api.md",
+          "finding": "Documentsdaemon API/model management andengineconstraints; READMEdescribesexport parity/goldenfixturepipeline.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "A runtime is not a new model. Protocol projection can change confidence while underlying probabilities remain identical.",
+      "limits": "README's llama.cpp support is current; lib.rsdoccommentstill saysllama.cpp later—source/docstaleness retained. Runtime success, export numerical agreement and deployment task quality must be measured separately.",
+      "summary_role": "模型管理 / runtime",
+      "summary_value": "权重谱系、ONNX / GGUF、协议投影",
+      "summary_inspection": "Rust 回答层已读"
+    },
+    {
+      "id": "gliner2",
+      "repo": "https://github.com/fastino-ai/GLiNER2",
+      "owner_role": "Fastino extraction/classification model library; GLiNER2.5-Decide implementation family",
+      "category": "schema-driven encoder task heads",
+      "maturity": "Published library/modelcards; architecture-dispatchcompatibilitycode inspected; no test-run evidence in this workstream",
+      "license": "GLiNER2.5-DecideweightsApache2; code license not separatelyread",
+      "mechanism": "AutoExtractor reads model architectureconfig and dispatches to registeredspan/boundary extractor class; supports schema-definedclassification includingmultipleheads/multilabel.",
+      "evidence": [
+        {
+          "url": "https://github.com/fastino-ai/GLiNER2/blob/main/gliner2/auto.py",
+          "finding": "Registry-based architecture dispatch with UnknownArchitecture/ArchitectureMismatcherrors and model-loadingkwargsvalidation.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/fastino-ai/GLiNER2/blob/main/gliner2/models/span/model.py",
+          "finding": "ConcreteSpanExtractorModel implementation and structured forward/loss branches; legacygliner2/model.pyisashim,notdecisionlogic.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://huggingface.co/fastino/GLiNER2.5-Decide/blob/main/README.md",
+          "finding": "Describes English340MDecide, single-label versus thresholdmultilabel andspecializedoperationaltasks.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Expands scope beyondnou/choice/scoretrio; multi-label classifiers have ownthreshold/cardinalityevaluation ratherthanforcedK-waysoftmax.",
+      "limits": "Do not claimallGLiNERarchitecturepaths identical or GLiDEcompatible; contextlimit andtypedDecisionAPIprojectionnotfullyaudited.",
+      "summary_role": "schema 分类 / 提取",
+      "summary_value": "模型架构分发、encoder、多标签分类",
+      "summary_inspection": "AutoExtractor / 具体实现已读"
+    },
+    {
+      "id": "winnow_context",
+      "repo": "https://github.com/GhalebDweikat/winnow",
+      "owner_role": "DownstreamClaudeCodepractice; nottheWinnowE4Bmodeloriginator",
+      "category": "context selection, shadow rollout, recall andfail-open hook",
+      "maturity": "Pluginwithsource/tests,replayandmanual-labelworkflow; runtimehookAPIversion-sensitive",
+      "license": "Repo license file not separatelyread in this stream",
+      "mechanism": "Recoverable tool-output filtering with shadow and replay. Label evidence separates transcript-derived weak labels, Claude-assisted decided labels, and a later small human audit.",
+      "evidence": [
+        {
+          "url": "https://github.com/GhalebDweikat/winnow/blob/main/hooks/winnow.ts",
+          "finding": "Hook interceptsandforwardstoolresult,asks sidecar tofilterlargeoutputsandaddscontextatprompttime;sharedrestart/backofflogicpresent.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/GhalebDweikat/winnow/blob/main/tests/winnow.test.ts",
+          "finding": "Tests unreachable sidecar passesoriginaltoolresult unchanged,smallresultanddeniedcallpass-through,promptunchangedwhenunreachable,coalescedrestartandbackoff.",
+          "inspection": "source read; tests not run"
+        },
+        {
+          "url": "https://github.com/GhalebDweikat/winnow/blob/main/README.md",
+          "finding": "Replay/labelcommands and discussioncalibrationplusdiscrimination; shadow/activeoperation andrecall controls.",
+          "inspection": "source read; tests not run"
+        }
+      ],
+      "practical_value": "Retain original content, replay decisions and independently evaluate missed-needed context; preserve the label provenance.",
+      "limits": "Functionhooksareclient-versiondependent; a passes-untouchedfallback is appropriateforcontextfilteravailability, notnecessarilyforsecurityauthorization.",
+      "label_provenance_correction": "The 97 decided 'hand' labels in historical score files are model-assisted; see practice_evidence.json and the original DESIGN.",
+      "summary_role": "下游工作流",
+      "summary_value": "shadow、回放、原文 recall、hook 失效处理",
+      "summary_inspection": "hook / policy / 模型辅助标签来源已读"
+    },
+    {
+      "id": "llama_cpp",
+      "repo": "https://github.com/ggml-org/llama.cpp",
+      "summary_role": "本地 runtime",
+      "summary_value": "原生 System One、Clef 图像、joint schema",
+      "summary_inspection": "正式发行 / 当前文档 / merged PR",
+      "license": "模型各自许可；runtime 许可见原仓库",
+      "source_aliases": [
+        "llama-release",
+        "llama-api",
+        "llama-vision"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "typesafe_python",
+      "repo": "https://github.com/typesafe-ai/typesafe-sdk-python",
+      "summary_role": "原厂 SDK",
+      "summary_value": "同步 / 异步、typed answers、重试、HTTP/2",
+      "summary_inspection": "README / 原厂代码资料审读",
+      "license": "MIT 客户端；不含 Jev 权重",
+      "source_aliases": [
+        "R01"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "typesafe_js",
+      "repo": "https://github.com/typesafe-ai/typesafe-sdk-js",
+      "summary_role": "原厂 SDK",
+      "summary_value": "由 questions 推断答案类型",
+      "summary_inspection": "README / 类型接口资料审读",
+      "license": "MIT 客户端",
+      "source_aliases": [
+        "R02"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "typesafe_adapter",
+      "repo": "https://github.com/typesafe-ai/system-one-adapter-python",
+      "summary_role": "生成模型对照",
+      "summary_value": "普通 LLM 接入问题契约；重试与原始输出",
+      "summary_inspection": "相关代码 / 说明已读",
+      "license": "MIT",
+      "source_aliases": [
+        "adapter"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "workflow_evals",
+      "repo": "https://github.com/typesafe-ai/WorkflowEvals",
+      "summary_role": "工作流评测",
+      "summary_value": "版本、恢复、参考模型、usage、缺价处理",
+      "summary_inspection": "README / 工作流结构审读",
+      "license": "Apache-2.0 代码；数据各自来源",
+      "source_aliases": [
+        "workflow"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "typesafe_examples",
+      "repo": "https://github.com/typesafe-ai/typesafe-public-examples",
+      "summary_role": "原厂实践",
+      "summary_value": "fan-out、RAG passage 示例",
+      "summary_inspection": "原厂归属 / 结构确认",
+      "license": "MIT",
+      "source_aliases": [
+        "jev-examples"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "openai_python",
+      "repo": "https://github.com/openai/openai-python",
+      "summary_role": "原厂 SDK",
+      "summary_value": "Decisions 请求类型、refusal、响应类型",
+      "summary_inspection": "资源 / 类型文件；已记录 blob SHA",
+      "license": "本轮未单独审阅许可证文件",
+      "source_aliases": [
+        "OAI-SDK",
+        "OAI-PARAMS",
+        "OAI-RESP"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "sys1_eval",
+      "repo": "https://github.com/David-DL-Space/sys1-eval",
+      "summary_role": "比较评测",
+      "summary_value": "成对输出、输入构造、顺序干预、成本",
+      "summary_inspection": "源码 + 1,000 案例独立离线复算",
+      "license": "MIT 代码；输出 / 底层数据另列",
+      "source_aliases": [
+        "sys1-repo"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "jev_benchmarking",
+      "repo": "https://github.com/AppliedMachineLearning-Lab/jev-benchmarking",
+      "summary_role": "公开任务评测",
+      "summary_value": "冻结模板、hash cache、阈值 / 测试分开",
+      "summary_inspection": "相关源码 / 汇总已读",
+      "license": "MIT 代码；响应另有 Jev Responses License",
+      "source_aliases": [
+        "jev37-repo"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "security_eval",
+      "repo": "https://github.com/yxsec/system-one-security-eval",
+      "summary_role": "选择性自动化",
+      "summary_value": "allow / block 阈值、分区、错误互补性",
+      "summary_inspection": "阈值代码 / 汇总 / 审计说明",
+      "license": "本轮未单独审阅许可证文件",
+      "source_aliases": [
+        "security-repo"
+      ],
+      "upstream_inference_or_tests_executed": false
+    },
+    {
+      "id": "crash_coding",
+      "repo": "https://github.com/pozapas/jev-calibrated-narrative-coding",
+      "summary_role": "规模化领域实践",
+      "summary_value": "抽样加权、分阶段成本、总体外推",
+      "summary_inspection": "指标 / 成本代码 / 汇总已读",
+      "license": "原始叙述不随包公开；仅审代码 / 汇总",
+      "source_aliases": [
+        "crash-repo"
+      ],
+      "upstream_inference_or_tests_executed": false
+    }
+  ],
+  "boundary": "Source and test-definition inspection is distinct from model execution. Our own offline arithmetic was executed."
+}

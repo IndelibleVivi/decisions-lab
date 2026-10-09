@@ -1,0 +1,357 @@
+{
+  "suite": "next-action",
+  "version": 1,
+  "provenance": "Original synthetic tasks authored for this lab. No benchmark data copied. Public-doc-style text only; no private or account data.",
+  "cases": [
+    {
+      "id": "relnote-field-zh",
+      "source_group": "release-notes-v2",
+      "split": "dev",
+      "task": {
+        "document": "发布说明 v2.1：新增字段 `retry_after_ms`，默认 0 表示不重试；该字段替代旧的 `retry_ms`。旧的 `retry_ms` 将在 v3 移除。",
+        "question": "应采取的下一步阅读/核对动作是什么？",
+        "claim": "这次发布说明只是文档措辞调整，不影响调用方接口。",
+        "source_ref": "https://example.invalid/releases/v2.1"
+      },
+      "acceptable": ["compare_contract", "inspect_source"],
+      "rationale": "文档声明字段替换并计划移除旧字段，属于接口/契约变化；应先对照契约，也可先核对发布说明原文。两者都合理，故不强制唯一答案。",
+      "notes": "negation/renaming; acceptable 有两个合理动作。"
+    },
+    {
+      "id": "relnote-field-en",
+      "source_group": "release-notes-v2",
+      "split": "dev",
+      "task": {
+        "document": "Release notes v2.1: adds field `retry_after_ms`, default 0 meaning no retry; it replaces the old `retry_ms`. The old `retry_ms` will be removed in v3.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "This release note is wording-only and does not affect caller-facing interfaces.",
+        "source_ref": "https://example.invalid/releases/v2.1"
+      },
+      "acceptable": ["compare_contract", "inspect_source"],
+      "rationale": "Same source as the Chinese variant, so it stays in the same source_group/split. The declared replacement + removal is a contract change; compare_contract or inspecting the source are both defensible.",
+      "notes": "language variant of release-notes-v2, kept in same split."
+    },
+    {
+      "id": "relnote-field-mix",
+      "source_group": "release-notes-v2",
+      "split": "dev",
+      "task": {
+        "document": "v2.1 notes: 新增 `retry_after_ms`（默认 0 = no retry），deprecates `retry_ms`，removal planned for v3。",
+        "question": "下一步应 read_in_context 还是 compare_contract？",
+        "claim": "字段更名对调用方无影响。",
+        "source_ref": "https://example.invalid/releases/v2.1"
+      },
+      "acceptable": ["compare_contract", "inspect_source"],
+      "rationale": "Same source in a code-switched surface form; grouped with the other relnote variants. Contract-first is the strongest action, source inspection also acceptable.",
+      "notes": "code-switching variant."
+    },
+    {
+      "id": "api-doc-newparam-en",
+      "source_group": "api-guide-quota",
+      "split": "test",
+      "task": {
+        "document": "API guide: requests now require header `X-Quota-Tier`. Requests without it are rejected with 400. The value must be one of free, pro, enterprise.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "Existing integrations keep working unchanged.",
+        "source_ref": "https://example.invalid/api/guide/quota"
+      },
+      "acceptable": ["compare_contract"],
+      "rationale": "A newly required request field with an enumerated value set is a hard interface contract change; comparing against the integration contract is the clear next action.",
+      "notes": "required new field; single strong action."
+    },
+    {
+      "id": "api-doc-newparam-zh",
+      "source_group": "api-guide-quota",
+      "split": "test",
+      "task": {
+        "document": "API 指南：请求现在必须带请求头 `X-Quota-Tier`，缺失时返回 400；取值必须是 free、pro、enterprise 之一。",
+        "question": "下一步应采取的阅读/核对动作？",
+        "claim": "既有集成无需改动即可继续工作。",
+        "source_ref": "https://example.invalid/api/guide/quota"
+      },
+      "acceptable": ["compare_contract"],
+      "rationale": "同一来源的中文变体，保持同一 split。新增必填字段且枚举取值，属于契约变化。",
+      "notes": "language variant of api-guide-quota."
+    },
+    {
+      "id": "changelog-breaking-en",
+      "source_group": "changelog-breaking",
+      "split": "dev",
+      "task": {
+        "document": "Changelog: DEFAULT_TIMEOUT changed from 30s to 10s. This is a breaking change for long-running callers.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "No behavior change; only internal constant.",
+        "source_ref": "https://example.invalid/changelog#timeout"
+      },
+      "acceptable": ["compare_contract", "read_in_context"],
+      "rationale": "Documented breaking default change: the claim contradicts the document, so contract comparison is primary; reading callers in context is also reasonable.",
+      "notes": "claim contradicts document."
+    },
+    {
+      "id": "changelog-breaking-zh",
+      "source_group": "changelog-breaking",
+      "split": "dev",
+      "task": {
+        "document": "变更日志：DEFAULT_TIMEOUT 由 30s 改为 10s，对长耗时调用方是破坏性变更。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "无行为变化，只是内部常量。",
+        "source_ref": "https://example.invalid/changelog#timeout"
+      },
+      "acceptable": ["compare_contract", "read_in_context"],
+      "rationale": "同一来源中文变体，同一 split。文档声明破坏性变更，claim 与之矛盾。",
+      "notes": "language variant."
+    },
+    {
+      "id": "missing-doc-placeholder-zh",
+      "source_group": "missing-spec",
+      "split": "dev",
+      "task": {
+        "document": "规范草稿：超时策略见 <TBD>，错误码表 待补充。",
+        "question": "下一步应采取的阅读/核对动作？",
+        "claim": "超时策略已经确定。",
+        "source_ref": ""
+      },
+      "acceptable": ["needs_more_context"],
+      "rationale": "文档含占位符且关键表缺失，无法核对；需要先补齐上下文。needs_more_context 是唯一稳妥动作。",
+      "notes": "missing source/context."
+    },
+    {
+      "id": "missing-doc-empty-en",
+      "source_group": "missing-spec",
+      "split": "dev",
+      "task": {
+        "document": "Spec draft: timeout policy is [missing]; error code table omitted.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "The timeout policy is settled.",
+        "source_ref": ""
+      },
+      "acceptable": ["needs_more_context"],
+      "rationale": "Same source as the Chinese placeholder variant. Placeholders and omissions leave nothing to inspect; more context is required.",
+      "notes": "language variant of missing-spec."
+    },
+    {
+      "id": "naming-overlap-noapply-en",
+      "source_group": "name-overlap",
+      "split": "test",
+      "task": {
+        "document": "Module `retry` exists in package `net.retry` for connection retries. This change touches `retry`, which is the unrelated string-formatting helper in package `fmt.retry`.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "The change affects connection retry behavior.",
+        "source_ref": "https://example.invalid/commit/abc123"
+      },
+      "acceptable": ["inspect_source", "needs_more_context"],
+      "rationale": "Same name, different module: the claim misapplies the change. Inspecting the actual source/diff to confirm scope is primary; needing more context is also defensible.",
+      "notes": "naming overlap without applicability."
+    },
+    {
+      "id": "naming-overlap-noapply-zh",
+      "source_group": "name-overlap",
+      "split": "test",
+      "task": {
+        "document": "`net.retry` 包里有连接重试模块 `retry`。本次改动涉及 `retry`，但那是 `fmt.retry` 包里无关的字符串格式化辅助函数。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "本次改动影响连接重试行为。",
+        "source_ref": "https://example.invalid/commit/abc123"
+      },
+      "acceptable": ["inspect_source", "needs_more_context"],
+      "rationale": "同一来源中文变体，同一 split。同名不同模块，claim 张冠李戴。",
+      "notes": "language variant."
+    },
+    {
+      "id": "conditional-flag-en",
+      "source_group": "conditional-feature",
+      "split": "dev",
+      "task": {
+        "document": "Feature flag `async_jobs` is enabled only when `PLAN` is enterprise. If PLAN != enterprise, the new async path is not used.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "All users now get async jobs.",
+        "source_ref": "https://example.invalid/docs/flags"
+      },
+      "acceptable": ["read_in_context"],
+      "rationale": "Conditional gating: the correct judgment depends on the caller's plan context, so reading in context is the primary action.",
+      "notes": "conditional change."
+    },
+    {
+      "id": "conditional-flag-zh",
+      "source_group": "conditional-feature",
+      "split": "dev",
+      "task": {
+        "document": "特性开关 `async_jobs` 仅在 `PLAN` 为 enterprise 时启用；若 PLAN != enterprise，则不使用新的异步路径。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "所有用户都将获得异步任务。",
+        "source_ref": "https://example.invalid/docs/flags"
+      },
+      "acceptable": ["read_in_context"],
+      "rationale": "同一来源中文变体，同一 split。条件门控，需结合调用方上下文判断。",
+      "notes": "language variant."
+    },
+    {
+      "id": "multi-action-scope-en",
+      "source_group": "scoped-deprecation",
+      "split": "test",
+      "task": {
+        "document": "Deprecation notice: endpoint `/v1/search` is deprecated; `/v1/query` is the replacement. Deprecation is announced but no removal date is given.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "We should migrate all callers now.",
+        "source_ref": "https://example.invalid/deprecations"
+      },
+      "acceptable": ["inspect_source", "compare_contract", "read_in_context"],
+      "rationale": "A deprecation with no removal date is genuinely multi-action: inspect the notice, compare the two endpoint contracts, or read current callers in context are all defensible. The lab must not fabricate a unique answer.",
+      "notes": "multiple acceptable actions."
+    },
+    {
+      "id": "multi-action-scope-zh",
+      "source_group": "scoped-deprecation",
+      "split": "test",
+      "task": {
+        "document": "弃用通知：接口 `/v1/search` 已弃用，替代为 `/v1/query`。仅宣布弃用，未给出移除日期。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "我们应立刻迁移所有调用方。",
+        "source_ref": "https://example.invalid/deprecations"
+      },
+      "acceptable": ["inspect_source", "compare_contract", "read_in_context"],
+      "rationale": "同一来源中文变体，同一 split。多个合理动作。",
+      "notes": "language variant."
+    },
+    {
+      "id": "clarify-in-response-en",
+      "source_group": "ambiguous-response-shape",
+      "split": "dev",
+      "task": {
+        "document": "Response shape: on success returns {items:[...]}. On partial failure returns {items:[...], errors:[...]}. The doc does not say whether `errors` is always present.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "`errors` is always present.",
+        "source_ref": "https://example.invalid/api/response"
+      },
+      "acceptable": ["compare_contract", "needs_more_context"],
+      "rationale": "Documentation is ambiguous about optionality; comparing the contract or requesting more context are both defensible. Claim overstates certainty.",
+      "notes": "ambiguity, two acceptable."
+    },
+    {
+      "id": "clarify-in-response-zh",
+      "source_group": "ambiguous-response-shape",
+      "split": "dev",
+      "task": {
+        "document": "响应结构：成功时返回 {items:[...]}；部分失败时返回 {items:[...], errors:[...]}。文档未说明 `errors` 是否总存在。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "`errors` 总是存在。",
+        "source_ref": "https://example.invalid/api/response"
+      },
+      "acceptable": ["compare_contract", "needs_more_context"],
+      "rationale": "同一来源中文变体，同一 split。可选性不明确。",
+      "notes": "language variant."
+    },
+    {
+      "id": "negation-doc-en",
+      "source_group": "negated-statement",
+      "split": "test",
+      "task": {
+        "document": "Note: the client does NOT retry by default. Retries only occur when `max_retries > 0` is explicitly set.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "The client retries by default.",
+        "source_ref": "https://example.invalid/docs/retry"
+      },
+      "acceptable": ["read_in_context", "inspect_source"],
+      "rationale": "Negation matters: the claim drops the 'not'. Checking how callers set max_retries (in context) or the source docs are both defensible.",
+      "notes": "negation."
+    },
+    {
+      "id": "negation-doc-zh",
+      "source_group": "negated-statement",
+      "split": "test",
+      "task": {
+        "document": "注意：客户端默认不会重试。仅当显式设置 `max_retries > 0` 时才重试。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "客户端默认会重试。",
+        "source_ref": "https://example.invalid/docs/retry"
+      },
+      "acceptable": ["read_in_context", "inspect_source"],
+      "rationale": "同一来源中文变体，同一 split。否定语义被 claim 抹掉。",
+      "notes": "language variant."
+    },
+    {
+      "id": "config-source-en",
+      "source_group": "ops-config",
+      "split": "dev",
+      "task": {
+        "document": "Ops README: set `CACHE_TTL` in config.yaml. See source: https://example.invalid/ops/config for the full list.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "CACHE_TTL is removed.",
+        "source_ref": "https://example.invalid/ops/readme"
+      },
+      "acceptable": ["inspect_source"],
+      "rationale": "The note explicitly points at an upstream source; inspecting that source is the clear next action.",
+      "notes": "explicit source pointer."
+    },
+    {
+      "id": "config-source-zh",
+      "source_group": "ops-config",
+      "split": "dev",
+      "task": {
+        "document": "运维说明：在 config.yaml 设置 `CACHE_TTL`。完整列表见来源：https://example.invalid/ops/config 。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "CACHE_TTL 已被移除。",
+        "source_ref": "https://example.invalid/ops/readme"
+      },
+      "acceptable": ["inspect_source"],
+      "rationale": "同一来源中文变体，同一 split。显式来源指针。",
+      "notes": "language variant."
+    },
+    {
+      "id": "context-prior-issue-en",
+      "source_group": "regression-history",
+      "split": "test",
+      "task": {
+        "document": "This reverts a previous change. The prior change is described in context; review how it was originally used before judging this revert.",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "The revert is unrelated to prior history.",
+        "source_ref": "https://example.invalid/commit/revert-42"
+      },
+      "acceptable": ["read_in_context", "inspect_source"],
+      "rationale": "The document explicitly invokes prior history; reading it in context is primary, inspecting the referenced commit is also fine.",
+      "notes": "history/context linkage."
+    },
+    {
+      "id": "context-prior-issue-zh",
+      "source_group": "regression-history",
+      "split": "test",
+      "task": {
+        "document": "本次改动还原了先前的一次提交。先前改动记载于上下文；判断本次还原前应先看清它当时是如何被使用的。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "本次还原与历史无关。",
+        "source_ref": "https://example.invalid/commit/revert-42"
+      },
+      "acceptable": ["read_in_context", "inspect_source"],
+      "rationale": "同一来源中文变体，同一 split。显式引用历史上下文。",
+      "notes": "language variant."
+    },
+    {
+      "id": "missing-claim-empty-en",
+      "source_group": "no-claim-context",
+      "split": "dev",
+      "task": {
+        "document": "",
+        "question": "What is the single best next reading/checking action?",
+        "claim": "",
+        "source_ref": ""
+      },
+      "acceptable": ["needs_more_context"],
+      "rationale": "No document and no claim: there is nothing to judge against; more context is required.",
+      "notes": "missing source/context (empty)."
+    },
+    {
+      "id": "tricky-mixed-signal-zh",
+      "source_group": "mixed-signal",
+      "split": "test",
+      "task": {
+        "document": "变更日志：接口签名 `fetch(user_id)` 新增可选参数 `timeout=None`（向后兼容）；同时修正了一处拼写。来源见 https://example.invalid/changelog#fetch 。",
+        "question": "下一步的阅读/核对动作？",
+        "claim": "本次为破坏性变更。",
+        "source_ref": "https://example.invalid/changelog#fetch"
+      },
+      "acceptable": ["compare_contract", "inspect_source"],
+      "rationale": "混合信号：文档明确说向后兼容（非破坏性），claim 却称破坏性。核对契约可确认兼容性，核对来源原文亦可；两者均合理。",
+      "notes": "mixed signal + claim contradiction; code_switch."
+    }
+  ]
+}

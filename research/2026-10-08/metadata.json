@@ -1,0 +1,17 @@
+{
+  "title": "Decision Models & APIs",
+  "version": "1.0",
+  "as_of_utc": "2026-10-08",
+  "research_entities": 23,
+  "repository_index_entries": 21,
+  "deep_ecosystem_code_reviews": 10,
+  "original_studies": 6,
+  "offline_reanalysis_cases": 1000,
+  "historical_prediction_records": 4000,
+  "matched_author_summary_checks": 14,
+  "public_probe_checks": 12,
+  "original_text_fixtures": 6,
+  "live_inference_calls": 0,
+  "source_urls": 171,
+  "scope": "Public research only; no private project adoption memo. Counts are not independent training-company or checkpoint totals."
+}

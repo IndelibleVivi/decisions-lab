@@ -1,0 +1,23 @@
+{
+  "bytes": 280956,
+  "source_urls": 146,
+  "source_aliases": 206,
+  "detailed_model_records": 31,
+  "html_ids": 204,
+  "internal_links": 265,
+  "table_rows": {
+    "market-table": 23,
+    "route-table": 5,
+    "price-table": 13,
+    "cascade-table": 5,
+    "accuracy-table": 6,
+    "repository-table": 21,
+    "probe-table": 12,
+    "watchlist-table": 17
+  },
+  "unexpanded_placeholders": 0,
+  "unresolved_internal_links": 0,
+  "duplicate_ids": 0,
+  "browser_rendered": false,
+  "verification_scope": "Static HTML structure, source-anchor resolution, table counts and inline JavaScript source inspection. No browser render or interaction runtime validation; Chromium executable unavailable."
+}

@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
+!.env.example
+_site/
+.build/
+.cache/
+runs/
+private/
+*.zip
+*.sqlite*
+research/**/sys1_order_inputs.jsonl

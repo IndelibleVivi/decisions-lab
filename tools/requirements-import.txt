@@ -1,0 +1,2 @@
+# Only needed to transform the supplied historical HTML into editable Markdown.
+markdownify==1.2.0

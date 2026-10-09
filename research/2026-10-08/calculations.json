@@ -1,0 +1,187 @@
+{
+  "as_of_utc": "2026-10-08",
+  "workload": {
+    "requests": 1000000,
+    "billed_input_tokens_per_request": 1000,
+    "assumptions": [
+      "Same billed token counts across routes, not matched text.",
+      "No images, retries, fees, discounts, regional/long-context premium, minimum charges or taxes.",
+      "One request is not necessarily one question.",
+      "No accuracy or latency equivalence assumed."
+    ]
+  },
+  "quoted_price_arithmetic": [
+    {
+      "route": "Jev / TypeSafe native",
+      "usd_per_million_input_tokens": 0.042,
+      "usd_per_million_requests": 42.0
+    },
+    {
+      "route": "Clef-flash / Cloudflare native",
+      "usd_per_million_input_tokens": 0.09,
+      "usd_per_million_requests": 90.0
+    },
+    {
+      "route": "Clef / Cloudflare native",
+      "usd_per_million_input_tokens": 0.24,
+      "usd_per_million_requests": 240.0
+    },
+    {
+      "route": "GPT-6 Luna Decisions / OpenAI native",
+      "usd_per_million_input_tokens": 0.1,
+      "usd_per_million_requests": 100.0
+    },
+    {
+      "route": "Liquid d1 / Vercel route",
+      "usd_per_million_input_tokens": 0.04,
+      "usd_per_million_requests": 40.0
+    },
+    {
+      "route": "Clef-flash / OpenRouter Prime Intellect route",
+      "usd_per_million_input_tokens": 0.021,
+      "usd_per_million_requests": 21.0
+    },
+    {
+      "route": "Clef / OpenRouter Prime Intellect route",
+      "usd_per_million_input_tokens": 0.042,
+      "usd_per_million_requests": 42.0
+    },
+    {
+      "route": "GLiDE / Fastino native",
+      "usd_per_million_input_tokens": 0.15,
+      "usd_per_million_requests": 150.0
+    },
+    {
+      "route": "GLiNER-2.5-Decide / Fastino native",
+      "usd_per_million_input_tokens": 0.03,
+      "usd_per_million_requests": 30.0
+    },
+    {
+      "route": "span-01 Pro / Respan native",
+      "usd_per_million_input_tokens": 0.02,
+      "usd_per_million_requests": 20.0
+    },
+    {
+      "route": "Aplomb 1 / EmpirioLabs native",
+      "usd_per_million_input_tokens": 0.02,
+      "usd_per_million_requests": 20.0
+    },
+    {
+      "route": "Decider V1.1 27B / OpenRouter route",
+      "usd_per_million_input_tokens": 0.02,
+      "usd_per_million_requests": 20.0
+    },
+    {
+      "route": "Solar Decide / OpenRouter promotional route",
+      "usd_per_million_input_tokens": 0.05,
+      "usd_per_million_requests": 50.0
+    }
+  ],
+  "short_answer_and_cascade_scenarios": {
+    "baseline": "GPT-6 Luna Responses Standard, 1000 billed input + 8 output tokens; reasoning none; no cache",
+    "direct_usd": 104.0,
+    "native_decisions_usd": 100.0,
+    "native_decisions_input_only_saving_fraction": 0.038461538461538464,
+    "responses_batch_usd": 52.0,
+    "batch_note": "Responses Batch is asynchronous and has its own availability/SLA; do not apply discount to Decisions.",
+    "jev_screen_usd": 42.0,
+    "break_even_max_escalation_fraction": 0.5961538461538461,
+    "cascade": [
+      {
+        "escalated_fraction": 0.0,
+        "total_usd": 42.0,
+        "saving_fraction": 0.5961538461538461
+      },
+      {
+        "escalated_fraction": 0.25,
+        "total_usd": 68.0,
+        "saving_fraction": 0.34615384615384615
+      },
+      {
+        "escalated_fraction": 0.5,
+        "total_usd": 94.0,
+        "saving_fraction": 0.09615384615384616
+      },
+      {
+        "escalated_fraction": 0.75,
+        "total_usd": 120.0,
+        "saving_fraction": -0.15384615384615385
+      },
+      {
+        "escalated_fraction": 1.0,
+        "total_usd": 146.0,
+        "saving_fraction": -0.40384615384615385
+      }
+    ],
+    "scope": "Arithmetic only; no model quality, calibration, input overhead or live bills measured."
+  },
+  "probability_formula_examples": [
+    {
+      "probabilities": [
+        0,
+        1,
+        0
+      ],
+      "score_expectation": 1.0,
+      "jev_choice_confidence": 1.0,
+      "jev_score_confidence": 1.0,
+      "telnyx_normalized_entropy_confidence": 1.0,
+      "clef_hf_helper_max_probability": 1.0
+    },
+    {
+      "probabilities": [
+        0.5,
+        0,
+        0.5
+      ],
+      "score_expectation": 1.0,
+      "jev_choice_confidence": 0.25,
+      "jev_score_confidence": 0.0,
+      "telnyx_normalized_entropy_confidence": 0.3690702464285426,
+      "clef_hf_helper_max_probability": 0.5
+    },
+    {
+      "probabilities": [
+        0.6,
+        0.3,
+        0.1
+      ],
+      "score_expectation": 0.5,
+      "jev_choice_confidence": 0.4,
+      "jev_score_confidence": 0.25,
+      "telnyx_normalized_entropy_confidence": 0.18265457785348993,
+      "clef_hf_helper_max_probability": 0.6
+    },
+    {
+      "probabilities": [
+        0.7,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "score_expectation": 0.6,
+      "jev_choice_confidence": 0.6,
+      "jev_score_confidence": 0.4,
+      "telnyx_normalized_entropy_confidence": 0.3216101752764803,
+      "clef_hf_helper_max_probability": 0.7
+    }
+  ],
+  "billing_multiplicity_scenario": {
+    "state_tokens": 8000,
+    "tokens_per_question": 400,
+    "questions": 10,
+    "shared_state_once_billed_tokens": 12000,
+    "state_repeated_per_question_billed_tokens": 84000,
+    "repeated_over_shared_ratio": 7,
+    "illustrative_input_usd_per_million": 0.05,
+    "shared_usd": 0.0006,
+    "repeated_usd": 0.0042,
+    "scope": "Counterfactual equal-price arithmetic; illustrates billing multiplicity, not measured tokenizer counts or quality. Levanto documentation uses the repeated 84000-token example."
+  },
+  "confidence_scope": "Jev and Telnyx documented formulas vs pinned Clef HF helper; not an assertion about hosted Clef confidence. Formula demonstrations do not establish calibration.",
+  "confidence_sources": [
+    "https://docs.typesafe.ai/confidence",
+    "https://developers.telnyx.com/docs/inference/decision-models",
+    "https://huggingface.co/Cloudflare/clef-flash/blob/41318bf2106d135c7a92da745fec4b255279b4de/joint_schema_model.py"
+  ]
+}

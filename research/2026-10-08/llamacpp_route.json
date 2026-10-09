@@ -1,0 +1,127 @@
+{
+  "verified_date": "2026-10-08",
+  "verification": "只读官方文档、已合并 PR 与 ggml-org GGUF 模型卡；未安装、未启动服务器、未执行推理；5 个成功读取的一手页面。",
+  "conclusion": "llama.cpp 已原生支持 System One / Clef，不能写成缺少正确执行 joint head 的通用本地 runtime。",
+  "release_evidence": {
+    "release": "v0.6.0",
+    "released_date": "2026-10-05",
+    "commit_short": "d812350",
+    "endpoint": "POST /v1/systemone",
+    "clef_text_and_vision": true,
+    "other_decision_models_named_by_release": [
+      "laya",
+      "julia-1",
+      "lev",
+      "openjev",
+      "kev",
+      "nimble"
+    ],
+    "identity_caution": "发行说明的 lev / openjev 等不代表闭源 TypeSafe Jev 权重已经公开。",
+    "sources": [
+      "L02",
+      "L03",
+      "L04"
+    ]
+  },
+  "current_server_contract": {
+    "scope": "master README 于核验日的内容；不把 master 的所有新增字段追溯到 v0.6.0。",
+    "streaming": false,
+    "state": "string / object / array；非字符串编码为 JSON 文本",
+    "questions": "choice / score / noul；instructions 为 string / object / array",
+    "score_levels": "2–10",
+    "clef_choice_options_max": 255,
+    "multi_question": "其他所述模型逐问题独立；Clef 在一个 prompt 中联合决定。",
+    "clef_generation": "只服务 System One 决策接口，不提供文本生成。",
+    "vision": "Clef 已支持；须加载对应 multimodal projector (--mmproj)。files 或 images 别名接受 data URL；也接受 state chat-message 中的 image_url 部件，仅 data URL。",
+    "errors": "无效请求 400；非 decision model 501；不支持图像或未加载 projector 时图像请求 501。",
+    "usage": "input_tokens 为问题 prompt token 合计；output_tokens 恒 0。",
+    "probabilities": "使用模型文件内温度缩放；不保证在用户数据上校准。未读取当前 confidence 实现公式。",
+    "additional_current_models_named": [
+      "pplx-decider",
+      "lfm2-d1",
+      "lfm2-d1-omni"
+    ],
+    "sources": [
+      "L01"
+    ]
+  },
+  "runtime_and_artifacts": {
+    "runtime": "llama-server / llama serve，加载具备 Clef decision architecture 的 GGUF",
+    "official_pr_model_repositories": [
+      "ggml-org/Clef-GGUF",
+      "ggml-org/Clef-Flash-GGUF"
+    ],
+    "clef_flash_card": "ggml-org/Clef-Flash-GGUF；source model Cloudflare/clef-flash；architecture clef；9B；Apache-2.0",
+    "clef_flash_listed_weight_sizes_GB": {
+      "Q4_K_M": 6.49,
+      "Q8_0": 9.66,
+      "BF16": 18.2
+    },
+    "size_caution": "模型卡显示的文件/量化体积不是最低 RAM / VRAM，更不是完整运行峰值；还需运行时、激活、context、图像 projector 等空间。",
+    "hardware": "官方服务器说明支持 CPU / GPU 上的 F16 与量化模型，可设置 GPU offload。该证据属于引擎能力，不证明所有后端的 Clef 性能一致，也不给出 Clef 最低硬件。",
+    "clef_context_constraint": "Clef 整个 prompt 必须在一个物理 batch 求值，须 fit --ubatch-size；只调 --ctx-size 不能代替检查这个限制。",
+    "documented_cli_defaults": {
+      "ctx_size": "0：从模型读取",
+      "batch_size": 2048,
+      "ubatch_size": 512
+    },
+    "default_caution": "这是 README 中的 CLI 默认值；未启动运行时，未确认模型特定初始化是否进一步调整有效值。",
+    "sources": [
+      "L01",
+      "L04",
+      "L05"
+    ]
+  },
+  "implementation_evidence": {
+    "text_support": "PR #29831 merged 2026-10-03，commit 99b9548；原作者说明新增 llama_batch_ext_set_decision_order，标记 question / option token span，供 joint decision 计算。",
+    "vision_support": "PR #29969 merged 2026-10-05，commit 9871df5；支持非因果场景的多模态 embedding 与 text 同 batch。",
+    "read_boundary": "PR 的 Files changed 页面返回错误；未声称逐行审核当前 C++ 实现。release + 当前正式 server 文档 + 两个 merged PR 足以确认存在原生支持。",
+    "sources": [
+      "L02",
+      "L03",
+      "L04"
+    ]
+  },
+  "core_records_review": {
+    "json_records": 10,
+    "unique_record_ids": 10,
+    "source_registry_entries": 41,
+    "dangling_source_ids": [],
+    "material_new_information": "新增 llama.cpp 自托管 route；原有 HF-helper route 记录仍准确，但不能视为自托管全貌。",
+    "preserved_boundaries": [
+      "HF-helper maxP confidence 不转移到 llama.cpp 或 hosted",
+      "HF-helper 默认 16K 不转移到 llama.cpp",
+      "llama.cpp 的 255 choice cap 不转移到 Cloudflare hosted 未公开字段",
+      "主目录已有 10 条记录，但 OpenRouter 记录内还按 provider 分行，不能把条数解释为精确计费路线总数"
+    ],
+    "other_internal_inconsistencies": "轻量复核未发现需要推翻的核心事实；原始资料的 hosted context / confidence 差异仍保留为未决。",
+    "original_files_changed": false
+  },
+  "sources": [
+    {
+      "id": "L01",
+      "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md",
+      "scope": "当前 server System One 契约、默认 CLI、CPU/GPU、模型 modality discovery；master 未固定 SHA"
+    },
+    {
+      "id": "L02",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0",
+      "scope": "2026-10-05 正式发行明确包含 Clef text+vision 与 System One"
+    },
+    {
+      "id": "L03",
+      "url": "https://github.com/ggml-org/llama.cpp/pull/29969",
+      "scope": "Clef vision merged PR；9871df5"
+    },
+    {
+      "id": "L04",
+      "url": "https://github.com/ggml-org/llama.cpp/pull/29831",
+      "scope": "Clef text joint-head support merged PR；99b9548；列出 Clef 与 Flash 两个官方 GGUF"
+    },
+    {
+      "id": "L05",
+      "url": "https://huggingface.co/ggml-org/Clef-Flash-GGUF",
+      "scope": "ggml-org 原作者模型卡正文与量化元数据；不采用页面自动生成的 chat/vLLM 安装示例"
+    }
+  ]
+}
