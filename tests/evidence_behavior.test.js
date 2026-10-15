@@ -232,12 +232,13 @@ function buildDom(aggRecords, { withData = true } = {}) {
   return { root, controls, tasks, scopes, grid, outputs };
 }
 
-function loadEvidence(dom) {
+function loadEvidence(dom, extra = {}) {
   const document = {
     querySelector: (s) => dom.root.querySelector(s),
     querySelectorAll: (s) => dom.root.querySelectorAll(s),
     createElement: (t) => new Node(t),
     createElementNS: (ns, t) => new Node(t, ns),
+    ...extra,
   };
   const code = fs.readFileSync(path.join(ROOT, 'site/evidence.js'), 'utf8');
   const sandbox = { document, window: {}, console, module: { exports: {} }, Object, Array, String, Number, JSON, Math, isFinite };
@@ -388,7 +389,27 @@ function testIdentityMapping() {
   check('identity: A button uses its id even when records reordered', dom.outputs.correct.textContent === '200' && dom.outputs.total.textContent === '400');
 }
 
+function testMotionLifecycle() {
+  const dom=buildDom([AGG.A,AGG.B,AGG.F]), handles=[],events={};let observer,changed;
+  const reduced={matches:false,addEventListener(_type,fn){changed=fn;}};
+  const extra={hidden:false,defaultView:{matchMedia:()=>reduced,IntersectionObserver:class{constructor(fn){observer=fn;}observe(){}}},addEventListener(type,fn){events[type]=fn;},createElementNS(ns,t){const n=new Node(t,ns);n.animate=()=>{const handle={cancelled:false,cancel(){this.cancelled=true;}};handles.push(handle);return handle;};return n;}};
+  const sandbox=loadEvidence(dom,extra);
+  check('motion: offscreen initial render is static',handles.length===0);
+  observer([{isIntersecting:true}]);dom.tasks[1].dispatch('click');
+  check('motion: visible change animates the real cells',handles.length===400);
+  check('motion: animation never delays real numbers',dom.outputs.correct.textContent==='398');
+  dom.scopes[1].dispatch('click');
+  check('motion: rapid scope change cancels prior animation',handles.slice(0,400).every(a=>a.cancelled));
+  observer([{isIntersecting:false}]);check('motion: leaving viewport cancels every animation',handles.every(a=>a.cancelled));
+  observer([{isIntersecting:true}]);dom.tasks[0].dispatch('click');reduced.matches=true;changed();
+  check('motion: reduced motion cancels active handles',handles.every(a=>a.cancelled));
+  const count=handles.length;dom.tasks[2].dispatch('click');check('motion: reduced motion starts no new animation',handles.length===count);
+  reduced.matches=false;dom.tasks[1].dispatch('click');sandbox.document.hidden=true;events.visibilitychange();
+  check('motion: background visibility cancels handles',handles.every(a=>a.cancelled));
+}
+
 /* ------------------------------------------------------------- run */
+testMotionLifecycle();
 testIdentityMapping();
 testPartitions();
 testMetrics();

@@ -142,6 +142,30 @@
     var scopeButtons = Array.prototype.slice.call(doc.querySelectorAll('[data-evidence-scope]'));
     var current = 0;
     var scope = 'all';
+    var view = doc.defaultView;
+    var reduced = view && view.matchMedia ? view.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    var animations = [], gridVisible = !view || !view.IntersectionObserver;
+    var pixelPause = doc.querySelector('#pixel-pause');
+    function cancelMotion() { animations.forEach(function (a) { a.cancel(); }); animations = []; }
+    function animateCells() {
+      cancelMotion();
+      if (!gridVisible || doc.hidden || (reduced && reduced.matches) || (pixelPause && pixelPause.getAttribute('aria-pressed') === 'true')) return;
+      var cells = grid.querySelectorAll('.evidence-cell');
+      for (var i = 0; i < cells.length; i++) {
+        if (!cells[i].animate) continue;
+        animations.push(cells[i].animate([
+          { transform: 'translateY(7px) scale(.35)' }, { transform: 'translateY(0) scale(1)' }
+        ], { duration: 260, delay: (i % COLS) * 9 + Math.floor(i / COLS) * 7, easing: 'steps(5, end)' }));
+      }
+    }
+    if (reduced) reduced.addEventListener('change', function () { if (reduced.matches) cancelMotion(); });
+    if (doc.addEventListener) doc.addEventListener('visibilitychange', function () { if (doc.hidden) cancelMotion(); });
+    if (pixelPause) pixelPause.addEventListener('click', cancelMotion);
+    if (view && view.IntersectionObserver) new view.IntersectionObserver(function (entries) {
+      gridVisible = entries[entries.length - 1].isIntersecting;
+      if (!gridVisible) cancelMotion();
+    }).observe(grid);
+
 
     function labelFor(index) {
       var label = records[index].label;
@@ -149,6 +173,7 @@
     }
 
     function buildCells(parts) {
+      cancelMotion();
       grid.textContent = '';
       var cells = cellsFor(parts);
       var originX = (SIZE - ((COLS - 1) * PITCH + CELL)) / 2;
@@ -214,6 +239,7 @@
         button.setAttribute('aria-pressed', String(button.getAttribute('data-evidence-task') === records[index].id));
       });
       paint();
+      animateCells();
     }
 
     function selectScope(next) {
@@ -223,6 +249,7 @@
       });
       syncScope();
       paint();
+      animateCells();
     }
 
     taskButtons.forEach(function (button) {

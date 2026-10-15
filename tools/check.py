@@ -19,7 +19,8 @@ def main():
         if not node:
             parser.error('Full checks require Node.js 22+; CLI/data checks can use --core-only.')
         commands += [[node, 'tests/reader_behavior.test.js'], [node, 'tests/evidence_behavior.test.js'],
-                     [node, 'tests/visual_behavior.test.js'], [node, 'tests/atlas_behavior.test.js'], [node, 'tests/recipes_behavior.test.js'], [node, '--check', 'site/lab.js'],
+                     [node, 'tests/visual_behavior.test.js'], [node, 'tests/atlas_behavior.test.js'], [node, 'tests/recipes_behavior.test.js'], [node, 'tests/pixels_behavior.test.js'],
+                     [node, '--check', 'site/lettering.js'], [node, '--check', 'site/lab.js'],
                      [sys.executable, 'tools/build_site.py'], [sys.executable, 'tools/check_site.py']]
     for command in commands:
         print('+ ' + ' '.join(command[1:]), flush=True)
