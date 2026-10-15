@@ -2,7 +2,7 @@
 
 **把有限选项的判断，变成可以检查的实验。**
 
-[English](README.en.md) · [研究快照](research/2026-10-08/README.md) · [项目地图](docs/projects.md) · [运行实验](experiments/next-action/README.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [10-15 更新](research/2026-10-15/README.md) · [妙妙玩法](docs/playbook.md) · [项目地图](docs/projects.md) · [运行实验](experiments/next-action/README.md) · [当前状态](docs/current-state.md)
 
 Decisions Lab 研究 decision models 与 typed decision APIs：它们接受证据和明确的选项，返回结构化判断。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
@@ -12,6 +12,8 @@ Decisions Lab 研究 decision models 与 typed decision APIs：它们接受证�
 
 | 你想做什么 | 从这里开始 |
 | --- | --- |
+| 查看最近 API、模型与价格变化 | [2026-10-15 定向核查](research/2026-10-15/README.md) |
+| 找一个有趣、可以动手的用法 | [20 种玩法与现成项目](docs/playbook.md) |
 | 理解这个领域和证据边界 | [2026-10-08 调查及复算](research/2026-10-08/README.md) |
 | 找 SDK、开放模型、运行时或评测项目 | [按问题分组的项目地图](docs/projects.md) |
 | 真正运行一个判断任务 | [next-action 实验](experiments/next-action/README.md) |
@@ -39,15 +41,19 @@ python3 -m decision_lab prepare experiments/next-action/cases.json --route decis
 # 离线查询调查记录
 python3 tools/catalog.py projects --query calibration
 python3 tools/catalog.py models --query clef --json
+python3 tools/catalog.py updates --query jev
+python3 tools/catalog.py recipes --query NPC --json
 ```
 
 live collector 支持 TypeSafe Jev 与 OpenAI Decisions 的原生 HTTP 形状；需要操作者主动选择网络调用、配置环境变量凭据并给出调用上限。具体命令与限制见[实验说明](experiments/next-action/README.md)。本项目目前没有 live 推理或生产接入证据，不能据此声称某个账号、区域或模型可用。
 
 ## 阅读站与验证
 
-阅读站从同一份 Markdown 和 catalog 构建。首页以全幅排版和原创编织像素曲面开场，可按五个类别探索 catalog 中的 21 个项目并进入相应研究。下滑进入大字号阅读索引与交互实验。概率地形可以切换示意分布、调整候选偏向，并查看 maxP 和熵；历史像素矩阵可切换三组任务及高 maxP 子集，显示对应正确／错误数量。三个原创合成案例允许选择下一步动作、查看编辑标签和理由。首屏曲面的几何位置与高亮只用于视觉反馈，不编码模型关系或性能；概率地形也不是模型输出。长文支持章节目录、阅读进度、代码复制和表格内横向滚动；项目地图可检索并跳到匹配行，原有局限和来源说明始终保留。
+阅读站从同一份 Markdown 和 catalog 构建。首页以全幅排版和原创 WebGL 粒子作品开场：在编织、分岔、环流三种形态间连续变形，用指针拨动或轻点冲散。下滑进入 20 种玩法，可以组合分类与关键词筛选，展开输入、选项、失败方式和现成项目，复制不绑定 provider 的任务 JSON，再沿完整配方进入 API 示例。两项已有离线实验，其余为待接入验证的提案。五组分类还可探索历史 catalog 中的 21 个项目。
 
-浏览器不请求模型，不加载外部字体、分析脚本或 CDN，不保存练习答案；仅在本地保存手动选择的日／夜外观。默认外观跟随系统，所有阅读页共用同一选择。动态作品可暂停，并尊重系统减少动态效果偏好；页面后台或作品滚出视野时停止动画。关闭 JavaScript 后保留静态图、历史汇总、正文与案例材料。构建需要 Python 3.11+ 与 `requirements-site.txt`；完整验证另外需要 Node.js 22+，无需安装 npm packages。
+概率地形可以切换示意分布、调整候选偏向，并查看 maxP 和熵；历史像素矩阵可切换三组任务及高 maxP 子集，显示对应正确／错误数量。三个原创合成案例允许选择下一步动作、查看编辑标签和理由。粒子几何与颜色只用于视觉反馈，不编码模型关系或性能；概率地形也不是模型输出。长文支持章节目录、阅读进度、代码复制和表格内横向滚动；项目地图可检索并跳到匹配行，原有局限和来源说明始终保留。
+
+浏览器不请求模型，不加载外部字体、分析脚本或 CDN，不保存练习答案；仅在本地保存手动选择的日／夜外观。默认外观跟随系统，所有阅读页共用同一选择。动态作品可暂停，并尊重系统减少动态效果偏好；页面后台或作品滚出视野时停止动画。暂停时仍可切换静态形态。WebGL 不可用时保留静态图；关闭 JavaScript 后仍可阅读全部玩法、历史汇总、正文与案例材料。构建需要 Python 3.11+ 与 `requirements-site.txt`；完整验证另外需要 Node.js 22+，无需安装 npm packages。
 
 ```bash
 python3 -m venv .venv
@@ -62,6 +68,8 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory _site
 ## 证据与限制
 
 首期调查包含 23 个模型/服务实体、21 个相关仓库、6 项研究、171 条来源索引。我们复算了随包历史输入：1,000 个案例、4,000 条概率记录，14 项作者汇总核对一致。原始预测记录不随仓库分发；有原始 evidence bundle 的读者可以按[复算说明](research/2026-10-08/README.md)检查。
+
+[2026-10-15 增量](research/2026-10-15/README.md)另存 30 条来源、12 条变化记录，覆盖 Jev 1.14、OpenAI Decisions 契约与 SDK 差异、Cloudflare、Fastino、Upstage。它没有覆盖全部首期条目，也没有重写历史快照；玩法中每项项目证据另标截点。公开文档和标价不等于实际调用、账单或质量验证。
 
 这些是特定任务与历史版本的证据。选项集合、语言、上下文截断、问题依赖和 confidence 定义都会改变解释。高 maxP 不能替代针对实际任务的校准；unknown、API refusal 和错误也不能混记成“否”。[评估方法](docs/method.md)说明如何读结果。
 

@@ -97,6 +97,8 @@ python3 -m decision_lab routes
 > live 证据：API 可用性、模型质量与实际价格均未被断言。任何未来文档漂移都会在
 > 归一化时以严格校验错误暴露，而不会被静默误读。
 
+[2026-10-15 定向核查](../../research/2026-10-15/README.md)记录 Jev 1.14、OpenAI reference／SDK 差异及新请求示例。这里仍固定原有 `jev-1.13.0` / `gpt-6-luna` 文本 Choice profile，不因 alias 变化升级，不接入图像、Box 或 cache。更换模型后必须独立记录运行条件；新增文档没有更新此 adapter 的实测状态。更多任务设计见[玩法大全](../../docs/playbook.md)。
+
 校验规则：确有唯一的问题标识、只含已知选项、数值有限且落在 `[0,1]`
 （拒绝 NaN/Inf/bool）、按文档容差近似和为 1、选中项等于 argmax（容差内允许并列）；
 OpenAI 的数组值重复即拒绝。**不做重新归一化**。缺失 choice 视为**格式错误**，

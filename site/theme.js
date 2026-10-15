@@ -14,7 +14,7 @@
       button.setAttribute('aria-pressed', String(theme === 'dark'));
       button.querySelector('span').textContent = theme === 'dark' ? 'DAY' : 'NIGHT';
     }
-    document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#111d21' : '#e8e7df';
+    document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#111d21' : '#f6f2e9';
     document.dispatchEvent(new Event('themechange'));
   }
   apply(chosen || (system.matches ? 'dark' : 'light'));

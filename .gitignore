@@ -8,6 +8,7 @@ __pycache__/
 _site/
 .build/
 .cache/
+.playwright-cli/
 runs/
 private/
 *.zip

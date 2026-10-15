@@ -1,6 +1,8 @@
 """Evidence/index consistency and public source boundary checks (no network)."""
 import importlib.util
 import json
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -35,5 +37,39 @@ class ContentTests(unittest.TestCase):
         self.assertNotIn('](#source-',text)
         for number in range(1, 10):
             self.assertIn(f'## {number:02d} · ', text)
+
+    def test_increment_preserves_snapshot_and_resolves_sources(self):
+        index, _ = catalog.load()
+        update = json.loads((ROOT/index['latest_update']['path']).read_text())
+        self.assertEqual(update['baseline'], index['source_root'])
+        self.assertEqual(update['checked_at'], index['latest_update']['date'])
+        self.assertLess(index['snapshot'], update['checked_at'])
+        sources = {source['id'] for source in update['sources']}
+        self.assertEqual(len(sources), len(update['sources']))
+        changes = [change['id'] for change in update['changes']]
+        self.assertEqual(len(changes), len(set(changes)))
+        for change in update['changes']:
+            self.assertTrue(change['source_ids'])
+            self.assertTrue(set(change['source_ids']) <= sources, change['id'])
+        for item in update['not_rechecked']:
+            if 'source_id' in item:
+                self.assertIn(item['source_id'], sources)
+
+    def test_new_catalog_queries_return_their_own_dates(self):
+        index, _ = catalog.load()
+        for kind, query, source_path, date_key, records_key in (
+            ('updates', 'jev', index['latest_update']['path'], 'checked_at', 'changes'),
+            ('recipes', 'NPC', index['recipes'], 'updated_at', 'recipes'),
+        ):
+            source = json.loads((ROOT/source_path).read_text())
+            result = subprocess.run([sys.executable, str(ROOT/'tools/catalog.py'), kind,
+                                     '--query', query, '--json'], check=True, capture_output=True, text=True)
+            output = json.loads(result.stdout)
+            expected = [r for r in source[records_key]
+                        if query.casefold() in json.dumps(r, ensure_ascii=False).casefold()]
+            self.assertTrue(expected)
+            self.assertEqual(output['as_of'], source[date_key])
+            self.assertEqual(output['records'], expected)
+            self.assertEqual(output['count'], len(expected))
 
 if __name__ == '__main__': unittest.main()

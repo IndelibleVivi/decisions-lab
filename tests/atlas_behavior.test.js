@@ -2,7 +2,7 @@
 // Dependency-free behavior test for site/atlas.js (catalog category selector).
 //
 // Runs the real module inside a minimal DOM shim (no browser, no network) so
-// the selection / aria / event / fallback contracts can be asserted in CI.
+// the selection / aria / fallback contracts can be asserted in CI.
 // This is a behavior test, not a pixel/CSS test: focus behavior, real keyboard
 // activation and the decorative canvas are covered by the browser run.
 'use strict';
@@ -93,14 +93,9 @@ const el = (t) => new Node(t);
 const results = [];
 function check(name, cond, detail) { results.push({ name, ok: !!cond, detail: detail || '' }); }
 
-// Records CustomEvents dispatched on the shim document for the canvas listener.
-class CustomEventShim {
-  constructor(type, init) { this.type = type; this.detail = (init || {}).detail; }
-}
-
 function loadAtlas(globals) {
   const code = fs.readFileSync(path.join(ROOT, 'site/atlas.js'), 'utf8');
-  const sandbox = Object.assign({ console, CustomEvent: CustomEventShim, Error }, globals);
+  const sandbox = Object.assign({ console, Error }, globals);
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(code, sandbox, { filename: 'site/atlas.js' });
@@ -112,7 +107,7 @@ function loadAtlas(globals) {
 // object is provided so the factory's API lands in module.exports.
 function loadAtlasApi() {
   const code = fs.readFileSync(path.join(ROOT, 'site/atlas.js'), 'utf8');
-  const sandbox = { console, CustomEvent: CustomEventShim, Error, module: { exports: {} } };
+  const sandbox = { console, Error, module: { exports: {} } };
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(code, sandbox, { filename: 'site/atlas.js' });
@@ -156,15 +151,13 @@ function buildAtlas(groups) {
   atlas.appendChild(status);
   root.appendChild(atlas);
 
-  const events = [];
   const document = {
     querySelector: (s) => root.querySelector(s),
     querySelectorAll: (s) => root.querySelectorAll(s),
     getElementById: (id) => root.querySelectorAll('#' + id)[0] || null,
     createElement: (t) => el(t),
-    dispatchEvent: (e) => { events.push(e); return true; },
   };
-  return { root, atlas, controls, status, buttons, panels, links, events, document };
+  return { root, atlas, controls, status, buttons, panels, links, document };
 }
 
 const GROUPS = [
@@ -187,10 +180,6 @@ function testHappyPath() {
     dom.panels.sdk.hidden === false && dom.panels.models.hidden === true && dom.panels.eval.hidden === true);
   check('atlas: status announces first label',
     dom.status.textContent === GROUPS[0].label, dom.status.textContent);
-  check('atlas: initial event dispatched once with group and index',
-    dom.events.length === 1 && dom.events[0].type === 'atlaschange' &&
-    dom.events[0].detail.group === 'sdk' && dom.events[0].detail.index === 0,
-    JSON.stringify(dom.events.map((e) => [e.type, e.detail])));
 
   dom.buttons.models.dispatch('click');
   check('atlas: selecting a second group shows only its panel',
@@ -201,22 +190,12 @@ function testHappyPath() {
     dom.buttons.eval.getAttribute('aria-pressed') === 'false');
   check('atlas: status follows the selected group',
     dom.status.textContent === GROUPS[1].label, dom.status.textContent);
-  check('atlas: changed selection emits one event with its own detail',
-    dom.events.length === 2 && dom.events[1].type === 'atlaschange' &&
-    dom.events[1].detail.group === 'models' && dom.events[1].detail.index === 1,
-    JSON.stringify(dom.events.map((e) => [e.type, e.detail])));
 
   dom.buttons.eval.dispatch('click');
   check('atlas: third group selection isolates its panel',
     dom.panels.eval.hidden === false && dom.panels.sdk.hidden === true && dom.panels.models.hidden === true);
   check('atlas: status names the third group', dom.status.textContent === GROUPS[2].label);
-  check('atlas: each changed selection emits its corresponding detail',
-    dom.events.length === 3 &&
-    dom.events[1].detail.group === 'models' && dom.events[1].detail.index === 1 &&
-    dom.events[2].detail.group === 'eval' && dom.events[2].detail.index === 2,
-    JSON.stringify(dom.events.map((e) => e.detail)));
   dom.buttons.eval.dispatch('click');
-  check('atlas: reselecting the current group emits no event', dom.events.length === 3, String(dom.events.length));
 
   check('atlas: panels keep real links into projects',
     dom.links.sdk.getAttribute('href') === 'projects.html#sdk' &&
@@ -234,15 +213,11 @@ function testIdempotentReselect() {
   const before = dom.panels.models.hidden;
   dom.buttons.models.dispatch('click');
   dom.buttons.models.dispatch('click');
-  const afterChange = dom.events.length; // initial + one changed selection
   check('atlas: repeated selection of same group stays selected',
     dom.panels.models.hidden === before && dom.panels.models.hidden === false &&
     dom.buttons.models.getAttribute('aria-pressed') === 'true');
   check('atlas: repeated selection does not disturb other panels',
     dom.panels.sdk.hidden === true && dom.panels.eval.hidden === true);
-  check('atlas: selecting models emits exactly one event', afterChange === 2 && dom.events[1].detail.group === 'models',
-    JSON.stringify(dom.events.map((e) => e.detail)));
-  check('atlas: repeated selection dispatches no further events', dom.events.length === afterChange);
   check('atlas: status still names the same group', dom.status.textContent === GROUPS[1].label);
 }
 
@@ -281,10 +256,9 @@ function testMissingPanel() {
     dom.buttons.models.getAttribute('aria-pressed') === null);
   check('atlas: missing panel changes no status text',
     dom.status.textContent === '', JSON.stringify(dom.status.textContent));
-  check('atlas: missing panel dispatches no event', dom.events.length === 0);
   dom.buttons.models.dispatch('click');
   check('atlas: click on a control in malformed DOM does nothing',
-    dom.panels.sdk.hidden === false && dom.events.length === 0);
+    dom.panels.sdk.hidden === false);
 }
 
 function testOrphanPanel() {
@@ -298,7 +272,6 @@ function testOrphanPanel() {
   check('atlas: orphan panel keeps controls hidden', dom.controls.hidden === true);
   check('atlas: orphan panel leaves static panels untouched',
     dom.panels.sdk.hidden === false && dom.panels.models.hidden === true);
-  check('atlas: orphan panel dispatches no event', dom.events.length === 0);
 }
 
 function testDuplicateGroup() {
@@ -309,7 +282,6 @@ function testDuplicateGroup() {
   dom.atlas.appendChild(dup);
   loadAtlas({ document: dom.document });
   check('atlas: duplicate panel id keeps controls hidden', dom.controls.hidden === true);
-  check('atlas: duplicate panel id dispatches no event', dom.events.length === 0);
 }
 
 function testAbsentRoot() {
@@ -336,19 +308,15 @@ function testNoStatusStillWorks() {
     dom.controls.hidden === false && dom.panels.sdk.hidden === false);
   dom.buttons.eval.dispatch('click');
   check('atlas: without status the panel still swaps', dom.panels.eval.hidden === false);
-  check('atlas: without status the initial event still fires once',
-    dom.events.length === 2 && dom.events[0].detail.group === 'sdk' && dom.events[1].detail.group === 'eval');
 }
 
 // The exported mount() handle exposes select(); an unknown group id must be a
-// no-op so a bad call can never hide every panel or dispatch a stray event.
+// no-op so a bad call can never hide every panel or disturb the current selection.
 function testSelectUnknownId() {
   const dom = buildAtlas(GROUPS);
   const sandbox = loadAtlasApi();
   const handle = sandbox.mount(dom.document);
   check('atlas: mount returns a select handle', handle && typeof handle.select === 'function');
-  check('atlas: mount drives the initial event once',
-    dom.events.length === 1 && dom.events[0].detail.group === 'sdk');
   const result = handle.select('no-such-group');
   check('atlas: select(unknown) returns without change', result == null);
   check('atlas: select(unknown) leaves the current panel visible',
@@ -356,8 +324,6 @@ function testSelectUnknownId() {
   check('atlas: select(unknown) presses only the current control',
     dom.buttons.sdk.getAttribute('aria-pressed') === 'true' &&
     dom.buttons.models.getAttribute('aria-pressed') === 'false');
-  check('atlas: select(unknown) dispatches no extra event',
-    dom.events.length === 1 && dom.events[0].detail.group === 'sdk', String(dom.events.length));
 }
 
 // A missing .atlas-controls has nothing to reveal, so the selector must bail
@@ -372,7 +338,6 @@ function testMissingControls() {
     dom.panels.sdk.hidden === false && dom.panels.models.hidden === true && dom.panels.eval.hidden === true);
   check('atlas: missing controls presses no button',
     dom.buttons.sdk.getAttribute('aria-pressed') === null);
-  check('atlas: missing controls dispatches no event', dom.events.length === 0);
 }
 
 /* ---------------------------------------------------------------- main */

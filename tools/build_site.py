@@ -15,10 +15,10 @@ from markdown_it import MarkdownIt
 ROOT = Path(__file__).resolve().parents[1]
 PAGES = (
     'README.md', 'README.en.md', 'LICENSING.md', 'LICENSE-DOCUMENTATION.md',
-    'docs/projects.md', 'docs/method.md', 'docs/integration.md',
+    'docs/projects.md', 'docs/playbook.md', 'docs/method.md', 'docs/integration.md',
     'docs/maintenance.md', 'docs/current-state.md',
     'experiments/next-action/README.md',
-    'research/2026-10-08/README.md', 'research/2026-10-08/report.md',
+    'research/2026-10-08/README.md', 'research/2026-10-08/report.md', 'research/2026-10-15/README.md',
 )
 SNAPSHOT_FILES = (
     'calculations.json', 'calculations.py', 'census.json', 'llamacpp_route.json',
@@ -30,7 +30,7 @@ SNAPSHOT_FILES = (
     'reanalysis/sys1_reanalysis.json',
 )
 ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/reader.js', 'site/lab.js', 'site/field.js', 'site/evidence.js', 'site/sculpture.js', 'site/atlas.js', 'site/theme.js', 'site/flow.svg',
-          'catalog/index.json', 'experiments/next-action/cases.json') + tuple(
+          'catalog/index.json', 'catalog/recipes.json', 'research/2026-10-15/updates.json', 'site/recipes.js', 'experiments/next-action/cases.json') + tuple(
               'research/2026-10-08/' + p for p in SNAPSHOT_FILES)
 
 
@@ -62,7 +62,15 @@ def render_markdown(source, current):
                     resolved = posixpath.normpath(posixpath.join(posixpath.dirname(current), unquote(u.path)))
                     if resolved in PAGES:
                         child.attrSet('href', urlunsplit(('', '', u.path.removesuffix('.md')+'.html',u.query,u.fragment)))
-    return title, md.renderer.render(tokens, md.options, {}), toc
+    body = md.renderer.render(tokens, md.options, {})
+    if current == 'docs/playbook.md':
+        # Stable Markdown IDs keep deep links portable; show the reader's title
+        # once in HTML instead of promoting a machine ID to the visual heading.
+        for recipe in json.loads((ROOT/'catalog/recipes.json').read_text())['recipes']:
+            key, name = html.escape(recipe['id']), html.escape(recipe['title'])
+            body = body.replace(f'<h3 id="{key}">{key}</h3>\n<p><strong>{name}</strong></p>',
+                                f'<h3 id="{key}">{name}</h3>')
+    return title, body, toc
 
 
 PAGE_CONTEXT = {
@@ -71,6 +79,8 @@ PAGE_CONTEXT = {
     'research/2026-10-08/README.html': ('01', '研究档案', 'Research'),
     'research/2026-10-08/report.html': ('01', '决策 API 调查', 'Research'),
     'docs/projects.html': ('02', '相关项目', 'Directory'),
+    'docs/playbook.html': ('09', '妙妙玩法', 'Playbook'),
+    'research/2026-10-15/README.html': ('01', '10 月增量核查', 'Research update'),
     'experiments/next-action/README.html': ('03', 'Next-action 实验', 'Experiment'),
     'docs/method.html': ('04', '评估方法', 'Method'),
     'docs/integration.html': ('05', '工作流接入', 'Integration'),
@@ -90,7 +100,7 @@ def shell(title, body, current, toc=()):
     is_home = current == 'index.html'
     is_en = current == 'README.en.html'
     number, section, english = PAGE_CONTEXT.get(current, ('00', '研究索引', 'Index'))
-    nav_items = (('index.html', '索引'), ('research/2026-10-08/README.html', '研究'),
+    nav_items = (('index.html', '索引'), ('research/2026-10-15/README.html', '更新'), ('docs/playbook.html', '玩法'),
                  ('docs/projects.html', '项目'), ('experiments/next-action/README.html', '实验'),
                  ('docs/method.html', '方法'))
     nav = ''.join(f'<a href="{prefix}{path}"' +
@@ -105,9 +115,9 @@ def shell(title, body, current, toc=()):
     sidebar = sidebar.replace(f'href="{prefix}{current.removesuffix(".html")}.md"', f'href="https://github.com/IndelibleVivi/decisions-lab/blob/main/{current.removesuffix(".html")}.md"')
     if not is_home:
         body = f'<div class="page-heading"><span>{number} / {section}</span><span>{english.upper()}</span></div>{toc_html}<div class="reading-layout">{sidebar}<article>{body}</article></div>'
-    lab_script = ''.join(f'<script defer src="{asset(path)}"></script>' for path in ('site/sculpture.js', 'site/atlas.js', 'site/field.js', 'site/evidence.js', 'site/lab.js')) if is_home else ''
+    lab_script = ''.join(f'<script defer src="{asset(path)}"></script>' for path in ('site/sculpture.js', 'site/atlas.js', 'site/field.js', 'site/evidence.js', 'site/lab.js', 'site/recipes.js')) if is_home else ''
     return f'''<!doctype html>
-<html lang="{'en' if is_en else 'zh-CN'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Decisions Lab</title><meta name="description" content="决策模型、API 契约和可复现实验。"><meta name="theme-color" content="#e8e7df"><script src="{asset('site/theme.js')}"></script><link rel="icon" href="data:,"><link rel="stylesheet" href="{asset('site/style.css')}"><script defer src="{asset('site/filter.js')}"></script><script defer src="{asset('site/reader.js')}"></script>{lab_script}<noscript><style>.evidence-pixels{{display:none}}.evidence-stage{{display:block}}</style></noscript></head>
+<html lang="{'en' if is_en else 'zh-CN'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Decisions Lab</title><meta name="description" content="决策模型、API 契约和可复现实验。"><meta name="theme-color" content="#f6f2e9"><script src="{asset('site/theme.js')}"></script><link rel="icon" href="data:,"><link rel="stylesheet" href="{asset('site/style.css')}"><script defer src="{asset('site/filter.js')}"></script><script defer src="{asset('site/reader.js')}"></script>{lab_script}<noscript><style>.evidence-pixels{{display:none}}.evidence-stage{{display:block}}</style></noscript></head>
 <body class="{'is-home' if is_home else 'is-reader'}"><a class="skip" href="#content">{'Skip to content' if is_en else '跳到正文'}</a>
 <header class="site-header"><a class="brand" href="{prefix}index.html" aria-label="Decisions Lab 首页"><span class="brand-symbol" aria-hidden="true">{pixel_mark()}</span><span>decisions<span class="brand-slash">/</span>lab</span></a><nav class="primary-nav" aria-label="主导航">{nav}</nav><div class="header-links"><a href="https://github.com/IndelibleVivi/decisions-lab">GitHub ↗</a><a href="{prefix}{'README.html' if is_en else 'README.en.html'}" lang="{'zh' if is_en else 'en'}">{'中文' if is_en else 'EN'}</a><button id="theme-toggle" type="button" hidden aria-label="切换到夜间模式" aria-pressed="false"><i aria-hidden="true"></i><span>NIGHT</span></button></div><div class="reading-progress" aria-hidden="true"></div></header>
 <main id="content" class="{'landing' if is_home else 'reader'}">{body}</main>
@@ -187,6 +197,27 @@ def project_atlas():
     return f'<div id="project-atlas"><div class="atlas-controls" role="group" aria-label="探索项目类别" hidden>{"".join(controls)}</div><div class="atlas-panels">{"".join(panels)}<a class="atlas-all" href="docs/projects.html">全部项目与来源 ↗</a></div><p id="atlas-status" class="sr-only" role="status"></p></div>'
 
 
+def recipe_explorer():
+    book = json.loads((ROOT/'catalog/recipes.json').read_text())
+    escape = html.escape
+    tabs = '<button type="button" data-recipe-group="all" aria-pressed="true">全部</button>' + ''.join(
+        f'<button type="button" data-recipe-group="{escape(g["id"])}" aria-pressed="false">{escape(g["title"])}</button>' for g in book['groups'])
+    entries = []
+    for i, recipe in enumerate(book['recipes'], 1):
+        r = {k: escape(str(v)) for k, v in recipe.items() if k != 'options'}
+        options = ''.join(f'<li>{escape(option)}</li>' for option in recipe['options'])
+        label = '已有离线实验' if recipe['status'] == 'implemented-offline' else '接入配方'
+        task = json.dumps({key: recipe[key] for key in ('input', 'question', 'options')}, ensure_ascii=False, indent=2)
+        entries.append(f'''<details class="recipe" data-recipe-category="{r['group']}" id="recipe-{r['id']}">
+<summary><span class="recipe-index">{i:02}</span><span><strong>{r['title']}</strong><small>{r['summary']}</small></span><span class="recipe-toggle" aria-hidden="true">＋</span></summary>
+<div class="recipe-body"><div><span class="eyebrow">INPUT → CHOICE</span><p>{r['input']}</p><h3>{r['question']}</h3><ul class="recipe-options">{options}</ul><p class="recipe-caution">容易踩坑：{r['failure_mode']}</p></div>
+<div><span class="recipe-status">{label}</span><h3>从这里动手</h3><p>{r['first_step']}</p><p><a href="{r['project_url']}">{r['project']} ↗</a><br>{r['mechanism']}</p><p class="recipe-date">项目证据截点 {r['source_date']} · 创意是本项目提案</p><a href="docs/playbook.html#{r['id']}">完整配方 ↗</a><button type="button" class="recipe-copy" hidden>复制任务 JSON</button><pre class="recipe-payload" hidden>{escape(task)}</pre><span class="recipe-copy-status" role="status"></span></div></div></details>''')
+    return f'''<section class="recipe-section" id="playground" aria-labelledby="recipe-title"><div class="section-heading"><h2 id="recipe-title">选一个，玩起来。<span>THE POSSIBILITY PLAYBOOK</span></h2><p>{len(entries)} 种玩法 · 现成项目 × 原创任务</p></div>
+<p class="recipe-intro">让模型决定下一幕剧情、下一篇该读什么、哪件素材值得留下。打开一张配方，从一个小而清楚的问题开始。</p>
+<div class="recipe-tools" hidden><div class="recipe-groups" role="group" aria-label="按玩法分类">{tabs}</div><label for="recipe-search">找个玩法<input id="recipe-search" type="search" placeholder="NPC、阅读、路由…"></label><p id="recipe-count" role="status"></p></div>
+<div class="recipe-list">{''.join(entries)}</div><p id="recipe-empty" hidden>没有匹配的玩法。换个词，或选择「全部」。</p><div class="recipe-footer"><p>这里可以读、筛选和复制任务；模型结果需要你接入后另测。浏览器不发送输入。</p><a href="docs/playbook.html">阅读全文与 API 用法 ↗</a></div></section>'''
+
+
 def home():
     metadata = json.loads((ROOT/'research/2026-10-08/metadata.json').read_text())
     results = json.loads((ROOT/'research/2026-10-08/reanalysis/sys1_reanalysis.json').read_text())['results']
@@ -207,6 +238,8 @@ def home():
     actions = [('inspect_source','核对来源','01'),('compare_contract','比较契约','02'),('read_in_context','结合上下文阅读','03'),('needs_more_context','先补信息','04'),('unknown','没有合适选项','05')]
     buttons = ''.join(f'<button type="button" data-action="{key}"><span>{num}</span>{label}<span class="choice-arrow" aria-hidden="true">↗</span></button>' for key,label,num in actions)
     paths = (
+        ('research/2026-10-15/README.html','这一周，发生了什么','新版本、多模态、定价与契约差异','15 OCT 2026','updates'),
+        ('docs/playbook.html','把模型拿来玩','配方、现成项目与第一步','PLAYBOOK','playbook'),
         ('research/2026-10-08/report.html','读清接口的承诺','原生 API、托管路线与开放模型',f'{metadata["research_entities"]} ENTITIES','research'),
         ('docs/projects.html','拆开有趣的项目','SDK、决策头、运行时与评测',f'{metadata["repository_index_entries"]} PROJECTS','projects'),
         ('docs/method.html','重新认识“可靠”','正确率、覆盖率、校准与错误代价','METHOD NOTES','method'),
@@ -215,17 +248,22 @@ def home():
     index = ''.join(f'<a class="directory-item" href="{url}"><span class="directory-id">0{i+1} / {meta}</span><h3>{title}</h3><p>{description}</p><span class="directory-arrow" aria-hidden="true">↗</span></a>' for i,(url,title,description,meta,kind) in enumerate(paths))
     return f'''<section class="cover" aria-labelledby="cover-title">
 <div class="cover-heading"><p>独立研究 · 决策模型与可复现实验</p><span>VOL. 01 / OCT 2026</span></div>
-<h1 id="cover-title" class="cover-title">DECISIONS<span>LAB<span class="cover-asterisk" aria-hidden="true">✳</span></span></h1>
+<div class="cover-stage">
+<h1 id="cover-title" class="sr-only">Decisions Lab</h1>
+<div class="cover-type" aria-hidden="true"><span class="type-back">DECISIONS</span><span class="type-front">LAB<span class="cover-asterisk">✳</span></span></div>
 <div class="sculpture">{sculpture_fallback()}<canvas id="sculpture-canvas" aria-hidden="true" hidden></canvas></div>
-{project_atlas()}
-<div class="cover-note"><span>{metadata["repository_index_entries"]} PROJECTS / 05 FIELDS</span><p>模型能选对吗？<br>我们把问题拆开看。</p></div>
-<div class="cover-bottom"><a href="#explore">向下探索 <span aria-hidden="true">↓</span></a><span>原创生成图形 · 非数据图</span><button id="sculpture-pause" type="button" hidden>暂停动态</button></div>
+<p class="cover-note"><span>{metadata["repository_index_entries"]} PROJECTS / 05 FIELDS</span>让一个选择，<br>长出许多可能。</p><p class="sculpture-hint" hidden>移动指针拨动 · 轻点冲散<br><span>原创粒子作品 / 不编码模型表现</span></p>
+</div>
+<div class="cover-bottom"><a href="#playground">向下探索 <span aria-hidden="true">↓</span></a><div class="sculpture-controls" hidden><div role="group" aria-label="粒子形态"><button type="button" data-sculpture-mode="0" aria-pressed="true">编织</button><button type="button" data-sculpture-mode="1" aria-pressed="false">分岔</button><button type="button" data-sculpture-mode="2" aria-pressed="false">环流</button></div><button type="button" id="sculpture-burst">冲散 ↗</button></div><button id="sculpture-pause" type="button" hidden>暂停动态</button></div><p id="sculpture-status" class="sr-only" role="status"></p>
 </section>
 
+<section class="fresh-strip"><a href="research/2026-10-15/README.html"><span>15 OCT / 新观察</span><strong>Jev 1.14 · Clef-omni · Decisions 契约更新</strong><span>读增量核查 ↗</span></a></section>
+{recipe_explorer()}
+<section class="project-section"><div class="section-heading"><h2>借一块现成的积木。<span>THE PROJECT ATLAS</span></h2><a href="docs/projects.html">项目地图 ↗</a></div>{project_atlas()}</section>
 <section id="explore" class="directory-section" aria-labelledby="directory-title"><div class="section-heading"><h2 id="directory-title">研究，从这里展开。<span>01 — THE READING ROOM</span></h2><a href="README.html">关于这个项目 ↗</a></div><div class="directory-grid">{index}</div></section>
 <section class="field-section" id="probability-artifact" aria-labelledby="field-title">
-<div class="field-heading"><div><p class="eyebrow">02 — AN INTERACTIVE STUDY</p><h2 id="field-title">概率，长什么样？</h2></div><p>三座山，三个候选。<br>拖动，改变它们的可能性。</p></div>
-<div class="field-stage"><span class="stage-coordinate">FIG. 01 — POSSIBILITY SPACE</span>{field_fallback()}<canvas id="probability-field" role="img" hidden></canvas><div class="field-annotation"><span>01</span><p>同一组候选。<br>不同的可能性。</p></div><div class="field-scale"><span>高</span><i></i><span>低</span><small>概率 / 示意</small></div><div class="field-values"><span><i class="color-a"></i>A <b data-field-value>72.0%</b></span><span><i class="color-b"></i>B <b data-field-value>20.0%</b></span><span><i class="color-c"></i>C <b data-field-value>8.0%</b></span></div></div>
+<div class="field-heading"><div><p class="eyebrow">02 — AN INTERACTIVE STUDY</p><h2 id="field-title">概率，长什么样？</h2></div><p>同一组候选，不同的可能性。<br>三座山，三个候选；拖动，改变它们的权重。</p></div>
+<div class="field-stage"><span class="stage-coordinate">FIG. 01 — POSSIBILITY SPACE</span>{field_fallback()}<canvas id="probability-field" role="img" hidden></canvas><div class="field-scale"><span>高</span><i></i><span>低</span><small>概率 / 示意</small></div><div class="field-values"><span><i class="color-a"></i>A <b data-field-value>72.0%</b></span><span><i class="color-b"></i>B <b data-field-value>20.0%</b></span><span><i class="color-c"></i>C <b data-field-value>8.0%</b></span></div></div>
 <div class="field-controls" hidden><div class="field-presets" role="group" aria-label="切换示意分布"><button data-field-preset="0" aria-pressed="true">一边倒</button><button data-field-preset="1" aria-pressed="false">难分高下</button><button data-field-preset="2" aria-pressed="false">双峰</button></div><label class="field-slider" for="field-bias"><span>偏向 A <output id="field-bias-value">72%</output></span><input id="field-bias" type="range" min="0" max="100" value="72"></label><div class="field-stat"><span>maxP</span><b id="field-max">0.72</b></div><div class="field-stat"><span>熵 / bits</span><b id="field-entropy">1.10</b></div><button type="button" id="field-pause">暂停动态</button></div>
 <div class="field-foot"><p>拖动看看：概率改变了形状，却不能独自证明判断正确。</p><span>交互示意 · 无模型调用</span></div><p id="field-summary" class="sr-only" role="status"></p>
 </section>

@@ -114,5 +114,12 @@
     "CJ-Dataset": "训练数据线索，不能计作模型供应商；混合、研究用途与非商用条款需要逐来源核查。",
     "zh-decision-bench": "中文评测数据线索；本期未深入审读，也不是模型条目。",
     "Chinese/regional vendors beyond Alibaba/Tencent": "调查没有形成穷尽性否定结论；确认 Alibaba/Tencent 不证明其他中国、日本或俄罗斯生态没有产品。"
-  }
+  },
+  "latest_update": {
+    "date": "2026-10-15",
+    "path": "research/2026-10-15/updates.json",
+    "reader": "research/2026-10-15/README.md",
+    "scope": "定向增量：Jev、OpenAI Decisions、Cloudflare、Fastino、Upstage；不刷新全量 census"
+  },
+  "recipes": "catalog/recipes.json"
 }

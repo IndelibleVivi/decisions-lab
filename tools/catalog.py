@@ -20,6 +20,9 @@ def project_markdown():
     records = {r["id"]: r for r in data["repositories"]["repositories"]}
     lines = ["# 相关项目地图", "", f"> 来源截点：{index['snapshot']}。以下审读深度来自该期调查；未在本项目重新运行上游测试或模型。", "",
              "从要解决的问题选择阅读入口。模型、SDK、运行时和评测仓库分别归类；兼容接口不保证语义、质量或许可相同。", ""]
+    latest = index.get("latest_update")
+    if latest:
+        lines += [f"新变化与新用法另见 [{latest['date']} 定向增量](../{latest['reader']}) 和 [妙妙玩法配方册](playbook.md)。下面仍是 {index['snapshot']} 的项目地图，不将旧审读自动标为新验证。", ""]
     for group in index["groups"]:
         lines += [f"## {group['title']}", "", group["question"], "",
                   "| 项目 | 值得看什么 | 调查读到了哪里 |", "| --- | --- | --- |"]
@@ -43,7 +46,7 @@ def project_markdown():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("kind", choices=("models", "projects", "sources", "watchlist", "render"))
+    parser.add_argument("kind", choices=("models", "projects", "sources", "watchlist", "updates", "recipes", "render"))
     parser.add_argument("--query", default="", help="case-insensitive substring across the complete record")
     parser.add_argument("--json", action="store_true", help="return complete matching records")
     args = parser.parse_args()
@@ -54,17 +57,24 @@ def main():
         target.write_text(project_markdown(), encoding="utf-8")
         print("Generated docs/projects.md from dated sources.")
         return
+    as_of = index["snapshot"]
     records = {"models": data["census"]["entities"],
                "projects": data["repositories"]["repositories"],
                "sources": data["source_index"]["sources"],
-               "watchlist": data["watchlist"]["unverified_candidates"]}[args.kind]
+               "watchlist": data["watchlist"]["unverified_candidates"]}.get(args.kind)
+    if args.kind == "updates":
+        update = json.loads((ROOT / index["latest_update"]["path"]).read_text(encoding="utf-8"))
+        records, as_of = update["changes"], update["checked_at"]
+    elif args.kind == "recipes":
+        book = json.loads((ROOT / index["recipes"]).read_text(encoding="utf-8"))
+        records, as_of = book["recipes"], book["updated_at"]
     hits = [r for r in records if args.query.casefold() in json.dumps(r, ensure_ascii=False).casefold()]
     if args.json:
-        print(json.dumps({"as_of": index["snapshot"], "kind": args.kind, "count": len(hits), "records": hits}, ensure_ascii=False, indent=2))
+        print(json.dumps({"as_of": as_of, "kind": args.kind, "count": len(hits), "records": hits}, ensure_ascii=False, indent=2))
     else:
-        print(f"{args.kind}: {len(hits)} records · as of {index['snapshot']}")
+        print(f"{args.kind}: {len(hits)} records · as of {as_of}")
         for r in hits:
-            print(r.get("id", r.get("title", r.get("name", ""))), "—", r.get("name", r.get("repo", r.get("url", ""))))
+            print(r.get("id", r.get("title", r.get("name", ""))), "—", r.get("title", r.get("name", r.get("repo", r.get("url", "")))))
 
 
 if __name__ == "__main__":

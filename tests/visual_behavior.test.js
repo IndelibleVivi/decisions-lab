@@ -21,6 +21,7 @@ class Node {
   dispatchEvent(event){for(const fn of this.listeners[event.type]||[]) fn(event);}
   fire(type){this.dispatchEvent({type});}
   setAttribute(key,value){this.attributes[key]=value;}
+  removeAttribute(key){delete this.attributes[key];}
   getBoundingClientRect(){return {width:1000,height:600,left:0,top:0};}
   querySelector(){return this.child??=new Node();}
 }
@@ -29,7 +30,16 @@ function motionTest(file,prefix) {
     const nodes=new Map();const get=selector=>{if(!nodes.has(selector))nodes.set(selector,new Node());return nodes.get(selector);};
     const doc=new Node();doc.hidden=false;doc.documentElement={dataset:{theme:'light'}};
     doc.querySelector=get;doc.querySelectorAll=selector=>[0,1,2].map(i=>get(selector+i));
-    let draws=0; const context=new Proxy({}, {get:(_,key)=>key==='clearRect'?()=>draws++:()=>{},set:()=>true});
+    let draws=0;const uniforms={};
+    const context=new Proxy({}, {get:(_,key)=>{
+      if(key==='clearRect'||key==='clear')return ()=>draws++;
+      if(key==='getShaderParameter'||key==='getProgramParameter')return ()=>true;
+      if(key==='getUniformLocation')return (_,name)=>name;
+      if(key==='uniform3fv')return (name,value)=>{assert.ok([...value].every(Number.isFinite),'finite GPU uniforms');uniforms[name]=[...value];};
+      if(key==='uniform1f')return (name,value)=>{assert.ok(Number.isFinite(value),'finite GPU scalar');uniforms[name]=value;};
+      if(key==='bufferData')return (_,value)=>assert.ok([...value].every(Number.isFinite),'finite point geometry');
+      return ()=>{};
+    },set:()=>true});
     const canvas=get(prefix==='sculpture'?'#sculpture-canvas':'#probability-field');canvas.getContext=()=>context;
     const media=new Node();media.matches=reduce;
     let intersect;let id=0;const pending=new Map();
@@ -37,7 +47,7 @@ function motionTest(file,prefix) {
       requestAnimationFrame:fn=>{pending.set(++id,fn);return id;},cancelAnimationFrame:id=>pending.delete(id),
       ResizeObserver:class {observe(){}},IntersectionObserver:class{constructor(fn){intersect=fn;}observe(){}}};
     vm.runInNewContext(fs.readFileSync(`site/${file}`,'utf8'),env);
-    return {get,doc,media,pending,draws:()=>draws,intersect:value=>intersect([{isIntersecting:value}]),
+    return {get,doc,media,pending,uniforms,draws:()=>draws,intersect:value=>intersect([{isIntersecting:value}]),
       frame:stamp=>{const [id,fn]=pending.entries().next().value;pending.delete(id);fn(stamp);}};
   }
   const reduced=setup(true);
@@ -58,6 +68,21 @@ function motionTest(file,prefix) {
   runtime.doc.hidden=false;runtime.doc.fire('visibilitychange');check(runtime.pending.size===1,`${file}: visible tab resumes once`);
   runtime.media.matches=true;runtime.media.fire('change');
   check(runtime.pending.size===0&&button.attributes['aria-pressed']==='true',`${file}: switching reduced motion stops`);
+  if(prefix==='sculpture') {
+    runtime.get('[data-sculpture-mode]1').fire('click');
+    check(JSON.stringify(runtime.uniforms.uMorph)==='[0,1,0]','paused mode selection produces requested geometry immediately');
+    check(runtime.pending.size===0,'mode selection respects pause');
+    runtime.get('#sculpture-burst').fire('click');
+    check(runtime.uniforms.uBurst===1.5&&runtime.pending.size===0,'paused burst is one static state');
+    runtime.get('#sculpture-burst').fire('click');
+    check(runtime.uniforms.uBurst===0,'paused burst toggles back to assembled form');
+    runtime.get('#sculpture-canvas').dispatchEvent({type:'webglcontextlost',preventDefault(){}});
+    check(runtime.pending.size===0&&runtime.get('#sculpture-canvas').hidden,'context loss stops loop and hides canvas');
+    check(!('hidden' in runtime.get('.sculpture-fallback').attributes),'context loss restores static fallback');
+    runtime.get('#sculpture-canvas').fire('webglcontextrestored');
+    check(!runtime.get('#sculpture-canvas').hidden&&runtime.pending.size===0,'context restore respects paused state');
+    check(runtime.get('#sculpture-status').textContent==='粒子作品已恢复；当前已暂停。','context restore replaces stale failure announcement');
+  }
   const before=runtime.draws();runtime.doc.documentElement.dataset.theme='dark';runtime.doc.fire('themechange');
   check(runtime.draws()>before&&runtime.pending.size===0,`${file}: theme repaints paused artwork without restarting`);
 }

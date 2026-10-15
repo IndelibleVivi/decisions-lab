@@ -1,0 +1,278 @@
+{
+  "schema": "decisions-lab.updates/1",
+  "checked_at": "2026-10-15",
+  "baseline": "research/2026-10-08",
+  "live_verified": false,
+  "coverage": {
+    "kind": "targeted_increment",
+    "entities": ["openai_decisions", "typesafe_jev", "fastino_glide", "fastino_gliner_decide", "cloudflare_clef", "solar_decide"],
+    "scope": "OpenAI 与 TypeSafe 原生文本契约、官方 Python SDK 及已公开实验扩展；Fastino、Cloudflare、Upstage 的相关文档边界。",
+    "limits": "不是对历史 23 个实体、21 个仓库、171 条来源的全量复查；不替代 10-08 census，不重写历史快照。",
+    "evidence": ["official_documentation", "official_sdk_source", "public_openapi"],
+    "not_performed": ["credential_access", "live_inference", "billing_measurement", "latency_measurement", "quality_or_calibration_evaluation", "production_activation"]
+  },
+  "not_rechecked": [
+    {"scope": "完整 OpenRouter 模型目录、全部模型权重与相关仓库", "reason": "不在本轮定向核对范围。"},
+    {"scope": "六组研究、历史预测与 benchmark", "reason": "未重新采样模型或重跑质量实验。"},
+    {"scope": "Cloudflare Clef Omni 完整模型页 schema", "source_id": "CF-OMNI-PAGE", "reason": "Web 工具返回 400 redirect loop；公告不能替代完整 schema。"},
+    {"scope": "Perplexity 新请求 guide", "source_id": "PPLX-GUIDE-UNREAD", "reason": "不可访问；本轮未复核，不能据此推断服务状态。"},
+    {"scope": "Fastino GLiNER-2.5-Decide 完整推理请求", "reason": "只补核 hosted ID、参数量、context 与标价；未重审完整 GLiNER 请求契约。"}
+  ],
+  "sources": [
+    {
+      "id": "OAI-GUIDE", "title": "OpenAI Decisions guide",
+      "url": "https://developers.openai.com/api/docs/guides/decisions",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "OAI-REF", "title": "Create a decision",
+      "url": "https://developers.openai.com/api/reference/resources/decisions/methods/create",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_api_reference"
+    },
+    {
+      "id": "OAI-SDK-RESOURCE", "title": "openai-python Decisions resource",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/resources/decisions.py",
+      "api_url": "https://api.github.com/repos/openai/openai-python/contents/src/openai/resources/decisions.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main"
+    },
+    {
+      "id": "OAI-SDK-PARAMS", "title": "openai-python Decisions request types",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision_create_params.py",
+      "api_url": "https://api.github.com/repos/openai/openai-python/contents/src/openai/types/decision_create_params.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main",
+      "latest_file_change": {"commit": "d42accb1a2d1b75b79edf694b8bfee78c4e90e6a", "committed_at": "2026-10-14T17:30:55Z", "source_id": "OAI-SDK-COMMIT"}
+    },
+    {
+      "id": "OAI-SDK-INPUT", "title": "openai-python Decisions message type",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision_input_message_param.py",
+      "api_url": "https://api.github.com/repos/openai/openai-python/contents/src/openai/types/decision_input_message_param.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main"
+    },
+    {
+      "id": "OAI-SDK-IMAGE", "title": "openai-python Decisions image type",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision_input_image_param.py",
+      "api_url": "https://api.github.com/repos/openai/openai-python/contents/src/openai/types/decision_input_image_param.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main"
+    },
+    {
+      "id": "OAI-SDK-RESPONSE", "title": "openai-python Decisions response types",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/decision.py",
+      "api_url": "https://api.github.com/repos/openai/openai-python/contents/src/openai/types/decision.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main"
+    },
+    {
+      "id": "OAI-SDK-BATCH", "title": "openai-python Batch endpoint enum",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/batch_create_params.py",
+      "api_url": "https://api.github.com/repos/openai/openai-python/contents/src/openai/types/batch_create_params.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main"
+    },
+    {
+      "id": "OAI-SDK-VERSION", "title": "openai-python observed main version",
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/_version.py",
+      "api_url": "https://api.github.com/repos/openai/openai-python/contents/src/openai/_version.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main", "observed_version": "3.31.0"
+    },
+    {
+      "id": "OAI-SDK-COMMIT", "title": "Clarify Decisions request and response fields",
+      "url": "https://github.com/openai/openai-python/commit/d42accb1a2d1b75b79edf694b8bfee78c4e90e6a",
+      "api_url": "https://api.github.com/repos/openai/openai-python/commits?path=src/openai/types/decision_create_params.py&per_page=1",
+      "checked_at": "2026-10-15", "access": "GitHub commits API HTTP 200", "evidence_type": "official_sdk_history",
+      "note": "最近 request types 修改定位；不表示全部本轮 main 文件固定于此 commit。"
+    },
+    {
+      "id": "TS-API", "title": "TypeSafe API reference",
+      "url": "https://docs.typesafe.ai/api",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_api_reference"
+    },
+    {
+      "id": "TS-MODELS", "title": "TypeSafe models",
+      "url": "https://docs.typesafe.ai/models",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "TS-CONFIDENCE", "title": "TypeSafe confidence",
+      "url": "https://docs.typesafe.ai/confidence",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "TS-CHOICE", "title": "TypeSafe Choice",
+      "url": "https://docs.typesafe.ai/primitives/choice",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "TS-IMAGES", "title": "TypeSafe experimental images",
+      "url": "https://docs.typesafe.ai/images",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "TS-BOX", "title": "TypeSafe experimental Box",
+      "url": "https://docs.typesafe.ai/primitives/box",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "TS-OPENAPI", "title": "TypeSafe public OpenAPI",
+      "url": "https://api.typesafe.ai/openapi.json",
+      "checked_at": "2026-10-15", "access": "Unauthenticated GET HTTP 200", "evidence_type": "public_openapi", "observed_version": "0.2.0"
+    },
+    {
+      "id": "TS-SDK-SCHEMA", "title": "TypeSafe Python SDK generated schemas",
+      "url": "https://github.com/typesafe-ai/typesafe-sdk-python/blob/main/src/typesafe_sdk/_schemas/models.py",
+      "api_url": "https://api.github.com/repos/typesafe-ai/typesafe-sdk-python/contents/src/typesafe_sdk/_schemas/models.py",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main"
+    },
+    {
+      "id": "TS-SDK-VERSION", "title": "TypeSafe Python SDK observed main version",
+      "url": "https://github.com/typesafe-ai/typesafe-sdk-python/blob/main/pyproject.toml",
+      "api_url": "https://api.github.com/repos/typesafe-ai/typesafe-sdk-python/contents/pyproject.toml",
+      "checked_at": "2026-10-15", "access": "GitHub Contents API HTTP 200", "evidence_type": "official_sdk_source", "observed_ref": "main", "observed_version": "0.7.5", "note": "本轮未固定 commit，未安装或运行 SDK。"
+    },
+    {
+      "id": "FASTINO-API", "title": "Call GLiDE and migrate from TypeSafe",
+      "url": "https://docs.fastino.ai/inference/systemone",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_api_reference"
+    },
+    {
+      "id": "FASTINO-CHOICE", "title": "GLiDE Choice",
+      "url": "https://docs.fastino.ai/concepts/glide-choice",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "FASTINO-SCORE", "title": "GLiDE Score",
+      "url": "https://docs.fastino.ai/concepts/glide-score",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "FASTINO-PRICE", "title": "Fastino pricing",
+      "url": "https://docs.fastino.ai/pricing",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "FASTINO-MODELS", "title": "Fastino model catalog",
+      "url": "https://docs.fastino.ai/concepts/models",
+      "checked_at": "2026-10-15", "access": "HTML parsed", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "CF-OMNI-RELEASE", "title": "Clef Omni on Workers AI",
+      "url": "https://developers.cloudflare.com/changelog/post/2026-10-09-clef-omni-workers-ai/",
+      "checked_at": "2026-10-15", "published_at": "2026-10-09", "access": "Official announcement inspected", "evidence_type": "official_changelog"
+    },
+    {
+      "id": "CF-FLASH", "title": "Cloudflare Clef Flash model page",
+      "url": "https://developers.cloudflare.com/ai/models/%40cf/cloudflare/clef-flash/",
+      "checked_at": "2026-10-15", "access": "Official model page inspected", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "CF-OMNI-PAGE", "title": "Cloudflare Clef Omni model page, unread",
+      "url": "https://developers.cloudflare.com/ai/models/@cf/cloudflare/clef-omni/",
+      "checked_at": "2026-10-15", "access": "Web tool 400 redirect loop; @ encoded as %40", "evidence_type": "access_failure", "content_inspected": false
+    },
+    {
+      "id": "UPSTAGE-API", "title": "Upstage System One API",
+      "url": "https://console.upstage.ai/api/systemone",
+      "checked_at": "2026-10-15", "access": "Official API reference inspected", "evidence_type": "official_api_reference"
+    },
+    {
+      "id": "UPSTAGE-MODEL", "title": "Upstage Solar Decide model",
+      "url": "https://console.upstage.ai/docs/models/solar-decide",
+      "checked_at": "2026-10-15", "access": "Official model page inspected", "evidence_type": "official_documentation"
+    },
+    {
+      "id": "PPLX-GUIDE-UNREAD", "title": "Perplexity Decider guide, unread",
+      "url": "https://docs.perplexity.ai/guides/decider",
+      "checked_at": "2026-10-15", "access": "Unavailable in this review", "evidence_type": "access_failure", "content_inspected": false
+    }
+  ],
+  "changes": [
+    {
+      "id": "openai-input-limits", "entity": "openai_decisions", "title": "问题上限和 hosted image URLs 已明确", "status": "updated_documentation",
+      "previous": {"question_count_max": "not established", "image_urls": "inline data URLs only"},
+      "current": {"model": "gpt-6-luna", "endpoint": "https://api.openai.com/v1/decisions", "method": "POST", "auth": "Authorization: Bearer", "questions_min": 1, "questions_max": 200, "images_max": 128, "image_urls": ["base64 data URL", "public HTTP(S) URL"], "file_id": false},
+      "source_ids": ["OAI-REF", "OAI-SDK-PARAMS", "OAI-SDK-IMAGE"],
+      "limits": ["文档与 SDK 一致；未验证服务端边界。", "观察日期不是这些能力的确定上线日期。"]
+    },
+    {
+      "id": "openai-reference-sdk-drift", "entity": "openai_decisions", "title": "Reference 的 history/cache 扩展尚未同步到 Python types", "status": "source_disagreement",
+      "previous": "10-08 按当时 user-only request types 记录。",
+      "current": {
+        "reference": {"roles": ["user", "developer", "system", "assistant"], "history": ["function_call", "function_call_output", "custom_tool_call", "custom_tool_call_output"], "cache_fields": ["prompt_cache_key", "prompt_cache_options", "prompt_cache_breakpoint"], "safety_identifier": true},
+        "python_main": {"observed_version": "3.31.0", "message_roles": ["user"], "tools_documented_supported": false, "cache_parameters_exposed": false, "safety_identifier": true},
+        "request_types_latest_change": {"commit": "d42accb1a2d1b75b79edf694b8bfee78c4e90e6a", "committed_at": "2026-10-14T17:30:55Z"}
+      },
+      "source_ids": ["OAI-REF", "OAI-SDK-RESOURCE", "OAI-SDK-PARAMS", "OAI-SDK-INPUT", "OAI-SDK-VERSION", "OAI-SDK-COMMIT"],
+      "limits": ["不把 reference 声明当作 SDK 或 live 验证。", "所列 commit 定位 request types 最近修改，不代表所有 main 文件固定于此 commit。"]
+    },
+    {
+      "id": "openai-response-price", "entity": "openai_decisions", "title": "文本 Choice、refusal 与 endpoint 标价延续", "status": "reconfirmed",
+      "previous": "10-08 的基本原生文本契约与 input-only 标价。",
+      "current": {"request_required": ["model", "input", "questions"], "question_types": ["predicate", "choice", "score"], "choice_count": [2, 255], "choice_value_types": ["string", "boolean"], "answers": "ordered array", "choice_fields": ["choice", "probabilities", "confidence"], "probability_shape": "array of {value, probability}", "refusal_fields": ["type", "name"], "refusal_reason_field": false, "score": "probability-weighted level index", "confidence_formula": "not established", "availability": "official guide still says public beta", "price": {"observed_at": "2026-10-15", "currency": "USD", "unit": "per 1M input tokens", "input": 0.1, "output_charged": false, "cache_read_write_charged": false, "conditions": "Regional processing premiums and long-context input multipliers apply; endpoint-specific pricing."}, "batch_in_sdk_endpoint_enum": false, "streaming_event_contract": "not established"},
+      "source_ids": ["OAI-GUIDE", "OAI-REF", "OAI-SDK-RESPONSE", "OAI-SDK-BATCH"],
+      "limits": ["不能继承模型级 Batch/Flex 折扣。", "模型 context 不是 endpoint 上限验证。", "public beta 不证明当前账号可以调用。"]
+    },
+    {
+      "id": "jev-114-and-aliases", "entity": "typesafe_jev", "title": "Jev 1.14 发布，latest 仍为 1.13", "status": "new_version",
+      "previous": {"models": ["jev-1.13.0"], "latest": "jev-1.13.0", "preview": "jev-1.13.0"},
+      "current": {"models": ["jev-1.13.0", "jev-1.14.0"], "jev_114_available_from": "2026-10-14", "latest": "jev-1.13.0", "preview": "jev-1.14.0", "price": {"observed_at": "2026-10-15", "currency": "USD", "unit": "per 1M input tokens", "input": 0.042, "output_charged": false}},
+      "source_ids": ["TS-MODELS"], "limits": ["响应 model 应保留为实际返回版本；未获取账号的 model listing。"]
+    },
+    {
+      "id": "jev-context-and-rate-limits", "entity": "typesafe_jev", "title": "长上下文 opt-in、无独立问题数量上限与组织速率限制", "status": "updated_documentation",
+      "previous": {"context": "64k request / 32k question", "question_count_max": "not stated", "oversize_behavior": "not specified", "rate_limits": "100K tokens/s and 80 requests/s"},
+      "current": {"default_context": {"per_request": "64k", "per_question": "32k"}, "independent_question_count_limit": false, "long_context": {"header": "TypeSafe-Danger-Zone-Long-Context: true", "per_request": "262k", "per_question": "262k", "models": ["jev-1.13.0", "jev-1.14.0"], "default_enabled": false, "per_token_price_changed": false, "vendor_caveat": "slower and less accurate than default limits"}, "oversize_error": "400 max_tokens_exceeded", "rate_limits": "organization-specific; inspect developer console"},
+      "source_ids": ["TS-MODELS", "TS-API", "TS-OPENAPI"], "limits": ["未测 token 边界、实际限制或超长输入质量。"]
+    },
+    {
+      "id": "jev-experimental-images-box", "entity": "typesafe_jev", "title": "Images 与 Box 是显式开启的实验扩展", "status": "experimental_documented",
+      "previous": {"input": ["text", "JSON"], "question_types": ["noul", "choice", "score"]},
+      "current": {"stage": "dreamer-ready; not production-ready", "header": "TypeSafe-Danger-Zone-Images: true", "default_enabled": false, "image_models": ["jev-1.13.0", "jev-1.14.0"], "assets": "top-level map; references may appear in state, instructions, criteria", "image_formats": ["png", "jpg", "jpeg"], "upload": ["multipart", "base64"], "box_model": "jev-1.14.0", "box_fields": ["top", "bottom", "left", "right"], "box_coordinates": "normalized fractions", "box_not_found_answer": false, "box_confidence_disagreement": "Box prose says number; OpenAPI permits number or null"},
+      "source_ids": ["TS-IMAGES", "TS-BOX", "TS-OPENAPI", "TS-SDK-SCHEMA"], "limits": ["Models 简表仍写 Text，API 总览未完整展开实验分支。", "本项目 collector 不支持本轮新增实验扩展；未发送图片或运行 Box。"]
+    },
+    {
+      "id": "jev-prose-schema-drift", "entity": "typesafe_jev", "title": "instructions 与 Score 边界的 prose/schema 差异", "status": "source_disagreement",
+      "previous": "以 API 总览记录 required instructions 与 2–10 Score levels。",
+      "current": {"api_prose": {"instructions": "required", "score_levels": "2–10"}, "openapi_and_python_schema": {"instructions": "optional or null", "score_min_items": 1, "score_max_items": "not specified"}, "openapi_version": "0.2.0", "python_observed_version": "0.7.5", "python_observed_ref": "main"},
+      "source_ids": ["TS-API", "TS-OPENAPI", "TS-SDK-SCHEMA", "TS-SDK-VERSION"], "limits": ["没有安装或执行 SDK，也未固定 TypeSafe SDK commit。", "较宽的 schema 不是实际服务端接受边界的证明。"]
+    },
+    {
+      "id": "jev-text-choice-contract", "entity": "typesafe_jev", "title": "既有文本 Choice 与独立概率语义延续", "status": "reconfirmed",
+      "previous": "10-08 的 TypeSafe native System One 结构。",
+      "current": {"endpoint": "https://api.typesafe.ai/v1/systemone", "method": "POST", "auth": "Authorization: Bearer", "request_required": ["model", "state", "questions"], "state": ["string", "object", "array"], "questions": "map keyed by caller question IDs; IDs not model-visible", "choice_criteria": "option-to-description map", "choice_fields": ["type", "choice", "probabilities", "confidence"], "choice": "highest-probability option", "probabilities": "complete map summing to approximately one", "choice_confidence": "(pmax - 1/n) / (1 - 1/n)", "score": "expected zero-based level index", "score_confidence": "max(0, 1 - weighted_absolute_distance_from_mode / uniform_MAD)", "noul_separate_confidence": false, "refusal_in_answer_union": false},
+      "source_ids": ["TS-API", "TS-CHOICE", "TS-CONFIDENCE", "TS-OPENAPI"], "limits": ["confidence 是概率的派生统计，不是独立正确率估计。", "无文档 refusal 不代表可以把缺失答案解释为 unknown。"]
+    },
+    {
+      "id": "fastino-glide-contract", "entity": "fastino_glide", "title": "GLiDE 相似 envelope 下的不同语义", "status": "reconfirmed",
+      "previous": "独立 Fastino 路线，不能当 TypeSafe drop-in replacement。",
+      "current": {"endpoint": "https://api.fastino.ai/v1/systemone", "method": "POST", "request_model": "fastino/GLiDE", "response_model": "glide", "auth": ["X-API-Key", "Authorization: Bearer accepted by migration guide"], "request_required": ["model", "state", "questions"], "instructions": "non-empty string", "choice_count": [2, 255], "score_max_levels": 255, "context_per_rendered_question": 40000, "choice_confidence": "top1 - top2", "score_confidence": "top1 - top2", "noul_confidence": "abs(2*p - 1)", "score": "winning integer level index", "expected_level": "probability-weighted level index", "unsupported": ["streaming", "batch of independent states", "fine-tuned deployment IDs"], "retry_statuses": [425, 429, 503], "price": {"observed_at": "2026-10-15", "currency": "USD", "unit": "per 1M input tokens", "input": 0.15, "output_charged": false, "conditions": "usage.input_tokens sums internal passes across all questions"}},
+      "source_ids": ["FASTINO-API", "FASTINO-CHOICE", "FASTINO-SCORE", "FASTINO-PRICE"], "limits": ["未建立独立 refusal response。", "阈值不能从 Jev 直接迁移；没有本项目 live 证据。"]
+    },
+    {
+      "id": "fastino-gliner-hosted-details", "entity": "fastino_gliner_decide", "title": "Hosted model ID 与 context 补充", "status": "newly_established",
+      "previous": {"model_id": "not fully audited", "context_tokens": null},
+      "current": {"route": "Fastino hosted", "model_id": "fastino/GLiNER-2.5-Decide", "parameters": 340000000, "context_tokens": 8192, "price": {"observed_at": "2026-10-15", "currency": "USD", "unit": "per 1M input tokens", "input": 0.03, "output_charged": false}},
+      "source_ids": ["FASTINO-MODELS", "FASTINO-PRICE"], "limits": ["没有重审完整 GLiNER inference contract；不继承 GLiDE System One schema。", "Hosted 标价不是自托管总成本。"]
+    },
+    {
+      "id": "cloudflare-clef-omni-and-flash", "entity": "cloudflare_clef", "title": "Clef Omni 发布与 Flash hosted context/价格调整", "status": "updated_documentation",
+      "previous": {"flash_hosted_context": "64K", "flash_input_usd_per_million": 0.09},
+      "current": {"omni_release_date": "2026-10-09", "omni_architecture": "30B MoE / 3B active", "omni_media": {"transport": "data URLs", "audio": ["WAV", "MP3"], "video": ["MP4", "WebM"]}, "flash_hosted_context": 24576, "flash_hosted_context_label": "24K", "flash_weights_changed": false, "flash_self_hosted_context": "256K", "prices": {"observed_at": "2026-10-15", "currency": "USD", "unit": "per 1M input tokens", "flash": 0.038, "clef": 0.24, "omni": 0.15}, "clef_hosted_context": "64K", "omni_hosted_context": "64K"},
+      "source_ids": ["CF-OMNI-RELEASE", "CF-FLASH"], "limits": ["能力与价格为官方声明，未测本项目 live。", "Omni 模型页遇 redirect loop；未读取完整请求 schema。", "Flash 自托管 weights context 与 hosted 上限分开。"]
+    },
+    {
+      "id": "upstage-direct-contract", "entity": "solar_decide", "title": "原厂 solar-decide 与 26 选项上限", "status": "newly_established",
+      "previous": "原厂 solar-decide 已记录，Solar Decide Flash 直连仍待核。",
+      "current": {"models_listed_in_api": ["solar-decide"], "choice_count": [2, 26], "documented_27_choice_example": "HTTP 422", "context": "512K", "price": {"observed_at": "2026-10-15", "currency": "USD", "unit": "per 1M input tokens", "input": 0.1}, "flash_direct_native_contract": "not established"},
+      "source_ids": ["UPSTAGE-API", "UPSTAGE-MODEL"], "limits": ["27 项返回 422 来自文档示例，不是本项目发送的探针。", "OpenRouter Flash 不能当作原厂直连确认。"]
+    }
+  ],
+  "repository_disposition": {
+    "native_models_retained": {"jev": "jev-1.13.0", "decisions": "gpt-6-luna"},
+    "reason": "Jev latest 仍指向 1.13；OpenAI 仍唯一列 gpt-6-luna。既有单文本 Choice 属于文档与 SDK 的共同支持子集，版本升级和实验扩展需要独立实验，不能静默替换。",
+    "collector_or_normalizer_changed": false,
+    "historical_snapshot_changed": false,
+    "examples_executed": false
+  },
+  "access_notes": [
+    "raw.githubusercontent.com 直取遭遇 SSL unexpected EOF；改用同一原作者仓库的 GitHub Contents API 成功读取。",
+    "Web 工具不支持 OpenAI .md 页的 text/markdown；HTML 可读。",
+    "文档可访问不证明账号权限、服务端行为、实际价格或模型质量；访问失败也不证明服务不可用。"
+  ]
+}

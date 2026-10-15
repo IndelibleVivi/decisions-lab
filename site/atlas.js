@@ -13,12 +13,8 @@
 // script only reveals the controls after it has proved the DOM is coherent —
 // every button has a matching panel and vice versa, each group appears exactly
 // once — and leaves them hidden if anything is missing or duplicated. Selecting
-// a control toggles visibility, mirrors aria-pressed, dispatches a
-// CustomEvent('atlaschange') for the decorative canvas listener, then announces
-// the selected group's label: one event for the initial mount, one for each
-// changed selection, none when the current group is re-selected. Groups are
-// addressed by stable ID (never by index), so reordering the markup cannot
-// change the behavior.
+// a control toggles visibility and aria-pressed, then announces the selected
+// label. Groups are addressed by stable ID, never by position.
 (function (root, factory) {
   'use strict';
   var api = factory();
@@ -103,23 +99,10 @@
       if (status) status.textContent = labelFor(group);
     }
 
-    // Dispatch one atlaschange for the given selection. Called once at mount
-    // for the initial group and once per changed selection; never for a
-    // re-selection of the current group (select() short-circuits that).
-    function emit(group) {
-      var Ctor = (typeof root.CustomEvent === 'function' && root.CustomEvent) ||
-                 (typeof CustomEvent === 'function' && CustomEvent);
-      if (typeof Ctor !== 'function') return;
-      var index = -1;
-      for (var i = 0; i < buttons.length; i++) if (buttons[i].group === group) index = i;
-      doc.dispatchEvent(new Ctor('atlaschange', { detail: { group: group, index: index } }));
-    }
-
     function select(group) {
       if (!nodeFor(panels, group)) return null; // unknown id: never hide every panel
-      if (group === current) return null; // idempotent re-selection, no event
+      if (group === current) return null; // idempotent re-selection
       render(group);
-      emit(group);
       return group;
     }
 
@@ -130,7 +113,6 @@
     }
 
     render(current);
-    emit(current);
     if (controls) controls.hidden = false;
 
     return { select: select, current: function () { return current; } };
