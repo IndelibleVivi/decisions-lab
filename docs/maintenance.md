@@ -41,7 +41,13 @@ python3 tools/build_site.py
 
 ## 图形与外观的维护边界
 
-`site/sculpture.js` 的 WebGL 粒子作品在编织、分岔、环流间变形，支持指针扰动与冲散；几何和颜色不代表模型关系或性能。无 WebGL 或 context 丢失时保留 SVG，恢复 context 后重新初始化并保留暂停状态。`site/atlas.js` 渐进增强独立的项目分类切换，项目名称、分组和链接由构建器读取 catalog 与带日期的 repositories 快照生成；不另存事实副本。无 JavaScript 时保留首组入口和完整项目目录链接。`site/recipes.js` 增强玩法分类、关键词搜索和复制；无 JavaScript 时全部配方仍可展开阅读。`site/field.js` 的三个高斯山峰由示意候选概率加权，maxP 和 Shannon entropy 使用同一分布计算；几何投影不等于概率校准。`site/evidence.js` 只投影构建时传入的历史汇总，切换高 maxP 时保留完整格子位置并淡化筛选外记录。作品／示意／历史标签需要一起保留。
+`site/sculpture.js` 的 WebGL 粒子作品在编织、分岔、环流间变形，支持整体姿态跟随、带惯性的拖拽、衰减轨迹、冲散和键盘旋转；Home／复位会清除视角偏移、惯性和冲散，保持当前选定形态。暂停／减少动态效果下，拖拽与键盘仅更新静帧，悬停不启动动画；触摸保留纵向滚动。取消、失焦、离屏、后台或 context 丢失会清理拖拽和 pointer capture。几何和颜色不代表模型关系或性能。无 WebGL 或 context 丢失时保留 SVG，恢复 context 后重新初始化并保留暂停状态。
+
+`site/atlas.js` 渐进增强独立的项目分类切换，项目名称、分组和链接由构建器读取 catalog 与带日期的 repositories 快照生成；不另存事实副本。无 JavaScript 时保留首组入口和完整项目目录链接。
+
+`site/recipes.js` 增强玩法分类、关键词搜索、索引选择、fragment 导航和复制；默认进入「创作与互动」，选「全部」可检索二十项，切换分类会保留仍匹配的当前项。原创分流图使用同份 catalog 的候选；手动选择只同步路线、高亮和读数，不修改复制的任务，不推断模型结果。无 JavaScript 时索引增强隐藏，全部配方仍可展开阅读。
+
+`site/field.js` 的三个高斯山峰由示意候选概率加权，maxP 和 Shannon entropy 使用同一分布计算；几何投影不等于概率校准。`site/evidence.js` 只投影构建时传入的历史汇总，切换高 maxP 时保留完整格子位置并淡化筛选外记录。作品／示意／历史标签需要一起保留。
 
 `site/theme.js` 在样式加载前读取本地外观选择，未选择时跟随系统；只写入 `decisions-theme`，不储存输入或练习答案。接入说明的原创 `site/flow.svg` 在构建时内联，随同一主题变色；原 SVG 仍是唯一编辑源。两幅 Canvas 都提供暂停，遵循减少动态效果偏好，并在后台／视野外停止。无 JavaScript 时保留内嵌 SVG 和静态汇总。
 
@@ -54,3 +60,5 @@ python3 tools/build_site.py
 记录本次要改变的决策、输入如何选择、分组/切分、baseline、具体路线和模型、未通过案例、原始概率、计时/费用的来源，以及结果不能说明什么。没有 live 运行就写未运行；局部失败也保留。研究贡献可以是复算、反例或修正一个错误解释，不必每次都是排行榜。
 
 维护代码与内容时运行统一入口。GitHub Actions 只负责同一入口的无凭据验证，不运行模型、不发布站点。公开前检查原始导出、私人记录、路径、凭据和第三方许可范围。
+
+交互设计参考了 [anatomy](https://github.com/wheresryan22/anatomy) 的部件／读数同步与直接操控、[Interactive Particles](https://tympanus.net/codrops/2019/01/17/interactive-particles-with-three-js/) 的轨迹衰减机制，以及 [LOOPY](https://ncase.me/loopy/) 的动作与后果就地呈现。本站沿用原生 WebGL/SVG 与自己的几何和状态逻辑，没有引入这些项目的代码、素材或依赖。

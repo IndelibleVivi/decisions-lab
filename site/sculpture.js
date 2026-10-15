@@ -10,6 +10,7 @@
   const hint = document.querySelector('.sculpture-hint');
   const modeButtons = [...document.querySelectorAll('[data-sculpture-mode]')];
   const burstButton = document.querySelector('#sculpture-burst');
+  const resetButton = document.querySelector('#sculpture-reset');
   const status = document.querySelector('#sculpture-status');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const gl = canvas.getContext('webgl', {alpha:true, antialias:false, premultipliedAlpha:true});
@@ -19,15 +20,24 @@
   attribute vec2 aSeed;
   uniform vec3 uMorph;
   uniform vec2 uRes,uPointer;
-  uniform float uTime,uSpin,uBurst,uDpr,uDark,uActive;
+  uniform vec2 uTrail[3];
+  uniform float uTrailW[3];
+  uniform float uTime,uYaw,uPitch,uBurst,uDpr,uDark,uActive;
   varying vec3 vColor;
   varying float vAlpha;
   mat3 turn(float a,float b){
     float c=cos(a),s=sin(a),q=cos(b),r=sin(b);
     return mat3(c,s*r,-s*q,0.,q,r,s,-c*r,c*q);
   }
+  vec3 wake(vec3 p,vec2 c,float w){
+    vec2 d=p.xy-c;
+    float infl=exp(-dot(d,d)*1.6)*w;
+    p.xy+=d*infl*.28;
+    p.z+=infl*.22;
+    return p;
+  }
   void main(){
-    mat3 rotation=turn(uSpin*.18-.30,-.38);
+    mat3 rotation=turn(uYaw,uPitch);
     vec3 p=aKnot*uMorph.x+aFork*uMorph.y+aOrbit*uMorph.z;
     vec3 n=normalize(aNormal);
     float wave=sin(aSeed.x*5.-uTime*1.4+aSeed.y*2.);
@@ -37,6 +47,9 @@
     float influence=exp(-radius*radius*1.5)*uActive;
     p.xy+=(p.xy-uPointer)*influence*.8;
     p.z+=influence*.8;
+    p=wake(p,uTrail[0],uTrailW[0]);
+    p=wake(p,uTrail[1],uTrailW[1]);
+    p=wake(p,uTrail[2],uTrailW[2]);
     vec3 scatter=normalize(p+vec3(sin(aSeed.x*13.),cos(aSeed.y*7.),sin(aSeed.y*11.)));
     p+=scatter*uBurst*(.7+aSeed.y*.11);
     float perspective=7.8/(8.5-p.z);
@@ -96,18 +109,35 @@
     for(const [name,size] of [['aKnot',3],['aFork',3],['aOrbit',3],['aNormal',3],['aSeed',2]]){
       const loc=gl.getAttribLocation(program,name);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,56,offset*4);offset+=size;
     }
-    locations=Object.fromEntries(['uMorph','uRes','uPointer','uTime','uSpin','uBurst','uDpr','uDark','uActive'].map(k=>[k,gl.getUniformLocation(program,k)]));
+    locations=Object.fromEntries(['uMorph','uRes','uPointer','uTrail','uTrailW','uTime','uYaw','uPitch','uBurst','uDpr','uDark','uActive'].map(k=>[k,gl.getUniformLocation(program,k)]));
     gl.enable(gl.BLEND);gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.enable(gl.DEPTH_TEST);
     gl.clearColor(0,0,0,0);
   }
+  const clamp=(value,min,max)=>value<min?min:value>max?max:value;
+  const clampPitch=value=>clamp(value,-1.15,1.15);
   let width=1,height=1,dpr=1,time=0,spin=0,last=null,frame=null,visible=true,paused=motion.matches,lost=false;
   let morph=[1,0,0],target=[1,0,0],burst=0,px=0,py=0,tx=0,ty=0,active=0,inside=false;
+  // Whole-object pose is auto yaw plus eased hover offsets plus direct drag/keyboard rotation.
+  let hoverYaw=0,hoverPitch=0,hoverYawTarget=0,hoverPitchTarget=0,userYaw=0,userPitch=0;
+  let spinVelYaw=0,spinVelPitch=0;
+  let dragging=false,activePointer=null,dragMoved=false,dragDistance=0,dragX=0,dragY=0,dragStart=0,dragStamp=0;
+  // Short cursor history gives pointer motion a small local wake that decays away.
+  const trail=[[0,0,0],[0,0,0],[0,0,0]],trailXY=new Float32Array(6),trailWeight=new Float32Array(3);
+  let trailHead=0;
+  const MAX_YAW_VELOCITY=4,MAX_PITCH_VELOCITY=2.5,TAP_DURATION=500;
+  function pose(){return [spin*.18-.30+hoverYaw+userYaw,clamp(-.38+hoverPitch+userPitch,-1.25,1.25)];}
   function stop(){if(frame!==null)cancelAnimationFrame(frame);frame=null;last=null;}
+  function pushTrail(x,y,weight){trail[trailHead][0]=x;trail[trailHead][1]=y;trail[trailHead][2]=weight;trailHead=(trailHead+1)%3;}
+  function clearTrail(){for(const t of trail)t[2]=0;}
+  function decayTrail(dt){const k=Math.exp(-dt*3.4);for(const t of trail){t[2]*=k;if(t[2]<.004)t[2]=0;}}
   function render(){
     if(lost)return;
     gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    const [yaw,pitch]=pose();
     gl.uniform3fv(locations.uMorph,morph);gl.uniform2f(locations.uRes,width,height);gl.uniform2f(locations.uPointer,px,py);
-    for(const [key,value] of Object.entries({uTime:time,uSpin:spin,uBurst:burst,uDpr:dpr,uDark:document.documentElement.dataset.theme==='dark'?1:0,uActive:active}))gl.uniform1f(locations[key],value);
+    for(let i=0;i<3;i++){trailXY[i*2]=trail[i][0];trailXY[i*2+1]=trail[i][1];trailWeight[i]=trail[i][2];}
+    gl.uniform2fv(locations.uTrail,trailXY);gl.uniform1fv(locations.uTrailW,trailWeight);
+    for(const [key,value] of Object.entries({uTime:time,uYaw:yaw,uPitch:pitch,uBurst:burst,uDpr:dpr,uDark:document.documentElement.dataset.theme==='dark'?1:0,uActive:active}))gl.uniform1f(locations[key],value);
     gl.drawArrays(gl.POINTS,0,count);
   }
   function tick(stamp){
@@ -115,7 +145,15 @@
     const dt=last===null?0:Math.min((stamp-last)/1000,.05);last=stamp;time+=dt;spin+=dt;
     const ease=1-Math.exp(-dt*5);
     morph=morph.map((x,i)=>x+(target[i]-x)*ease);px+=(tx-px)*ease;py+=(ty-py)*ease;active+=((inside?1:0)-active)*ease;
-    burst*=Math.exp(-dt*2.6);render();frame=requestAnimationFrame(tick);
+    const poseEase=1-Math.exp(-dt*4);
+    hoverYaw+=(hoverYawTarget-hoverYaw)*poseEase;hoverPitch+=(hoverPitchTarget-hoverPitch)*poseEase;
+    if(!dragging){
+      userYaw+=spinVelYaw*dt;userPitch=clampPitch(userPitch+spinVelPitch*dt);
+      const damp=Math.exp(-dt*2.6);spinVelYaw*=damp;spinVelPitch*=damp;
+      if(Math.abs(spinVelYaw)<.02)spinVelYaw=0;
+      if(Math.abs(spinVelPitch)<.02)spinVelPitch=0;
+    }
+    burst*=Math.exp(-dt*2.6);decayTrail(dt);render();frame=requestAnimationFrame(tick);
   }
   function start(){if(frame===null&&!paused&&!lost&&visible&&!document.hidden){last=null;frame=requestAnimationFrame(tick);}}
   function resize(){const box=canvas.getBoundingClientRect();width=Math.max(1,box.width);height=Math.max(1,box.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);gl.viewport(0,0,canvas.width,canvas.height);render();}
@@ -124,7 +162,75 @@
     if(paused){burst=burst>.1?0:1.5;render();status.textContent=burst?'散开静帧；再次点冲散可归位。':'已回到完整形态。';}
     else{burst=2.0;status.textContent='粒子散开后自动归位。';}
   }
-  function showFallback(){lost=true;stop();canvas.hidden=true;fallback.removeAttribute('hidden');controls.hidden=true;hint.hidden=true;pause.hidden=true;status.textContent='动态图形暂不可用，显示静态作品。';}
+  function stageControls(enabled){
+    if(enabled){stage.setAttribute('tabindex','0');stage.setAttribute('role','group');stage.setAttribute('aria-label','原创粒子作品：拖动旋转，方向键调整姿态，Home 复位');}
+    else for(const name of ['tabindex','role','aria-label'])stage.removeAttribute(name);
+  }
+  function showFallback(){lost=true;stop();endDrag();clearTrail();stageControls(false);canvas.hidden=true;fallback.removeAttribute('hidden');controls.hidden=true;hint.hidden=true;pause.hidden=true;status.textContent='动态图形暂不可用，显示静态作品。';}
+  function isNestedControl(target){return !!(target&&typeof target.closest==='function'&&target.closest('a,button,input,select,textarea,[role="button"]'));}
+  function localPoint(event){const box=canvas.getBoundingClientRect(),scale=Math.min(width/9,height/7.5);return {x:(event.clientX-box.left-width/2)/scale,y:-(event.clientY-box.top-height/2)/scale,nx:(event.clientX-box.left)/width-.5,ny:(event.clientY-box.top)/height-.5};}
+  function hoverAt(event){const p=localPoint(event);tx=p.x;ty=p.y;inside=true;hoverYawTarget=-p.nx*.6;hoverPitchTarget=-p.ny*.4;pushTrail(p.x,p.y,1);}
+  function dragTo(event){
+    const dx=event.clientX-dragX,dy=event.clientY-dragY;dragX=event.clientX;dragY=event.clientY;
+    dragDistance+=Math.hypot(dx,dy);if(dragDistance>6)dragMoved=true;
+    userYaw+=dx*.006;userPitch=clampPitch(userPitch+dy*.005);
+    const stamp=typeof event.timeStamp==='number'?event.timeStamp:dragStamp+16;
+    const dtMove=clamp((stamp-dragStamp)/1000,1/240,.05);dragStamp=stamp;
+    spinVelYaw=clamp(spinVelYaw*.5+(dx*.006)/dtMove*.5,-MAX_YAW_VELOCITY,MAX_YAW_VELOCITY);
+    spinVelPitch=clamp(spinVelPitch*.5+(dy*.005)/dtMove*.5,-MAX_PITCH_VELOCITY,MAX_PITCH_VELOCITY);
+    if(paused)render();
+  }
+  function endDrag(event){
+    if(event?.pointerId!=null&&event.pointerId!==activePointer)return;
+    const id=activePointer;activePointer=null;dragging=false;dragMoved=false;spinVelYaw=0;spinVelPitch=0;
+    stage.removeAttribute('data-dragging');releaseCapture(id);
+  }
+  function releaseCapture(pointerId){if(stage.releasePointerCapture&&pointerId!=null){try{stage.releasePointerCapture(pointerId);}catch(_){}}}
+  function resetPose(){
+    endDrag();spin=0;burst=0;active=0;inside=false;px=py=tx=ty=0;morph=[...target];
+    userYaw=0;userPitch=0;hoverYaw=0;hoverPitch=0;hoverYawTarget=0;hoverPitchTarget=0;
+    clearTrail();status.textContent='当前形态已回到初始视角。';render();
+  }
+  function pointerDown(event){
+    if(dragging||event.isPrimary===false||(typeof event.button==='number'&&event.button!==0))return;
+    if(isNestedControl(event.target))return;
+    dragging=true;activePointer=event.pointerId;dragMoved=false;dragDistance=0;dragX=event.clientX;dragY=event.clientY;
+    stage.setAttribute('data-dragging','');
+    dragStamp=dragStart=typeof event.timeStamp==='number'?event.timeStamp:0;
+    spinVelYaw=0;spinVelPitch=0;hoverYawTarget=0;hoverPitchTarget=0;
+    if(stage.setPointerCapture&&event.pointerId!=null){try{stage.setPointerCapture(event.pointerId);}catch(_){}}
+  }
+  function pointerMove(event){
+    if(event.isPrimary===false)return;
+    if(dragging){if(event.pointerId===activePointer)dragTo(event);return;}
+    if(paused)return; // Hover must not animate a paused or reduced-motion scene.
+    hoverAt(event);
+  }
+  function pointerUp(event){
+    if(dragging&&event.pointerId===activePointer&&event.isPrimary!==false){
+      const clean=!dragMoved&&(typeof event.timeStamp==='number'?event.timeStamp-dragStart:0)<TAP_DURATION;
+      dragging=false;activePointer=null;dragMoved=false;stage.removeAttribute('data-dragging');releaseCapture(event.pointerId);
+      if(paused){spinVelYaw=0;spinVelPitch=0;}
+      if(clean&&!isNestedControl(event.target)){inside=false;pulse();}
+      return;
+    }
+  }
+  function pointerLeave(){if(dragging)return;inside=false;hoverYawTarget=0;hoverPitchTarget=0;}
+  function keyDown(event){
+    if(event.defaultPrevented||isNestedControl(event.target))return;
+    const step=event.shiftKey?.12:.3;let handled=true;
+    switch(event.key){
+      case 'ArrowLeft':userYaw-=step;break;
+      case 'ArrowRight':userYaw+=step;break;
+      case 'ArrowUp':userPitch=clampPitch(userPitch-step);break;
+      case 'ArrowDown':userPitch=clampPitch(userPitch+step);break;
+      case 'Home':resetPose();break;
+      default:handled=false;
+    }
+    if(!handled)return;
+    if(typeof event.preventDefault==='function')event.preventDefault();
+    if(paused)render();
+  }
   try{initialize();}catch(_){showFallback();return;}
   pause.addEventListener('click',()=>{paused=!paused;label();if(paused)stop();else start();});
   modeButtons.forEach((button,index)=>button.addEventListener('click',()=>{
@@ -133,19 +239,22 @@
     if(paused){morph=[...target];burst=0;render();}
   }));
   burstButton.addEventListener('click',pulse);
-  stage.addEventListener('pointermove',event=>{
-    if(paused)return;const box=canvas.getBoundingClientRect(),scale=Math.min(width/9,height/7.5);
-    tx=(event.clientX-box.left-width/2)/scale;ty=-(event.clientY-box.top-height/2)/scale;inside=true;
-  },{passive:true});
-  stage.addEventListener('pointerleave',()=>{inside=false;});
-  stage.addEventListener('pointerup',event=>{if(event.target.closest('a,button'))return;inside=false;pulse();});
-  motion.addEventListener('change',()=>{if(motion.matches){paused=true;stop();active=0;burst=0;morph=[...target];label();render();}});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else start();});
+  if(resetButton)resetButton.addEventListener('click',resetPose);
+  stage.addEventListener('pointerdown',pointerDown);
+  stage.addEventListener('pointermove',pointerMove,{passive:true});
+  stage.addEventListener('pointerup',pointerUp);
+  stage.addEventListener('pointercancel',endDrag);
+  stage.addEventListener('lostpointercapture',endDrag);
+  stage.addEventListener('pointerleave',pointerLeave);
+  stage.addEventListener('keydown',keyDown);
+  motion.addEventListener('change',()=>{if(motion.matches){paused=true;stop();endDrag();active=0;burst=0;morph=[...target];hoverYawTarget=0;hoverPitchTarget=0;clearTrail();label();render();}});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();endDrag();inside=false;hoverYawTarget=0;hoverPitchTarget=0;}else start();});
+  if(typeof window!=='undefined')window.addEventListener('blur',()=>{endDrag();inside=false;hoverYawTarget=0;hoverPitchTarget=0;});
   document.addEventListener('themechange',render);
   canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();showFallback();});
-  canvas.addEventListener('webglcontextrestored',()=>{try{initialize();lost=false;canvas.hidden=false;fallback.setAttribute('hidden','');controls.hidden=false;hint.hidden=false;pause.hidden=false;status.textContent="粒子作品已恢复；"+(paused?"当前已暂停。":"动态播放中。");resize();start();}catch(_){showFallback();}});
-  canvas.hidden=false;fallback.setAttribute('hidden','');controls.hidden=false;hint.hidden=false;pause.hidden=false;label();resize();
+  canvas.addEventListener('webglcontextrestored',()=>{try{initialize();lost=false;stageControls(true);canvas.hidden=false;fallback.setAttribute('hidden','');controls.hidden=false;hint.hidden=false;pause.hidden=false;status.textContent="粒子作品已恢复；"+(paused?"当前已暂停。":"动态播放中。");resize();start();}catch(_){showFallback();}});
+  canvas.hidden=false;fallback.setAttribute('hidden','');controls.hidden=false;hint.hidden=false;pause.hidden=false;stageControls(true);label();resize();
   new ResizeObserver(resize).observe(canvas);
-  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)start();else stop();}).observe(canvas);
+  new IntersectionObserver(entries=>{visible=entries[entries.length-1].isIntersecting;if(visible)start();else{stop();endDrag();}}).observe(canvas);
   start();
 })();
