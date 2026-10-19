@@ -11,7 +11,7 @@
 - `read_in_context`：结合当前调用方或运行上下文，判断该变化是否真正适用。
 - `needs_more_context`：现有输入缺失或含占位符，无法下判断；必须先补齐上下文。这是
   **正向任务动作**。
-- `unknown`：请求中提供的**普通第五选项**，表示没有任何提供的动作适配当前输入。模型**显式**
+- `unknown`：请求中显式提供的**保留判断选项**，表示没有任何提供的动作适配当前输入；它不是第五个可执行动作。模型**显式**
   选择它时才算 `unknown`。它既不是 `needs_more_context`，也不是接口拒答（refusal），
   更不是运输错误（transport error）；四者分别记录。缺失 choice 是格式错误，不视为 `unknown`。
 
@@ -83,8 +83,8 @@ python3 -m decision_lab routes
 - OpenAI：`{"model":"gpt-6-luna","input":<序列化任务输入字符串>,"questions":[{"type":"choice","name":"next_action","instructions":<评分标准>,"choices":[{"value":id,"description":description}, ...]}]}`；没有 `decision` 对象、`allow_unknown` 标志或顶层 `metadata`。
 
 两条请求都向**全部选项**提供有意义的描述：四个任务动作 `inspect_source` /
-`compare_contract` / `read_in_context` / `needs_more_context`，**外加普通的第五个
-`unknown` 选项**（无自造的 abstain 字段）。`unknown` 表示没有提供的动作适配当前输入；
+`compare_contract` / `read_in_context` / `needs_more_context`，**外加显式的
+`unknown` 保留判断选项**（无自造的 abstain 字段）。`unknown` 表示没有提供的动作适配当前输入；
 `needs_more_context` 仍是**正向任务动作**，二者不同。
 
 **响应**（保留原生形状与原生 confidence，另存 `raw`）：

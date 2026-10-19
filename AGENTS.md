@@ -9,7 +9,9 @@
 - `catalog/` 拥有模型、服务路线、相关项目与来源的结构化索引；`index.json` 分别声明历史快照和最新增量。`recipes.json` 拥有玩法卡片事实、来源日期与实现状态；`docs/playbook.md` 拥有解释及用法，二者的稳定 recipe ID 必须对应。官方文档、原作者报告、历史数据复算与本项目实测是不同证据。
 - `decision_lab/` 拥有实验 CLI；`experiments/next-action/` 拥有原创合成任务、标签和实验说明；`tests/` 提供相应行为证据。
 - `tools/` 拥有内容投影与统一检查入口；构建输出和真实运行记录不提交。正文和 catalog 是编辑源，生成页不另行维护。
-- `site/` 拥有阅读站昼夜样式、渐进搜索、目录/复制交互、合成案例练习与原创图示；`tools/build_site.py` 的显式 allowlist 决定站点内容。首页 WebGL 粒子作品不编码事实，无 WebGL 时保留 SVG；`lettering.js` 只增强原有标题的有限位移与回弹，保留语义 H1；`recipes.js` 负责 catalog 投影的筛选、单配方选择、稳定 fragment、手动分支预览和 provider-neutral 任务复制；分流图的路线与候选同源；`pixels.js` 读取当前候选绘制原创像素信号机，画布出口回到 HTML 选项路径，无 Canvas 2D 时保留 SVG。手动预览不修改任务定义、不生成概率、不请求模型。分类入口由 catalog 分组及 repositories 快照生成，`atlas.js` 只切换展示；概率地形仅为数学示意。历史像素矩阵数字来自复算 JSON，练习来自既有 dev cases；不另存事实副本。`theme.js` 仅保存外观偏好，动画尊重减少动态效果、暂停及前后台状态。`docs/projects.md` 由 catalog 生成，`_site/` 是忽略的构建输出。
+- `site/` 拥有阅读站样式与渐进交互；`tools/build_site.py` 的显式 allowlist 决定站点内容。首页 WebGL 粒子作品不编码事实，无 WebGL 时保留 SVG；`lettering.js` 只增强原语义 H1 的有限位移与回弹。`atlas.js` 只切换 catalog／repositories 快照生成的分类入口。`theme.js` 仅保存外观偏好。
+- `recipes.js` 拥有玩法筛选、单配方选择、稳定 fragment、手动试选／离线结果示例和 provider-neutral 任务复制；`build_site.py` 的 `option_kind()` 拥有 UI 分类元数据。unknown 独立显示为 UNK／×，仍保留在请求选项里；补材料／交人工为正常 ok 选项，业务文案的「拒绝」「不适用」不等于 API refusal 或 unknown。`.choice-machine` 的 outcome／previewMode 同步 HTML、SVG 和 `pixels.js` 信号场；refusal/error 示例明确标注离线、取消全部选项，不能假装有可采用动作或真实调用。默认未试选；不生成概率／confidence、不改任务 JSON。当前只演示 Choice profile，归一化状态与原生输出类型分别说明。
+- `pixels.js` 拥有下方共享暂停，通过 document `pixelmotionchange` 同步消费者；无 Canvas 2D 仍保留 SVG、HTML 交互与共享暂停。`motion.js` 管滚动入场、PLAY 招牌轮播（每屏最多两组记号）与图标活化；`field.js` 的权重插值／指针变形只影响示意画面，不改即时概率读数；`evidence.js` 的扫描／有限落位只影响装饰，不改复算计数；`lab.js` 的练习与标签来自既有 dev cases。动态尊重减少动态效果、暂停、前后台和可见性；静态操作仍即时反馈。`site/fonts/` 自托管 Space Grotesk 与 Silkscreen（OFL-1.1），版权 notice 与许可随构建分发。`docs/projects.md` 由 catalog 生成，`_site/` 是忽略的构建输出。
 - 原始 chat、私人采用记录、账号、凭据、个人路径与 continuity 不进入仓库。公共实例只使用公开或原创合成输入。
 - 模型判断是建议；实验不执行其建议，不变更外部系统。unknown、refusal、调用失败与正常答案分别记录。
 - 离线演示、fixture 验证、HTTP 模拟与真实 provider 调用分别报告。没有真实运行证据，不宣称 API 可用、模型质量、实际价格或生产效果。

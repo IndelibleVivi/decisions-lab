@@ -21,6 +21,7 @@ class Node {
   dispatchEvent(event){for(const fn of this.listeners[event.type]||[]) fn(event);}
   fire(type){this.dispatchEvent({type});}
   setAttribute(key,value){this.attributes[key]=value;}
+  getAttribute(key){return this.attributes[key]??null;}
   removeAttribute(key){delete this.attributes[key];}
   setPointerCapture(id){this.captured=id;}
   releasePointerCapture(id){if(this.captured===id)this.captured=null;}
@@ -28,13 +29,14 @@ class Node {
   querySelector(){return this.child??=new Node();}
 }
 function motionTest(file,prefix) {
-  function setup(reduce) {
+  function setup(reduce,options={}) {
     const nodes=new Map();const get=selector=>{if(!nodes.has(selector))nodes.set(selector,new Node());return nodes.get(selector);};
     const doc=new Node();doc.hidden=false;doc.documentElement={dataset:{theme:'light'}};
     doc.querySelector=get;doc.querySelectorAll=selector=>[0,1,2].map(i=>get(selector+i));
-    let draws=0;const uniforms={};
+    let draws=0,points=[];const uniforms={};
     const context=new Proxy({}, {get:(_,key)=>{
-      if(key==='clearRect'||key==='clear')return ()=>draws++;
+      if(key==='clearRect'||key==='clear')return ()=>{draws++;points=[];};
+      if(key==='fillRect')return (...values)=>{assert.ok(values.every(Number.isFinite),'finite field dots');points.push(values);};
       if(key==='getShaderParameter'||key==='getProgramParameter')return ()=>true;
       if(key==='getUniformLocation')return (_,name)=>name;
       if(['uniform3fv','uniform2fv','uniform1fv'].includes(key))return (name,value)=>{assert.ok([...value].every(Number.isFinite),'finite GPU uniforms');uniforms[name]=[...value];};
@@ -42,15 +44,16 @@ function motionTest(file,prefix) {
       if(key==='bufferData')return (_,value)=>assert.ok([...value].every(Number.isFinite),'finite point geometry');
       return ()=>{};
     },set:()=>true});
-    const canvas=get(prefix==='sculpture'?'#sculpture-canvas':'#probability-field');canvas.getContext=()=>context;
+    const canvas=get(prefix==='sculpture'?'#sculpture-canvas':'#probability-field');canvas.getContext=()=>{if(options.contextFails)throw Error('context denied');return options.noCanvas?null:context;};
+    get('#pixel-pause').setAttribute('aria-pressed',String(!!options.paused));
     const media=new Node();media.matches=reduce;
     let intersect;let id=0;const pending=new Map();
     const win=new Node();
     const env={document:doc,window:win,matchMedia:()=>media,devicePixelRatio:1,console,
-      requestAnimationFrame:fn=>{pending.set(++id,fn);return id;},cancelAnimationFrame:id=>pending.delete(id),
-      ResizeObserver:class {observe(){}},IntersectionObserver:class{constructor(fn){intersect=fn;}observe(){}}};
+      requestAnimationFrame:options.noRAF?undefined:fn=>{pending.set(++id,fn);return id;},cancelAnimationFrame:id=>pending.delete(id),
+      ResizeObserver:options.noResize?undefined:class {observe(){}},IntersectionObserver:options.noIO?undefined:class{constructor(fn){intersect=fn;}observe(){}}};
     vm.runInNewContext(fs.readFileSync(`site/${file}`,'utf8'),env);
-    return {get,doc,win,media,pending,uniforms,draws:()=>draws,intersect:value=>intersect([{isIntersecting:value}]),intersectBatch:values=>intersect(values.map(isIntersecting=>({isIntersecting}))),
+    return {get,doc,win,media,pending,uniforms,draws:()=>draws,points:()=>points.map(point=>[...point]),intersect:value=>intersect([{isIntersecting:value}]),intersectBatch:values=>intersect(values.map(isIntersecting=>({isIntersecting}))),
       frame:stamp=>{const [id,fn]=pending.entries().next().value;pending.delete(id);fn(stamp);}};
   }
   const reduced=setup(true);
@@ -58,7 +61,7 @@ function motionTest(file,prefix) {
   check(reduced.get(`#${prefix}-pause`).attributes['aria-pressed']==='true',`${file}: reduced motion UI`);
   const runtime=setup(false),button=runtime.get(`#${prefix}-pause`);
   check(runtime.get(`.${prefix}-fallback`).attributes.hidden==='',`${file}: SVG fallback uses actual hidden attribute`);
-  check(runtime.pending.size===1,`${file}: one initial frame`);
+  check(runtime.pending.size===(prefix==='field'?0:1),`${file}: initial observer state controls the first frame`);
   runtime.intersect(true);runtime.intersect(true);
   check(runtime.pending.size===1,`${file}: duplicate visibility cannot multiply loops`);
   runtime.frame(100);runtime.frame(150);
@@ -88,6 +91,46 @@ function motionTest(file,prefix) {
   }
   const before=runtime.draws();runtime.doc.documentElement.dataset.theme='dark';runtime.doc.fire('themechange');
   check(runtime.draws()>before&&runtime.pending.size===0,`${file}: theme repaints paused artwork without restarting`);
+  if(prefix==='field') {
+    // A static interaction still redraws the selected mathematical distribution.
+    const staticField=setup(true);staticField.intersect(true);
+    const original=staticField.points();staticField.get('[data-field-preset]1').fire('click');
+    check(JSON.stringify(staticField.points())!==JSON.stringify(original),'field: reduced preset redraws the requested mountain heights');
+    check(staticField.get('[data-field-value]0').textContent==='36.0%'&&staticField.get('#field-max').textContent==='0.36','field: preset reports target facts immediately');
+    staticField.get('#field-bias').value='100';staticField.get('#field-bias').fire('input');
+    check(staticField.get('[data-field-value]0').textContent==='100.0%'&&staticField.get('#field-entropy').textContent==='0.00','field: static slider retains truthful one-hot readout');
+    check(staticField.pending.size===0,'field: static interactions never start a motion loop');
+    const staticPicture=staticField.points();
+    staticField.get('#probability-field').dispatchEvent({type:'pointermove',clientX:500,clientY:300});
+    check(JSON.stringify(staticField.points())===JSON.stringify(staticPicture),'field: reduced motion suppresses pointer deformation');
+    // OS preference cannot be overridden accidentally by the local play button.
+    staticField.get('#field-pause').fire('click');
+    check(staticField.pending.size===0,'field: local play cannot override reduced motion');
+    const shared=setup(false);shared.intersect(true);shared.frame(100);
+    shared.get('[data-field-preset]1').fire('click');
+    shared.frame(150);shared.frame(200);
+    check(shared.get('[data-field-value]0').textContent==='36.0%'&&shared.get('#field-max').textContent==='0.36','field: easing never rewrites the selected probability readout');
+    shared.get('#pixel-pause').setAttribute('aria-pressed','true');shared.doc.fire('pixelmotionchange');
+    check(shared.pending.size===0&&shared.get('#field-pause').attributes['aria-pressed']==='true','field: shared pause immediately stops ambient field');
+    const pausedPicture=shared.points();shared.get('[data-field-preset]2').fire('click');
+    check(JSON.stringify(shared.points())!==JSON.stringify(pausedPicture)&&shared.pending.size===0,'field: shared pause keeps preset interaction usable and static');
+    for(let i=0;i<20;i++){shared.get('#pixel-pause').setAttribute('aria-pressed',String(i%2===0));shared.doc.fire('pixelmotionchange');}
+    check(shared.pending.size===1,'field: rapid shared toggles leave exactly one loop');
+    shared.intersectBatch([true,false]);check(shared.pending.size===0,'field: latest visibility entry stops field');
+    shared.get('#pixel-pause').setAttribute('aria-pressed','false');shared.doc.fire('pixelmotionchange');
+    check(shared.pending.size===0,'field: unpause offscreen stays idle');
+    const noIO=setup(false,{noIO:true,noResize:true});
+    check(noIO.pending.size===1&&noIO.draws()>0,'field: absent observers preserve drawing and controls');
+    noIO.get('[data-field-preset]1').fire('click');
+    check(noIO.get('[data-field-value]0').textContent==='36.0%','field: controls remain usable without observers');
+    const fallback=setup(false,{noCanvas:true});
+    check(fallback.pending.size===0&&fallback.get('.field-fallback').attributes.hidden===undefined,'field: missing Canvas preserves SVG');
+    const denied=setup(false,{contextFails:true});
+    check(denied.pending.size===0&&denied.get('.field-fallback').attributes.hidden===undefined,'field: denied Canvas preserves SVG');
+    const noRAF=setup(false,{noRAF:true,noIO:true});const noRAFPicture=noRAF.points();
+    noRAF.get('[data-field-preset]1').fire('click');
+    check(noRAF.pending.size===0&&JSON.stringify(noRAF.points())!==JSON.stringify(noRAFPicture),'field: missing RAF keeps distribution controls usable and static');
+  }
   if(prefix==='sculpture') {
     const pevent=(type,extra={})=>{const e=Object.assign({type,defaultPrevented:false,target:{closest:()=>null},preventDefault(){e.defaultPrevented=true;}},extra);return e;};
     const nested={closest:selector=>selector.indexOf('button')>=0?{}:null};
@@ -226,4 +269,58 @@ function themeTest(storageFails=false) {
   if(!storageFails)check(writes.length===1&&writes[0][0]==='decisions-theme'&&writes[0][1]==='dark','only appearance preference stored');
 }
 themeTest();themeTest(true);
+function labMotionTest() {
+  class LabNode extends Node {
+    get textContent(){return this.children?.length?this.children.map(child=>child.textContent).join(''):this._text||'';}
+    set textContent(value){this._text=String(value);this.children=[];}
+    replaceChildren(...children){this.children=children;this._text='';}
+  }
+  const cases=[
+    {task:{document:'First `reference`',claim:'Claim one'},acceptable:['accept'],rationale:'Reason one.'},
+    {task:{document:'Second document',claim:'Claim two'},acceptable:['context'],rationale:'Reason two.'}
+  ];
+  function setup({reduce=false,paused=false,noIO=false,noAnimate=false}={}) {
+    const nodes=new Map(),get=selector=>{if(!nodes.has(selector))nodes.set(selector,new LabNode());return nodes.get(selector);};
+    const doc=new LabNode();doc.hidden=false;doc.querySelector=get;
+    const choices=['accept','context','reject'].map(action=>{const node=new LabNode();node.dataset.action=action;return node;});
+    doc.querySelectorAll=()=>choices;doc.createElement=()=>new LabNode();doc.createTextNode=text=>{const node=new LabNode();node.textContent=text;return node;};
+    get('#sample-data').textContent=JSON.stringify(cases);get('#sample-case').value='0';get('#pixel-pause').setAttribute('aria-pressed',String(paused));
+    const media=new LabNode();media.matches=reduce;const handles=[];let observer;
+    if(!noAnimate)get('.specimen').animate=()=>{const handle={cancelled:false,cancel(){this.cancelled=true;}};handles.push(handle);return handle;};
+    vm.runInNewContext(fs.readFileSync('site/lab.js','utf8'),{document:doc,matchMedia:()=>media,IntersectionObserver:noIO?undefined:class{constructor(fn){observer=fn;}observe(){}}});
+    return {doc,get,choices,handles,media,intersect:value=>observer([{isIntersecting:value}])};
+  }
+  const live=setup();
+  check(live.handles.length===0,'lab: offscreen initialization leaves text static');
+  check(live.get('#sample-document').textContent==='First reference','lab: safe authored inline-code rendering remains readable');
+  check(live.get('#sample-document').children[1].textContent==='reference','lab: inline-code remains a separate text node');
+  live.intersect(true);live.get('#sample-case').value='1';live.get('#sample-case').fire('change');
+  check(live.handles.length===1,'lab: visible case change animates once');
+  live.get('#sample-case').value='0';live.get('#sample-case').fire('change');
+  check(live.handles.length===2&&live.handles[0].cancelled,'lab: rapid case switch cancels the old animation');
+  live.handles[0].onfinish(); // A queued finish from the cancelled case cannot own the new handle.
+  live.choices[0].fire('click');
+  check(live.get('#sample-feedback').dataset.verdict==='accept'&&live.get('#sample-feedback').textContent.includes('Reason one.'),'lab: animation never changes the editorial answer');
+  live.doc.hidden=true;live.doc.fire('visibilitychange');
+  check(live.handles.every(handle=>handle.cancelled),'lab: backgrounding cancels the active animation');
+  live.doc.hidden=false;live.get('#sample-case').fire('change');
+  live.intersect(false);check(live.handles.every(handle=>handle.cancelled),'lab: viewport exit cancels animation');
+  live.intersect(true);live.get('#sample-case').fire('change');
+  live.media.matches=true;live.media.fire('change');
+  check(live.handles.every(handle=>handle.cancelled),'lab: runtime reduced motion cancels animation');
+  const count=live.handles.length;live.get('#sample-case').value='1';live.get('#sample-case').fire('change');
+  check(live.handles.length===count&&live.get('#sample-claim').textContent==='Claim two','lab: reduced motion changes content without animation');
+  live.choices[0].fire('click');check(live.get('#sample-feedback').dataset.verdict==='reject','lab: rejected label stays truthful under reduced motion');
+  live.media.matches=false;live.media.fire('change');live.get('#sample-case').fire('change');
+  live.get('#pixel-pause').setAttribute('aria-pressed','true');live.doc.fire('pixelmotionchange');
+  check(live.handles.every(handle=>handle.cancelled),'lab: shared pause cancels immediately');
+  const pausedCount=live.handles.length;live.get('#sample-case').fire('change');
+  live.choices[1].fire('click');
+  check(live.handles.length===pausedCount&&live.get('#sample-feedback').dataset.verdict==='accept','lab: paused exercise remains fully usable');
+  const reduced=setup({reduce:true,noIO:true});check(reduced.handles.length===0,'lab: initial reduced motion starts no animation');
+  const paused=setup({paused:true,noIO:true});check(paused.handles.length===0,'lab: initial shared pause starts no animation');
+  const fallback=setup({noIO:true,noAnimate:true});fallback.get('#sample-case').value='1';fallback.get('#sample-case').fire('change');fallback.choices[1].fire('click');
+  check(fallback.get('#sample-feedback').dataset.verdict==='accept','lab: missing observer/Web Animations preserves the exercise');
+}
+labMotionTest();
 console.log(`${checks} visual runtime checks passed (no browser or provider calls).`);

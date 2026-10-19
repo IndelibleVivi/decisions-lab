@@ -68,7 +68,7 @@
       "options": ["inspect_source 核对原文", "compare_contract 对照接口契约", "read_in_context 结合实际调用", "needs_more_context 先补上下文", "unknown"],
       "project": "Decisions Lab next-action",
       "project_url": "https://github.com/IndelibleVivi/decisions-lab",
-      "mechanism": "本仓库已实现的 next-action 任务：固定动作契约、保留原生概率与 confidence、建议永不自动执行；unknown 是普通第五选项，与 needs_more_context、refusal、错误分别记录。",
+      "mechanism": "本仓库已实现的 next-action 任务：固定动作契约、保留原生概率与 confidence、建议永不自动执行；unknown 是请求中显式提供的保留判断选项，归一化为 outcome=unknown，不计入可采用动作；与 needs_more_context、refusal、错误分别记录。",
       "first_step": "运行离线 validate 与 demo，先观察一个故意判错和一个显式 unknown 的结果，再换成自己的变更文本。",
       "failure_mode": "缺来源或缺当前依赖时不能硬判，应输出 needs_more_context；模型建议不自动变成操作，真实执行仍需人确认。",
       "status": "implemented-offline",

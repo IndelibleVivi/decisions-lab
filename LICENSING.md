@@ -8,6 +8,7 @@
 | 原创文字、研究编排和图示 | README、AGENTS、`docs/`、实验说明、研究报告，以及结构化记录中原创的描述和组织 | [CC BY-NC-SA 4.0](LICENSE-DOCUMENTATION.md) |
 | 原创合成实验输入与编辑标签 | `experiments/next-action/` 的数据与 task contract | CC BY-NC-SA 4.0；功能实现仍用 SUL-1.0 |
 | 第三方事实、引用、模型和资料 | 各记录链接的原厂文档、原作者仓库、模型卡、论文及引用部分 | 保留原作者权利；本项目不为第三方内容另行授权 |
+| 字体 | `site/fonts/` 内 Space Grotesk 与 Silkscreen woff2 | [SIL OFL 1.1](site/fonts/OFL-1.1.txt)；各字体 Project Authors 的 copyright notice 一并保留，设计者与来源见 [字体说明](site/fonts/README.md) |
 | 历史研究汇总 | `research/2026-10-08/reanalysis/author_numbers.json` 及其所支持的汇总 | Jiawei Li / sys1-eval 的研究成果；见下文；项目许可不重新授权其底层响应或数据 |
 
 SUL-1.0 允许个人、非商业及内部业务使用；向他人分发或提供须免费且非商业。CC BY-NC-SA 4.0 对原创内容的分享与改编设有署名、非商业及相同方式共享条件。以上是导读，完整条款分别以所链接文本为准。

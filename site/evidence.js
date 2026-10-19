@@ -146,24 +146,69 @@
     var reduced = view && view.matchMedia ? view.matchMedia('(prefers-reduced-motion: reduce)') : null;
     var animations = [], gridVisible = !view || !view.IntersectionObserver;
     var pixelPause = doc.querySelector('#pixel-pause');
-    function cancelMotion() { animations.forEach(function (a) { a.cancel(); }); animations = []; }
+    var metricNodes = [outAccuracy, outCorrect, outTotal, outErrors];
+    function cancelCells() { animations.forEach(function (a) { a.cancel(); }); animations = []; }
+    function cancelMotion() {
+      cancelCells();
+      metricNodes.forEach(function (node) { node.classList.remove('is-flip'); });
+    }
+    function motionAllowed() {
+      return gridVisible && !doc.hidden && !(reduced && reduced.matches)
+        && !(pixelPause && pixelPause.getAttribute('aria-pressed') === 'true');
+    }
     function animateCells() {
-      cancelMotion();
-      if (!gridVisible || doc.hidden || (reduced && reduced.matches) || (pixelPause && pixelPause.getAttribute('aria-pressed') === 'true')) return;
+      cancelCells();
+      if (!motionAllowed()) return;
       var cells = grid.querySelectorAll('.evidence-cell');
       for (var i = 0; i < cells.length; i++) {
         if (!cells[i].animate) continue;
-        animations.push(cells[i].animate([
+        var animation = cells[i].animate([
           { transform: 'translateY(7px) scale(.35)' }, { transform: 'translateY(0) scale(1)' }
-        ], { duration: 260, delay: (i % COLS) * 9 + Math.floor(i / COLS) * 7, easing: 'steps(5, end)' }));
+        ], { duration: 260, delay: (i % COLS) * 9 + Math.floor(i / COLS) * 7, easing: 'steps(5, end)' });
+        animation.onfinish = function () { var done = this; animations = animations.filter(function (a) { return a !== done; }); };
+        animations.push(animation);
       }
     }
-    if (reduced) reduced.addEventListener('change', function () { if (reduced.matches) cancelMotion(); });
-    if (doc.addEventListener) doc.addEventListener('visibilitychange', function () { if (doc.hidden) cancelMotion(); });
-    if (pixelPause) pixelPause.addEventListener('click', cancelMotion);
+
+    // Ambient scan: a quiet column walks the matrix while it sits in view,
+    // keeping the artifact alive between interactions. Decoration only — it
+    // never changes which cells are correct, muted or counted.
+    var sweepFrame = null, sweepLast = null, sweepCol = -1, sweepT = 0, cellsCache = [];
+    function sweepStop() {
+      if (sweepFrame !== null) view.cancelAnimationFrame(sweepFrame);
+      sweepFrame = null; sweepLast = null;
+      if (sweepCol >= 0) applySweep(-1);
+      sweepCol = -1;
+    }
+    function applySweep(col) {
+      for (var n = 0; n < cellsCache.length; n++) {
+        var cell = cellsCache[n];
+        var on = col >= 0 && (n % COLS) === col;
+        if (on) cell.classList.add('is-scanned'); else if (cell.classList.contains('is-scanned')) cell.classList.remove('is-scanned');
+      }
+    }
+    function sweepTick(now) {
+      sweepFrame = null;
+      if (!motionAllowed()) return;
+      if (sweepLast === null) sweepLast = now;
+      sweepT += Math.min(now - sweepLast, 100); sweepLast = now;
+      var next = Math.floor(sweepT / 220) % (COLS + 6); // eases across, brief pause off-grid
+      if (next !== sweepCol) { applySweep(next < COLS ? next : -1); sweepCol = next; }
+      sweepFrame = view.requestAnimationFrame(sweepTick);
+    }
+    function sweepKick() { if (sweepFrame === null && motionAllowed() && view && view.requestAnimationFrame) sweepFrame = view.requestAnimationFrame(sweepTick); }
+    function syncMotion() {
+      if (!motionAllowed()) { cancelMotion(); sweepStop(); }
+      else sweepKick();
+    }
+    if (reduced) reduced.addEventListener('change', syncMotion);
+    if (doc.addEventListener) {
+      doc.addEventListener('visibilitychange', syncMotion);
+      doc.addEventListener('pixelmotionchange', syncMotion);
+    }
     if (view && view.IntersectionObserver) new view.IntersectionObserver(function (entries) {
       gridVisible = entries[entries.length - 1].isIntersecting;
-      if (!gridVisible) cancelMotion();
+      syncMotion();
     }).observe(grid);
 
 
@@ -174,7 +219,9 @@
 
     function buildCells(parts) {
       cancelMotion();
+      sweepStop();
       grid.textContent = '';
+      cellsCache = [];
       var cells = cellsFor(parts);
       var originX = (SIZE - ((COLS - 1) * PITCH + CELL)) / 2;
       var originY = (SIZE - ((Math.ceil(cells.length / COLS) - 1) * PITCH + CELL)) / 2;
@@ -189,7 +236,9 @@
           'evidence-cell ' + (index.isError ? 'is-error' : 'is-correct') +
           (index.isHigh ? '' : ' is-muted'));
         grid.appendChild(rect);
+        cellsCache.push(rect);
       }
+      sweepKick();
     }
 
     // Scope never rebuilds cells; it only toggles the muted class, so rapid
@@ -206,6 +255,17 @@
       }
     }
 
+    function flip(node) {
+      if (!node || !motionAllowed()) return;
+      node.classList.remove('is-flip');
+      // Restart the keyframe: read a layout property between remove and add.
+      void (node.getBoundingClientRect ? node.getBoundingClientRect() : 0);
+      node.classList.add('is-flip');
+    }
+    metricNodes.forEach(function (node) {
+      node.addEventListener('animationend', function () { node.classList.remove('is-flip'); });
+    });
+
     function paint() {
       var parts = records[current];
       var data = metrics(parts, scope);
@@ -214,6 +274,7 @@
       outTotal.textContent = String(data.total);
       outAccuracy.textContent = formatAccuracy(data.accuracy);
       outErrors.textContent = String(data.errors);
+      flip(outAccuracy); flip(outCorrect); flip(outTotal); flip(outErrors);
 
       var scopeText = scope === 'high'
         ? '高置信度子集（maxP ≥ 0.9）：' + data.total + ' 项'

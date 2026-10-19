@@ -390,22 +390,43 @@ function testIdentityMapping() {
 }
 
 function testMotionLifecycle() {
-  const dom=buildDom([AGG.A,AGG.B,AGG.F]), handles=[],events={};let observer,changed;
+  const dom=buildDom([AGG.A,AGG.B,AGG.F]), handles=[],events={},pending=new Map();let observer,changed,id=0;
+  const pause=new Node('button');pause.setAttribute('id','pixel-pause');pause.setAttribute('aria-pressed','false');dom.root.appendChild(pause);
   const reduced={matches:false,addEventListener(_type,fn){changed=fn;}};
-  const extra={hidden:false,defaultView:{matchMedia:()=>reduced,IntersectionObserver:class{constructor(fn){observer=fn;}observe(){}}},addEventListener(type,fn){events[type]=fn;},createElementNS(ns,t){const n=new Node(t,ns);n.animate=()=>{const handle={cancelled:false,cancel(){this.cancelled=true;}};handles.push(handle);return handle;};return n;}};
+  const extra={hidden:false,defaultView:{matchMedia:()=>reduced,requestAnimationFrame:fn=>{pending.set(++id,fn);return id;},cancelAnimationFrame:next=>pending.delete(next),IntersectionObserver:class{constructor(fn){observer=fn;}observe(){}}},addEventListener(type,fn){events[type]=fn;},createElementNS(ns,t){const n=new Node(t,ns);n.animate=()=>{const handle={cancelled:false,cancel(){this.cancelled=true;}};handles.push(handle);return handle;};return n;}};
   const sandbox=loadEvidence(dom,extra);
   check('motion: offscreen initial render is static',handles.length===0);
-  observer([{isIntersecting:true}]);dom.tasks[1].dispatch('click');
+  check('motion: offscreen scan has no pending frame',pending.size===0);
+  observer([{isIntersecting:false},{isIntersecting:true}]);dom.tasks[1].dispatch('click');
   check('motion: visible change animates the real cells',handles.length===400);
+  check('motion: visible scan keeps one frame',pending.size===1);
+  function frame(stamp){const [next,fn]=pending.entries().next().value;pending.delete(next);fn(stamp);}
+  frame(100);frame(400);
+  check('motion: scan only decorates one column',dom.grid.querySelectorAll('.is-scanned').length===20);
   check('motion: animation never delays real numbers',dom.outputs.correct.textContent==='398');
+  check('motion: scan never changes counts or cell outcome',dom.outputs.correct.textContent==='398'&&dom.grid.querySelectorAll('.is-error').length===2);
   dom.scopes[1].dispatch('click');
   check('motion: rapid scope change cancels prior animation',handles.slice(0,400).every(a=>a.cancelled));
   observer([{isIntersecting:false}]);check('motion: leaving viewport cancels every animation',handles.every(a=>a.cancelled));
+  check('motion: leaving viewport cancels scan and clears decoration',pending.size===0&&dom.grid.querySelectorAll('.is-scanned').length===0);
   observer([{isIntersecting:true}]);dom.tasks[0].dispatch('click');reduced.matches=true;changed();
   check('motion: reduced motion cancels active handles',handles.every(a=>a.cancelled));
+  check('motion: reduced motion cancels scan and metric flips',pending.size===0&&!dom.outputs.accuracy.classList.contains('is-flip'));
   const count=handles.length;dom.tasks[2].dispatch('click');check('motion: reduced motion starts no new animation',handles.length===count);
-  reduced.matches=false;dom.tasks[1].dispatch('click');sandbox.document.hidden=true;events.visibilitychange();
+  reduced.matches=false;changed();check('motion: lifting reduced motion restarts scan once',pending.size===1);
+  dom.tasks[1].dispatch('click');sandbox.document.hidden=true;events.visibilitychange();
   check('motion: background visibility cancels handles',handles.every(a=>a.cancelled));
+  check('motion: background visibility cancels scan',pending.size===0);
+  sandbox.document.hidden=false;events.visibilitychange();check('motion: foreground resumes scan once',pending.size===1);
+  pause.setAttribute('aria-pressed','true');events.pixelmotionchange();
+  check('motion: shared pause cancels scan and cosmetic animations',pending.size===0&&handles.every(a=>a.cancelled)&&!dom.outputs.accuracy.classList.contains('is-flip'));
+  const pausedCount=handles.length;dom.scopes[0].dispatch('click');
+  check('motion: paused controls still update facts without animation',handles.length===pausedCount&&dom.outputs.correct.textContent==='398'&&dom.outputs.total.textContent==='400'&&!dom.outputs.accuracy.classList.contains('is-flip'));
+  for(let i=0;i<25;i++){pause.setAttribute('aria-pressed',String(i%2===0));events.pixelmotionchange();}
+  check('motion: repeated pause transitions leave no stale scan frame',pending.size===0);
+  pause.setAttribute('aria-pressed','false');events.pixelmotionchange();events.pixelmotionchange();
+  check('motion: repeated resume keeps one scan loop',pending.size===1);
+  observer([{isIntersecting:false}]);check('motion: scan exit stays idle',pending.size===0);
 }
 
 /* ------------------------------------------------------------- run */

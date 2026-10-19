@@ -47,11 +47,13 @@ python3 tools/build_site.py
 
 `site/atlas.js` 渐进增强独立的项目分类切换，项目名称、分组和链接由构建器读取 catalog 与带日期的 repositories 快照生成；不另存事实副本。无 JavaScript 时保留首组入口和完整项目目录链接。
 
-`site/recipes.js` 增强玩法分类、关键词搜索、索引选择、fragment 导航和复制；默认进入「创作与互动」，选「全部」可检索二十项，切换分类会保留仍匹配的当前项。像素卡带与静态分流图使用同份 catalog 的候选；手动选择只同步路线、高亮和读数，不修改复制的任务，不推断模型结果。无 JavaScript 时索引增强隐藏，全部配方仍可展开阅读。
+`site/recipes.js` 增强玩法分类、关键词搜索、索引选择、fragment 导航和复制；默认进入「创作与互动」，选「全部」可检索二十项，切换分类会保留仍匹配的当前项。手动选择卡带更新 URL fragment；静态配方与所有选项来自同份 catalog。`tools/build_site.py` 的 `option_kind()` 负责 UI 分类元数据：显式 unknown、请求材料／人工、普通业务选项；「直接拒绝」「都不适用」「无法从分布确定」等业务答案不自动归成 API refusal、unknown 或补上下文。unknown 在 HTML 独立区域显示 UNK，仍完整保留在复制的任务定义里。
 
-`site/pixels.js` 只读取当前配方的真实按钮与选中状态，绘制 320×180 像素信号机、编号出口和方块传输。画布出口点击回到对应 HTML 按钮路径；纸带、机器和小信使是原创装饰，不表示正在请求 API。一个 RAF owner 只更新可见的当前画布；暂停、减少动态、后台和离屏停止循环，选择仍可更新静帧；无 Canvas 2D 时保留构建器生成的 SVG 与 HTML 控件。像素字形和卡带图标由构建器原创生成，无外部字体。
+`recipes.js` 是手动试选／离线示例的状态 owner，更新 `.choice-machine` 的 `data-outcome` / `data-preview-mode`、按钮、SVG 路线和结果读数；`site/pixels.js` 消费同一状态绘制 320×180 信号场。ok 的普通分支与补上下文回环保留动作编号，unknown 使用独立 × 分支；refusal/error 只由明确标注的离线示例触发，取消全部选项，画布不显示可采用动作。清除回到未试选。画布节点点击回到 HTML 按钮路径；示例不改任务 JSON，不生成概率／confidence，不发网络请求。原生输出类型和归一化状态的边界见[结果契约](method.md#结果状态与输出类型)。无 JavaScript 时全部配方仍可展开阅读；无 Canvas 2D 时保留 SVG、文字按钮及结果区。
 
-`site/field.js` 的三个高斯山峰由示意候选概率加权，maxP 和 Shannon entropy 使用同一分布计算；几何投影不等于概率校准。`site/evidence.js` 只投影构建时传入的历史汇总，切换高 maxP 时保留完整格子位置并淡化筛选外记录。切换时，有限阶梯动画只改变格子的视觉位置；数字和类别立即同步。快速切换、减少动态、离屏、后台或像素暂停会取消旧动画。作品／示意／历史标签需要一起保留。
+`pixels.js` 拥有下方共享暂停状态，通过 document `pixelmotionchange` 同步消费者；无 Canvas 2D 仍提供共享暂停。`site/motion.js` 管滚动入场、PLAY 招牌轮播和图标信号活化：招牌每屏最多两组记号，所有绘制留在画布内。信号场一个 RAF owner 只更新当前可见画布；招牌／图标按自身可见性绘制，暂停、减少动态和后台停止。CSS 装饰同步共享状态和可见性；暂停时入场内容保持可读。`site/fonts/` 自托管第三方 Space Grotesk 与 Silkscreen，完整 copyright notice 和 OFL 条款随构建分发，不请求外部字体服务。
+
+`site/field.js` 的三个高斯山峰由示意候选概率加权，maxP 和 Shannon entropy 使用同一分布计算；权重缓动与指针变形只改画面，不改文本读数。共享暂停／减少动态下控件立即更新静态地形；几何投影不等于概率校准。`site/evidence.js` 只投影构建时传入的历史汇总，切换高 maxP 时保留完整格子位置并淡化筛选外记录。切换时，有限阶梯动画只改变格子的视觉位置；数字和类别立即同步。快速切换、减少动态、离屏、后台或像素暂停会取消旧动画。作品／示意／历史标签需要一起保留。
 
 `site/theme.js` 在样式加载前读取本地外观选择，未选择时跟随系统；只写入 `decisions-theme`，不储存输入或练习答案。接入说明的原创 `site/flow.svg` 在构建时内联，随同一主题变色；原 SVG 仍是唯一编辑源。各个持续播放的 Canvas 都提供暂停，遵循减少动态效果偏好，并在后台／视野外停止。无 JavaScript 时保留内嵌 SVG 和静态汇总。
 

@@ -2,7 +2,7 @@
 
 **把有限选项的判断，变成可以反复试的玩法。** 本页收集 20 个具体玩法，分成 6 组。每个玩法都写清楚真实输入、有限选项（含补信息或 unknown 等出口）、能借哪个已存在项目的具体机制、第一次怎么试、常见失败以及何时交还给人。
 
-事实真源是 [`catalog/recipes.json`](../catalog/recipes.json)；本页的输入、问题与选项与它保持一致。JSON 给首页取数据，本页负责把每条玩法讲清楚。当前版本日期 2026-10-15，项目证据日期逐条标注。
+事实真源是 [`catalog/recipes.json`](../catalog/recipes.json)；本页的输入、问题与选项与它保持一致。JSON 给首页取数据，本页负责把每条玩法讲清楚。目录调查截点为 2026-10-15，项目证据日期逐条标注。2026-10-19 仅澄清 unknown 的记录语义与首页试选方式，没有刷新项目来源。
 
 ## 怎么读这本册子
 
@@ -10,6 +10,8 @@
 - **两种状态。** `implemented-offline`：本仓库真实已有实现，可以先离线跑（目前只有 next-action 实验这两条）。`recipe`：可操作配方，但需要调用方自己实现，本仓库没有对应 CLI。
 - **建议不自动执行。** 所有玩法都只产出建议；是否采纳、是否影响外部系统由人或调用方代码决定。
 - **这不是穷尽市场。** 册子是"可以怎么用"的样例集合，不代表决策模型的全部用法，也不构成任何能力、价格或质量排名。
+
+首页可以手动试选已有选项或独立的 unknown 出口，也可以查看 API 拒答／调用失败的离线示例；这些操作不请求模型，不产生概率，不修改复制的通用任务 JSON。`ok` 与 `unknown` 的区别、业务拒绝与 API refusal 的区别，见[结果契约](method.md#结果状态与输出类型)。
 
 ## 分组总览
 
@@ -80,7 +82,7 @@ WorkflowEvals 的分数是**与 reference 的一致度**，不是独立人工真
 - 输入：一段发布说明或变更文本 + 一句主张 + 可选的来源链接（本仓库 next-action 用例已含中英与混写）。
 - 判断问题：下一步应采取的阅读/核对动作是什么？
 - 选项：`inspect_source 核对原文` · `compare_contract 对照接口契约` · `read_in_context 结合实际调用` · `needs_more_context 先补上下文` · `unknown`
-- 借用机制：本仓库已实现的 next-action 任务：固定动作契约、保留原生概率与 confidence、建议永不自动执行；unknown 是普通第五选项，与 needs_more_context、refusal、错误分别记录。（[Decisions Lab next-action](https://github.com/IndelibleVivi/decisions-lab)）
+- 借用机制：本仓库已实现的 next-action 任务：固定动作契约、保留原生概率与 confidence、建议永不自动执行；unknown 是请求中显式提供的保留判断选项，归一化为 outcome=unknown，不计入可采用动作；与 needs_more_context、refusal、错误分别记录。（[Decisions Lab next-action](https://github.com/IndelibleVivi/decisions-lab)）
 - 第一次试：运行离线 validate 与 demo，先观察一个故意判错和一个显式 unknown 的结果，再换成自己的变更文本。
 - 常见失败 / 何时交还人：缺来源或缺当前依赖时不能硬判，应输出 needs_more_context；模型建议不自动变成操作，真实执行仍需人确认。
 

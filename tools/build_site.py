@@ -30,7 +30,13 @@ SNAPSHOT_FILES = (
     'reanalysis/sys1_reanalysis.json',
 )
 ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/reader.js', 'site/lab.js', 'site/field.js', 'site/evidence.js', 'site/sculpture.js', 'site/atlas.js', 'site/theme.js', 'site/flow.svg',
-          'catalog/index.json', 'catalog/recipes.json', 'research/2026-10-15/updates.json', 'site/recipes.js', 'site/pixels.js', 'site/lettering.js', 'experiments/next-action/cases.json') + tuple(
+          'catalog/index.json', 'catalog/recipes.json', 'research/2026-10-15/updates.json', 'site/recipes.js', 'site/pixels.js', 'site/lettering.js', 'site/motion.js', 'experiments/next-action/cases.json') + tuple(
+              'site/fonts/' + f for f in ('OFL-1.1.txt', 'README.md',
+                                          'space-grotesk-500-latin.woff2', 'space-grotesk-500-latin-ext.woff2',
+                                          'space-grotesk-600-latin.woff2', 'space-grotesk-600-latin-ext.woff2',
+                                          'space-grotesk-700-latin.woff2', 'space-grotesk-700-latin-ext.woff2',
+                                          'silkscreen-400-latin.woff2', 'silkscreen-400-latin-ext.woff2',
+                                          'silkscreen-700-latin.woff2', 'silkscreen-700-latin-ext.woff2')) + tuple(
               'research/2026-10-08/' + p for p in SNAPSHOT_FILES)
 
 
@@ -115,7 +121,7 @@ def shell(title, body, current, toc=()):
     sidebar = sidebar.replace(f'href="{prefix}{current.removesuffix(".html")}.md"', f'href="https://github.com/IndelibleVivi/decisions-lab/blob/main/{current.removesuffix(".html")}.md"')
     if not is_home:
         body = f'<div class="page-heading"><span>{number} / {section}</span><span>{english.upper()}</span></div>{toc_html}<div class="reading-layout">{sidebar}<article>{body}</article></div>'
-    lab_script = ''.join(f'<script defer src="{asset(path)}"></script>' for path in ('site/sculpture.js', 'site/atlas.js', 'site/field.js', 'site/evidence.js', 'site/lab.js', 'site/recipes.js', 'site/pixels.js', 'site/lettering.js')) if is_home else ''
+    lab_script = ''.join(f'<script defer src="{asset(path)}"></script>' for path in ('site/sculpture.js', 'site/atlas.js', 'site/field.js', 'site/evidence.js', 'site/lab.js', 'site/recipes.js', 'site/pixels.js', 'site/motion.js', 'site/lettering.js')) if is_home else ''
     return f'''<!doctype html>
 <html lang="{'en' if is_en else 'zh-CN'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Decisions Lab</title><meta name="description" content="决策模型、API 契约和可复现实验。"><meta name="theme-color" content="#f6f2e9"><script src="{asset('site/theme.js')}"></script><link rel="icon" href="data:,"><link rel="stylesheet" href="{asset('site/style.css')}"><script defer src="{asset('site/filter.js')}"></script><script defer src="{asset('site/reader.js')}"></script>{lab_script}<noscript><style>.evidence-pixels{{display:none}}.evidence-stage{{display:block}}</style></noscript></head>
 <body class="{'is-home' if is_home else 'is-reader'}"><a class="skip" href="#content">{'Skip to content' if is_en else '跳到正文'}</a>
@@ -220,23 +226,72 @@ def pixel_word(word):
     return f'<svg class="pixel-word" viewBox="0 0 {len(word)*6-1} 7" fill="currentColor" aria-hidden="true" shape-rendering="crispEdges">{pixels}</svg>'
 
 
+def option_kind(option):
+    """Presentation metadata, never a rewrite of the catalog's offered values."""
+    if option == 'unknown':
+        return 'escape'
+    # A domain answer such as 都不适用 / 无法从分布确定 is still an ordinary
+    # choice. Only requests for material or human review use the return path.
+    if any(marker in option for marker in ('需要', '需补', '人工', '材料不足', '送人复核', '先补')):
+        return 'context'
+    return 'action'
+
+
 def recipe_explorer():
     book = json.loads((ROOT/'catalog/recipes.json').read_text())
     escape = html.escape
     tabs = '<button type="button" data-recipe-group="all" aria-pressed="true">全部</button>' + ''.join(
         f'<button type="button" data-recipe-group="{escape(g["id"])}" aria-pressed="false">{pixel_glyph(g["id"])}{escape(g["title"])}</button>' for g in book['groups'])
+    def endpoint(kinds, index):
+        # Mirrors endpoint() in site/pixels.js so the static SVG matches the canvas.
+        kind = kinds[index]
+        if kind == 'context':
+            return 14, 108 + sum(1 for k in kinds[:index] if k == 'context') * 24
+        if kind == 'escape':
+            return 210, 167
+        fan = sum(1 for k in kinds if k == 'action')
+        fan_i = sum(1 for k in kinds[:index] if k == 'action')
+        y = 88 if fan == 1 else 26 + fan_i * 126 / max(1, fan - 1)
+        return 292, y
+
     entries, selectors = [], []
     for i, recipe in enumerate(book['recipes'], 1):
         r = {k: escape(str(v)) for k, v in recipe.items() if k != 'options'}
+        kinds = [option_kind(o) for o in recipe['options']]
         selectors.append(f'<button type="button" data-recipe-select="recipe-{r["id"]}" aria-controls="recipe-{r["id"]}"><span class="cartridge-number">{i:02}</span>{pixel_glyph(recipe["group"])}<strong>{r["title"]}</strong><span class="cartridge-state" aria-hidden="true">↗</span></button>')
-        options = ''.join(f'<li><span class="choice-static"><small>{j+1:02}</small>{escape(option)}</span><button type="button" data-choice="{j}" data-choice-label="{escape(option)}" aria-pressed="false" hidden><small>{j+1:02}</small><span>{escape(option)}</span><i aria-hidden="true">↗</i></button></li>' for j, option in enumerate(recipe['options']))
-        # Static pixel machine is kept when canvas/JS is unavailable. Candidate labels are HTML.
-        wires = ''.join(f'<path class="choice-wire" data-choice-wire="{j}" d="M172 86 H{194+j*9} V{26+j*128/max(1,len(recipe["options"])-1)} H306"/>' for j in range(len(recipe['options'])))
+        def option_control(j, option):
+            mark = 'UNK' if kinds[j] == 'escape' else f'{j+1:02}'
+            arrow = '×' if kinds[j] == 'escape' else '↶' if kinds[j] == 'context' else '↗'
+            return f'<span class="choice-static"><small>{mark}</small>{escape(option)}</span><button type="button" data-choice="{j}" data-choice-kind="{kinds[j]}" data-choice-label="{escape(option)}" aria-pressed="false" hidden><small>{mark}</small><span>{escape(option)}</span><i aria-hidden="true">{arrow}</i></button>'
+        options = ''.join(f'<li>{option_control(j, option)}</li>' for j, option in enumerate(recipe['options']) if kinds[j] != 'escape')
+        abstention = ''.join(option_control(j, option) for j, option in enumerate(recipe['options']) if kinds[j] == 'escape')
+        outcomes = ''.join(f'<span data-outcome-state="{key}"><i aria-hidden="true">{mark}</i><b>{key}</b><small>{label}</small></span>' for key, mark, label in (
+            ('ok', '↗', '选中已有选项'), ('unknown', '×', '保留判断'), ('refusal', '⊘', 'API 拒答'), ('error', '!', '调用失败')))
+        # Static signal field is kept when canvas/JS is unavailable. Candidate labels are HTML.
+        wires = ''
+        nodes = ''
+        for j, kind in enumerate(kinds):
+            ex, ey = endpoint(kinds, j)
+            if kind == 'context':
+                wires += f'<path class="choice-wire" data-choice-wire="{j}" d="M50 90 C26 104 10 {ey-22} {ex} {ey}"/>'
+            elif kind == 'escape':
+                wires += f'<path class="choice-wire" data-choice-wire="{j}" stroke-dasharray="2 3" d="M66 106 C110 150 160 158 {ex} {ey}"/>'
+            else:
+                wires += f'<path class="choice-wire" data-choice-wire="{j}" d="M64 90 C140 90 150 {ey} {ex} {ey}"/>'
+            nx, ny = ex + 6, ey - 6
+            inner = (f'<rect x="{nx+5}" y="{ny+3}" width="2" height="6" fill="#76b39d"/><rect x="{nx+3}" y="{ny+5}" width="6" height="2" fill="#76b39d"/>' if kind == 'context'
+                     else ''.join(f'<rect x="{nx+3+d}" y="{ny+3+d}" width="2" height="2" fill="#274a3f"/><rect x="{nx+7-d}" y="{ny+3+d}" width="2" height="2" fill="#274a3f"/>' for d in range(3)) if kind == 'escape'
+                     else f'<rect x="{nx+4}" y="{ny+4}" width="4" height="4" fill="#76b39d"/>')
+            nodes += f'<rect x="{nx}" y="{ny}" width="12" height="12" fill="#2f5a4e"/><rect x="{nx+2}" y="{ny+2}" width="8" height="8" fill="#0c211e"/>{inner}'
         machine = f'''<figure class="choice-machine"><div class="choice-drawing">
-<svg class="pixel-fallback" viewBox="0 0 320 180" aria-hidden="true" shape-rendering="crispEdges"><g fill="none" stroke="#476b64" stroke-width="2"><path d="M12 100H98V86H112"/>{wires}</g><path fill="#719d8b" d="M105 57H165V62H174V118H165V125H105V118H98V62H105Z"/><path fill="#bdd9ac" d="M105 57H165V62H170V113H102V62H105Z"/><path fill="#173c38" d="M109 67H161V99H109Z"/><path fill="#d1e8a6" d="M119 75H125V81H119ZM145 75H151V81H145ZM125 87H145V91H125Z"/><path fill="#e89a71" d="M147 105H160V109H147Z"/><path fill="#3a6a5f" d="M111 125H160V131H111Z"/></svg>
-<canvas class="pixel-scene" data-pixel-glyph="{'/'.join(PIXEL_GLYPHS[recipe['group']])}" width="320" height="180" role="img" aria-label="像素信号机：点选右侧候选，观察对应路线" hidden></canvas><span class="machine-coordinate">INPUT → CHOICE → NEXT</span><span class="machine-hint">点一个选项，让信号走过去。</span></div>
-<div class="choice-console"><p class="console-label"><span>拨动一条分支</span><span>{len(recipe['options']):02} ROUTES</span></p><ol class="recipe-options">{options}</ol></div>
-<figcaption class="choice-readout" role="status">候选集合 · 手动试选，非模型回答。</figcaption></figure>'''
+<svg class="pixel-fallback" viewBox="0 0 320 180" aria-hidden="true" shape-rendering="crispEdges"><rect width="320" height="180" fill="#0c211e"/><g fill="none" stroke="#39604f" stroke-width="1">{wires}<path d="M8 90H30"/></g><rect x="49" y="87" width="7" height="7" fill="#76b39d"/><rect x="50" y="88" width="5" height="5" fill="#d9ecae"/><rect x="6" y="86" width="3" height="8" fill="#274a3f"/>{nodes}</svg>
+<canvas class="pixel-scene" data-pixel-glyph="{'/'.join(PIXEL_GLYPHS[recipe['group']])}" width="320" height="180" role="img" aria-label="信号场：方形节点可直接点按，也可用旁边的文字按钮试选" title="方形节点可直接点按，与旁边的文字按钮同步" hidden></canvas><span class="machine-coordinate">INPUT → CHOICE → OUTCOME</span></div>
+<div class="choice-console"><p class="console-label"><span>试选一个已有选项</span><span>{len(recipe['options']) - kinds.count('escape'):02} CHOICES</span></p><ol class="recipe-options">{options}</ol><div class="choice-abstention"><p>或者，保留判断</p>{abstention}</div></div>
+<p class="machine-hint">↖ 图中的方形节点也能点按 · 回环是补材料／交人工，× 是 unknown</p>
+<div class="response-preview"><div class="response-heading"><span>RESPONSE / 结果类型</span><small>Choice 任务 · 离线示意 · <a href="docs/method.html#结果状态与输出类型">读结果契约 ↗</a></small></div><div class="outcome-rail" aria-label="四种结果状态">{outcomes}</div>
+<p class="choice-readout" role="status" aria-live="polite">尚未试选。选中已有选项与保留判断会产生不同的 outcome。</p>
+<dl class="response-values"><div><dt>outcome</dt><dd data-result-outcome>—</dd></div><div><dt>choice</dt><dd data-result-choice>—</dd></div><div><dt>probabilities / confidence</dt><dd>未调用模型 · 无测量值</dd></div></dl>
+<div class="response-examples" hidden><span>还可能遇到</span><button type="button" data-outcome-example="refusal" aria-pressed="false">看 API 拒答示例</button><button type="button" data-outcome-example="error" aria-pressed="false">看调用失败示例</button><button type="button" class="preview-reset">清除试选</button></div></div></figure>'''
         label = '已有离线实验' if recipe['status'] == 'implemented-offline' else '接入配方'
         task = json.dumps({key: recipe[key] for key in ('input', 'question', 'options')}, ensure_ascii=False, indent=2)
         entries.append(f'''<details class="recipe" data-recipe-category="{r['group']}" id="recipe-{r['id']}">
@@ -245,11 +300,11 @@ def recipe_explorer():
 <div class="recipe-connection"><span>接到这个项目</span><a href="{r['project_url']}">{r['project']} ↗</a></div>
 <details class="recipe-notes"><summary>拆开配方：第一步、机制与容易踩的坑 <span aria-hidden="true">＋</span></summary><h4>从这里动手</h4><p>{r['first_step']}</p><p>{r['mechanism']}</p><p class="recipe-caution">容易踩坑：{r['failure_mode']}</p><p class="recipe-date">项目证据截点 {r['source_date']} · 创意是本项目提案</p></details>
 <div class="recipe-actions"><a href="docs/playbook.html#{r['id']}">完整配方与 API 用法 ↗</a><button type="button" class="recipe-copy" hidden>复制任务 JSON</button></div><pre class="recipe-payload" hidden>{escape(task)}</pre><span class="recipe-copy-status" role="status"></span></div></details>''')
-    return f'''<section class="recipe-section" id="playground" aria-labelledby="recipe-title"><div class="playground-heading"><div><p class="eyebrow">01 / 选择也可以很好玩</p><h2 id="recipe-title">把选择，玩出花。</h2><p class="recipe-intro">装入一个问题。拨动一条分支。看看它能通向哪里。</p></div>{pixel_word('PLAY')}<span class="playground-count">{len(entries):02}<small>玩法卡带 / 6 个方向</small></span></div>
-<div class="recipe-tools" hidden><div class="recipe-groups" role="group" aria-label="按玩法分类">{tabs}</div><label for="recipe-search"><span class="sr-only">找个玩法</span><input id="recipe-search" type="search" placeholder="找个玩法…"></label></div>
-<div class="recipe-shelf-label"><span>选一张卡带 ↓</span><p id="recipe-count" role="status"></p><button type="button" id="pixel-pause" hidden>暂停像素动态</button></div>
-<div class="recipe-workbench"><nav class="recipe-selectors" aria-label="选择玩法" hidden>{''.join(selectors)}</nav><div class="recipe-list">{''.join(entries)}<p id="recipe-empty" hidden>没有匹配的玩法。换个词，或选择「全部」。</p></div></div>
-<div class="recipe-footer"><p>手动试选 · 浏览器不发送输入，模型结果需接入后另测。</p><a href="docs/playbook.html">全部配方 ↗</a></div></section>'''
+    return f'''<section class="recipe-section" id="playground" aria-labelledby="recipe-title"><div class="playground-heading"><div><p class="eyebrow">01 / 选择也可以很好玩</p><h2 id="recipe-title">把选择，玩出花。</h2><p class="recipe-intro">装入一个问题。拨动一条分支。看看它能通向哪里。</p></div><div class="pixel-sign" data-rise><canvas class="sign-board" data-sign-word="PLAY" data-sign-glyphs="{'/'.join(','.join(v) for v in PIXEL_GLYPHS.values())}" role="img" aria-label="点阵招牌：PLAY 字样与轮播的玩法记号，每屏最多两组" hidden></canvas><span class="sign-static" aria-hidden="true">{pixel_word('PLAY')}</span></div><span class="playground-count">{len(entries):02}<small>玩法卡带 / 6 个方向</small></span></div>
+<div class="recipe-tools" data-rise hidden><div class="recipe-groups" role="group" aria-label="按玩法分类">{tabs}</div><label for="recipe-search"><span class="sr-only">找个玩法</span><input id="recipe-search" type="search" placeholder="找个玩法…"></label></div>
+<div class="recipe-shelf-label" data-rise><span>选一张卡带 ↓</span><p id="recipe-count" role="status"></p><button type="button" id="pixel-pause" hidden>暂停动态效果</button></div>
+<div class="recipe-workbench"><nav class="recipe-selectors" aria-label="选择玩法" data-rise="children" hidden>{''.join(selectors)}</nav><div class="recipe-list" data-rise>{''.join(entries)}<p id="recipe-empty" hidden>没有匹配的玩法。换个词，或选择「全部」。</p></div></div>
+<div class="recipe-footer" data-rise><p>手动试选与离线示例 · 浏览器不发送输入，模型结果需接入后另测。</p><a href="docs/playbook.html">全部配方 ↗</a></div></section>'''
 
 
 def home():
@@ -288,20 +343,20 @@ def home():
 <div class="cover-bottom"><a href="#playground">向下探索 <span aria-hidden="true">↓</span></a><div class="sculpture-controls" hidden><div role="group" aria-label="粒子形态"><button type="button" data-sculpture-mode="0" aria-pressed="true">编织</button><button type="button" data-sculpture-mode="1" aria-pressed="false">分岔</button><button type="button" data-sculpture-mode="2" aria-pressed="false">环流</button></div><button type="button" id="sculpture-burst">冲散 ↗</button><button type="button" id="sculpture-reset">复位 ↺</button></div><button id="sculpture-pause" type="button" hidden>暂停动态</button></div><p id="sculpture-status" class="sr-only" role="status"></p>
 </section>
 
-<section class="fresh-strip"><a href="research/2026-10-15/README.html"><span>15 OCT / 新观察</span><strong>Jev 1.14 · Clef-omni · Decisions 契约更新</strong><span>读增量核查 ↗</span></a></section>
-<nav class="lab-wayfinding" aria-label="实验室入口"><a href="#playground">{pixel_glyph('creative-interactive')}<span>01</span><strong>挑个玩法</strong><small>装入一个问题</small><i aria-hidden="true">↓</i></a><a href="#experiments">{pixel_glyph('reliability-lab')}<span>02</span><strong>拨动实验</strong><small>看看变化怎么发生</small><i aria-hidden="true">↓</i></a><a href="#explore">{pixel_glyph('reading-research')}<span>03</span><strong>带走灵感</strong><small>从这里接到真实项目</small><i aria-hidden="true">↓</i></a></nav>
+<section class="fresh-strip"><a href="research/2026-10-15/README.html" data-rise><span>15 OCT / 新观察</span><strong>Jev 1.14 · Clef-omni · Decisions 契约更新</strong><span>读增量核查 ↗</span></a></section>
+<nav class="lab-wayfinding" aria-label="实验室入口" data-rise="children"><a href="#playground">{pixel_glyph('creative-interactive')}<span>01</span><strong>挑个玩法</strong><small>装入一个问题</small><i aria-hidden="true">↓</i></a><a href="#experiments">{pixel_glyph('reliability-lab')}<span>02</span><strong>拨动实验</strong><small>看看变化怎么发生</small><i aria-hidden="true">↓</i></a><a href="#explore">{pixel_glyph('reading-research')}<span>03</span><strong>带走灵感</strong><small>从这里接到真实项目</small><i aria-hidden="true">↓</i></a></nav>
 {recipe_explorer()}
-<div class="lab-chapter" id="experiments"><div class="chapter-pixels" aria-hidden="true">{pixel_glyph("reliability-lab")}</div><p class="eyebrow">02 / 实验进行中</p><h2>小小改动，<br>不同结果。</h2><p>从分布的形状，走到判断的证据，再亲自选一次下一步。</p><nav aria-label="选择实验"><a href="#probability-artifact">A / 调一调概率 ↓</a><a href="#evidence">B / 看一眼错误 ↓</a><a href="#exercise">C / 自己选一次 ↓</a></nav></div>
+<div class="lab-chapter" id="experiments"><div class="chapter-pixels" aria-hidden="true" data-sign-glyph="reliability-lab">{pixel_glyph("reliability-lab")}</div><p class="eyebrow">02 / 实验进行中</p><h2>小小改动，<br>不同结果。</h2><p>从分布的形状，走到判断的证据，再亲自选一次下一步。</p><nav aria-label="选择实验"><a href="#probability-artifact">A / 调一调概率 ↓</a><a href="#evidence">B / 看一眼错误 ↓</a><a href="#exercise">C / 自己选一次 ↓</a></nav></div>
 <section class="field-section" id="probability-artifact" aria-labelledby="field-title">
-<div class="field-heading"><div><p class="eyebrow">EXPERIMENT A / 概率地形</p><h2 id="field-title">概率，长什么样？</h2></div><p>同一组候选，不同的可能性。<br>三座山，三个候选；拖动，改变它们的权重。</p></div>
-<div class="field-stage"><span class="stage-coordinate">FIG. 01 — POSSIBILITY SPACE</span>{field_fallback()}<canvas id="probability-field" role="img" hidden></canvas><div class="field-scale"><span>高</span><i></i><span>低</span><small>概率 / 示意</small></div><div class="field-values"><span><i class="color-a"></i>A <b data-field-value>72.0%</b></span><span><i class="color-b"></i>B <b data-field-value>20.0%</b></span><span><i class="color-c"></i>C <b data-field-value>8.0%</b></span></div></div>
-<div class="field-controls" hidden><div class="field-presets" role="group" aria-label="切换示意分布"><button data-field-preset="0" aria-pressed="true">一边倒</button><button data-field-preset="1" aria-pressed="false">难分高下</button><button data-field-preset="2" aria-pressed="false">双峰</button></div><label class="field-slider" for="field-bias"><span>偏向 A <output id="field-bias-value">72%</output></span><input id="field-bias" type="range" min="0" max="100" value="72"></label><div class="field-stat"><span>maxP</span><b id="field-max">0.72</b></div><div class="field-stat"><span>熵 / bits</span><b id="field-entropy">1.10</b></div><button type="button" id="field-pause">暂停动态</button></div>
-<div class="field-foot"><p>拖动看看：概率改变了形状，却不能独自证明判断正确。</p><span>交互示意 · 无模型调用</span></div><p id="field-summary" class="sr-only" role="status"></p>
+<div class="field-heading" data-rise><div><p class="eyebrow">EXPERIMENT A / 概率地形</p><h2 id="field-title">概率，长什么样？</h2></div><p>同一组候选，不同的可能性。<br>三座山，三个候选；拖动，改变它们的权重。</p></div>
+<div class="field-stage" data-rise><span class="stage-coordinate">FIG. 01 — POSSIBILITY SPACE</span>{field_fallback()}<canvas id="probability-field" role="img" hidden></canvas><div class="field-scale"><span>高</span><i></i><span>低</span><small>概率 / 示意</small></div><div class="field-values"><span><i class="color-a"></i>A <b data-field-value>72.0%</b></span><span><i class="color-b"></i>B <b data-field-value>20.0%</b></span><span><i class="color-c"></i>C <b data-field-value>8.0%</b></span></div></div>
+<div class="field-controls" data-rise hidden><div class="field-presets" role="group" aria-label="切换示意分布"><button data-field-preset="0" aria-pressed="true">一边倒</button><button data-field-preset="1" aria-pressed="false">难分高下</button><button data-field-preset="2" aria-pressed="false">双峰</button></div><label class="field-slider" for="field-bias"><span>偏向 A <output id="field-bias-value">72%</output></span><input id="field-bias" type="range" min="0" max="100" value="72"></label><div class="field-stat"><span>maxP</span><b id="field-max">0.72</b></div><div class="field-stat"><span>熵 / bits</span><b id="field-entropy">1.10</b></div><button type="button" id="field-pause">暂停动态</button></div>
+<div class="field-foot" data-rise><p>拖动看看：概率改变了形状，却不能独自证明判断正确。</p><span>交互示意 · 无模型调用</span></div><p id="field-summary" class="sr-only" role="status"></p>
 </section>
-<section class="evidence-section" id="evidence" aria-labelledby="evidence-title"><div class="section-heading"><h2 id="evidence-title">自信，和正确之间。<span>B / 核对真实的历史记录</span></h2><a href="research/2026-10-08/report.html">阅读完整研究 ↗</a></div><div class="evidence-controls" hidden><div class="evidence-tasks" role="group" aria-label="历史任务">{task_buttons}</div><div class="evidence-scopes" role="group" aria-label="筛选历史记录"><button data-evidence-scope="all">全部记录</button><button data-evidence-scope="high">只看 maxP ≥ 0.9</button></div></div><div class="evidence-stage"><div class="evidence-pixels"><svg id="evidence-grid" viewBox="0 0 400 400" role="img" aria-label="历史结果像素图，启用 JavaScript 后可切换"></svg><div class="evidence-legend"><span><i class="color-a"></i>正确</span><span><i class="color-b"></i>错误</span><span><i class="color-muted"></i>筛选外</span></div></div><div class="evidence-reading"><p class="eyebrow">JEV / 2026.10.08 SNAPSHOT</p><p class="evidence-number"><strong id="evidence-accuracy">{initial["correct"]/initial["total"]:.1%}</strong><span>判断正确</span></p><div class="evidence-counts"><p><span id="evidence-correct">{initial["correct"]}</span> / <span id="evidence-total">{initial["total"]}</span><small>选中记录中判断正确</small></p><p><span id="evidence-errors">{initial["total"]-initial["correct"]}</span><small>选中记录中判断错误</small></p></div><p id="evidence-summary" role="status">{initial["label"]}：{initial["correct"]} / {initial["total"]} 判断正确。切换任务，看看同一模型在不同问题上的落差。</p><p class="evidence-note">每格是一条记录的计数；按汇总结果分组排布，位置不代表原始样本顺序。高 maxP 也可能答错。</p></div></div><details class="evidence-source"><summary>展开原始汇总与来源</summary><div class="table-wrap"><table><thead><tr><th>历史任务</th><th>全部记录：正确 / 总数</th><th>高 maxP：错误 / 总数</th></tr></thead><tbody>{source_rows}</tbody></table></div><p>来源：<a href="research/2026-10-08/README.html">sys1-eval 历史复算</a>。任务、样本和条件不同，不是当前模型排名；没有重新调用模型。</p></details><script id="evidence-data" type="application/json">{evidence_json}</script></section>
-<section class="decision-exercise" id="exercise" aria-labelledby="exercise-title"><div class="section-heading"><h2 id="exercise-title">轮到你了。<span>C / 做出你的判断</span></h2><p>三个合成案例 · 选择后查看理由</p></div><div class="exercise-layout"><div class="specimen"><div class="specimen-top"><span>INPUT / 阅读材料</span><label class="case-selector" hidden>切换用例 <select id="sample-case"><option value="0">01 / 字段更名</option><option value="1">02 / 信息缺失</option><option value="2">03 / 默认值变化</option></select></label></div><p id="sample-document">{fragment(task['document'])}</p><div class="claim"><span>待核对的主张</span><p id="sample-claim">{fragment(task['claim'])}</p></div><p class="sample-source">原创合成输入；来源地址为占位符。</p></div><div class="exercise-actions" hidden><p class="action-prompt">NEXT ACTION / 下一步，先做什么？</p><div class="choice-list">{buttons}</div><div id="sample-feedback" role="status" aria-live="polite">选择一个动作，查看编辑标签与理由。</div></div><noscript><p>启用 JavaScript 可在本页选择动作，也可以直接<a href="experiments/next-action/README.html">阅读完整实验</a>。</p></noscript></div><div class="exercise-footer"><p>{len(suite['cases'])} 个原创合成案例，允许多个合理动作。人工标签可讨论。</p><a href="experiments/next-action/README.html">运行完整实验 ↗</a></div><script id="sample-data" type="application/json">{payload}</script></section>
-<section class="library-section" id="explore" aria-labelledby="library-title"><div class="section-heading"><h2 id="library-title">把灵感，接到实现上。<span>03 / TOOLS & READING</span></h2><a href="README.html">关于这个项目 ↗</a></div><div class="library-layout"><div class="project-section"><div class="toolbox-art" aria-hidden="true">{pixel_glyph("dev-agent")}{pixel_glyph("knowledge")}{pixel_glyph("life-choice")}</div><p class="eyebrow">工具箱 / {metadata["repository_index_entries"]} 个历史索引项目</p>{project_atlas()}</div><div class="directory-section"><p class="eyebrow">继续阅读 / 方法与接入</p><div class="directory-grid">{index}</div></div></div></section>
-<section class="archive-strip"><div><p class="eyebrow">A LIVING LAB, DATED EVIDENCE</p><h2>研究持续生长。<br>证据留在它的日期里。</h2><a href="docs/maintenance.html">我们怎样维护这份研究 ↗</a></div><p class="archive-date">2026<span>10.08</span><small>首期调查截点</small></p></section>'''
+<section class="evidence-section" id="evidence" aria-labelledby="evidence-title"><div class="section-heading" data-rise><h2 id="evidence-title">自信，和正确之间。<span>B / 核对真实的历史记录</span></h2><a href="research/2026-10-08/report.html">阅读完整研究 ↗</a></div><div class="evidence-controls" data-rise hidden><div class="evidence-tasks" role="group" aria-label="历史任务">{task_buttons}</div><div class="evidence-scopes" role="group" aria-label="筛选历史记录"><button data-evidence-scope="all">全部记录</button><button data-evidence-scope="high">只看 maxP ≥ 0.9</button></div></div><div class="evidence-stage" data-rise><div class="evidence-pixels"><svg id="evidence-grid" viewBox="0 0 400 400" role="img" aria-label="历史结果像素图，启用 JavaScript 后可切换"></svg><div class="evidence-legend"><span><i class="color-a"></i>正确</span><span><i class="color-b"></i>错误</span><span><i class="color-muted"></i>筛选外</span></div></div><div class="evidence-reading"><p class="eyebrow">JEV / 2026.10.08 SNAPSHOT</p><p class="evidence-number"><strong id="evidence-accuracy">{initial["correct"]/initial["total"]:.1%}</strong><span>判断正确</span></p><div class="evidence-counts"><p><span id="evidence-correct">{initial["correct"]}</span> / <span id="evidence-total">{initial["total"]}</span><small>选中记录中判断正确</small></p><p><span id="evidence-errors">{initial["total"]-initial["correct"]}</span><small>选中记录中判断错误</small></p></div><p id="evidence-summary" role="status">{initial["label"]}：{initial["correct"]} / {initial["total"]} 判断正确。切换任务，看看同一模型在不同问题上的落差。</p><p class="evidence-note">每格是一条记录的计数；按汇总结果分组排布，位置不代表原始样本顺序。高 maxP 也可能答错。</p></div></div><details class="evidence-source"><summary>展开原始汇总与来源</summary><div class="table-wrap"><table><thead><tr><th>历史任务</th><th>全部记录：正确 / 总数</th><th>高 maxP：错误 / 总数</th></tr></thead><tbody>{source_rows}</tbody></table></div><p>来源：<a href="research/2026-10-08/README.html">sys1-eval 历史复算</a>。任务、样本和条件不同，不是当前模型排名；没有重新调用模型。</p></details><script id="evidence-data" type="application/json">{evidence_json}</script></section>
+<section class="decision-exercise" id="exercise" aria-labelledby="exercise-title"><div class="section-heading" data-rise><h2 id="exercise-title">轮到你了。<span>C / 做出你的判断</span></h2><p>三个合成案例 · 选择后查看理由</p></div><div class="exercise-layout"><div class="specimen" data-rise><div class="specimen-top"><span>INPUT / 阅读材料</span><label class="case-selector" hidden>切换用例 <select id="sample-case"><option value="0">01 / 字段更名</option><option value="1">02 / 信息缺失</option><option value="2">03 / 默认值变化</option></select></label></div><p id="sample-document">{fragment(task['document'])}</p><div class="claim"><span>待核对的主张</span><p id="sample-claim">{fragment(task['claim'])}</p></div><p class="sample-source">原创合成输入；来源地址为占位符。</p></div><div class="exercise-actions" data-rise hidden><p class="action-prompt">NEXT ACTION / 下一步，先做什么？</p><div class="choice-list">{buttons}</div><div id="sample-feedback" role="status" aria-live="polite">选择一个动作，查看编辑标签与理由。</div></div><noscript><p>启用 JavaScript 可在本页选择动作，也可以直接<a href="experiments/next-action/README.html">阅读完整实验</a>。</p></noscript></div><div class="exercise-footer" data-rise><p>{len(suite['cases'])} 个原创合成案例，允许多个合理动作。人工标签可讨论。</p><a href="experiments/next-action/README.html">运行完整实验 ↗</a></div><script id="sample-data" type="application/json">{payload}</script></section>
+<section class="library-section" id="explore" aria-labelledby="library-title"><div class="section-heading" data-rise><h2 id="library-title">把灵感，接到实现上。<span>03 / TOOLS & READING</span></h2><a href="README.html">关于这个项目 ↗</a></div><div class="library-layout"><div class="project-section"><div class="toolbox-art" aria-hidden="true">{pixel_glyph("dev-agent")}{pixel_glyph("knowledge")}{pixel_glyph("life-choice")}</div><p class="eyebrow">工具箱 / {metadata["repository_index_entries"]} 个历史索引项目</p>{project_atlas()}</div><div class="directory-section"><p class="eyebrow">继续阅读 / 方法与接入</p><div class="directory-grid">{index}</div></div></div></section>
+<section class="archive-strip" data-rise><div><p class="eyebrow">A LIVING LAB, DATED EVIDENCE</p><h2>研究持续生长。<br>证据留在它的日期里。</h2><a href="docs/maintenance.html">我们怎样维护这份研究 ↗</a></div><p class="archive-date">2026<span>10.08</span><small>首期调查截点</small></p></section>'''
 
 
 def build(output):
