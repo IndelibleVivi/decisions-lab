@@ -42,7 +42,7 @@ python3 tools/build_site.py
 
 玩法卡片编辑 `catalog/recipes.json`，详细解释与操作路径编辑 `docs/playbook.md`。稳定 ID 同时用于 Markdown 标题、站点 fragment 和测试映射；修改标题不应破坏 ID。项目机制、核查日期、原创提案与已实现离线实验必须分别表述。首页复制的是通用任务定义，不是可直接发送给任意 provider 的请求体；原生请求以带日期的 API 示例及实验 adapter 为准。新增来源更新各自的截点，不把文档编辑日期当成全部链接的复核日期。
 
-类型化取值的解释由 `docs/typed-values.md` 拥有；三组题本和原创请求在 `experiments/typed-values/`。`examples.json` 的编辑答案、干预和观测结果与 provider 输出分开保存，状态为 NOT_RUN。它没有接入当前 Choice CLI，也不为配方卡片增加虚假的已实现数量。后续真实采集应先定义独立结果契约，再实现对应 collector。
+类型化取值的解释由 `docs/typed-values.md` 拥有；三组题本和原创请求在 `experiments/typed-values/`。`examples.json` 的编辑答案、干预和观测结果与 provider 输出分开保存，状态为 NOT_RUN。`decision_lab typed-values` 使用独立的离线记录和评分契约；不改 Choice 的 action/probabilities，也不改变配方卡片的已实现数量。修改题本或评分时，同时验证请求不含编辑答案／事后观测、null 不补 guess、三路径的作答正确性与任务完成率分列、区间覆盖与宽度分列。真实采集仍需单独实现并满足网络、凭据和调用上限约束。
 
 更换站点资产后，旧 `_site/` 可能留下已退役的文件；builder 会报 `Unexpected existing output`，不会擅自清空目录。先检查报错路径，确认它仅是旧的生成文件，再移除该文件并重新构建。当前源码不再生成旧版的 `site/orbit.js`。
 

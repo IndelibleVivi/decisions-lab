@@ -93,7 +93,7 @@ PAGE_CONTEXT = {
     'research/2026-10-15/README.html': ('01', '10 月增量核查', 'Research update'),
     'research/2026-10-20/README.html': ('01', 'Clairic 与类型化取值', 'Research update'),
     'experiments/next-action/README.html': ('03', 'Next-action 实验', 'Experiment'),
-    'experiments/typed-values/README.html': ('11', '类型化取值实验题本', 'Experiment design'),
+    'experiments/typed-values/README.html': ('11', '类型化取值实验', 'Offline experiment'),
     'docs/typed-values.html': ('10', '类型化输出', 'Typed values'),
     'docs/method.html': ('04', '评估方法', 'Method'),
     'docs/integration.html': ('05', '工作流接入', 'Integration'),

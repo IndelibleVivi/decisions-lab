@@ -12,7 +12,7 @@ Decisions Lab 研究 decision models 与类型化取值：从证据中选择动�
 
 [10-20 调查](research/2026-10-20/README.md)加入 Cloudflare Clairic，并把“结构合法”与“有证据、选对实体、判断正确”分开。[方法章](docs/typed-values.md)沿具体字段解释摘录、计算和预测的区别；[三组实验题本](experiments/typed-values/README.md)提供原创输入、原生请求、编辑答案、对照和评分办法，分别研究缺失值、提取后的上下文损失、预测区间。
 
-题本是准备好的实验设计，尚无模型采集结果，也未接入现有 CLI。当前可运行的仍是下面的 next-action 实验；Choice 与字段取值各自保留真实语义。
+题本的 provider 状态仍是 `NOT_RUN`，尚无模型采集结果。现在可以用独立的 `typed-values` 子命令准备请求、运行明确标注的 synthetic baseline／demo、导入本地响应，再回放字段、金额与区间评分。它与下面的 next-action 实验各用自己的结果契约；Clairic 尚无 live collector。
 
 ## 先做哪件事
 
@@ -23,7 +23,7 @@ Decisions Lab 研究 decision models 与类型化取值：从证据中选择动�
 | 找一个有趣、可以动手的用法 | [20 种玩法与现成项目](docs/playbook.md) |
 | 理解这个领域和证据边界 | [2026-10-08 调查及复算](research/2026-10-08/README.md) |
 | 找 SDK、开放模型、运行时或评测项目 | [按问题分组的项目地图](docs/projects.md) |
-| 真正运行一个判断任务 | [next-action 实验](experiments/next-action/README.md) |
+| 运行离线判断或取值实验 | [next-action 实验](experiments/next-action/README.md)；[typed-values CLI](experiments/typed-values/README.md) |
 | 决定怎样接入自己的工作流 | [接入设计](docs/integration.md) |
 | 更新快速变化的资料 | [维护方法](docs/maintenance.md) |
 
@@ -39,6 +39,18 @@ python3 -m decision_lab replay runs/demo-001 experiments/next-action/cases.json
 ```
 
 任务是：给定文档/变更和一个主张，推荐下一步核对动作。25 个原创合成用例覆盖中文、英文与混写；同一来源的变体保持在同一个 dev/test 分组。baseline 使用确定性规则；demo 有意构造一个错误和一个 unknown。**这些都不是模型实测，也不构成质量排名。** 每次使用新运行目录，以保留旧记录。
+
+同一个入口下，类型化取值使用独立子命令：
+
+```bash
+python3 -m decision_lab typed-values validate
+python3 -m decision_lab typed-values prepare --case-id source-missing
+python3 -m decision_lab typed-values baseline-run --run-dir runs/typed-baseline-001
+python3 -m decision_lab typed-values demo --run-dir runs/typed-demo-001
+python3 -m decision_lab typed-values replay runs/typed-demo-001
+```
+
+`prepare` 仅打印请求；baseline 和 demo 均为 synthetic。已有本地响应可用 `typed-values import --responses <responses.json> --run-dir <新目录>` 导入，再由 `replay` 重算评分。导入格式、三条判断路径和 span 约定见 [typed-values 实验说明](experiments/typed-values/README.md)。以上命令不读取凭据、不请求 provider，运行结果不会改写题本的 `NOT_RUN` 状态。
 
 ```bash
 # 检查两条原生 API 的请求，不发送

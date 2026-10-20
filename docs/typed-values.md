@@ -93,6 +93,6 @@ Clairic 的官方购买订单示例值得特别看：字段的 `value` 是 null�
 
 ## 本轮能拿到什么
 
-[实验册](../experiments/typed-values/README.md)和 [JSON 资料](../experiments/typed-values/examples.json)提供三组原生请求草案、原创输入、编辑答案、控制变量与评分规则，状态为 **NOT_RUN**。它们可供人工核对及后续实现；当前 `decision_lab` CLI 仍只接受原有 next-action 契约，没有新增 Clairic collector。
+[实验册](../experiments/typed-values/README.md)和 [JSON 资料](../experiments/typed-values/examples.json)提供三组原生请求草案、原创输入、编辑答案、控制变量与评分规则，状态为 **NOT_RUN**。`decision_lab typed-values` 已提供独立的离线请求准备、synthetic baseline／demo、外部响应导入与评分回放，具体命令和记录契约见实验册。生成的演示记录与题本分开；导入只读取本地文件，不访问模型，也不能证明响应确实来自某次 provider 调用。Clairic 的 live collector 尚未实现。
 
 原有配方继续适合有限选择任务。新资料帮助下一次扩展先确定：要保留的是一个动作、一段证据、一个算出来的值，还是一次等待验证的预测。

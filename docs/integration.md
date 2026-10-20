@@ -4,7 +4,7 @@
 
 想换一个入口，可以从[20 种玩法](playbook.md)选择 NPC 行为、互动叙事、阅读路径、素材整理或工具路由；每项都有现成项目和可检查的第一步。具体请求请结合[10-15 API 增量与原生示例](../research/2026-10-15/README.md)，不要把首页复制的通用任务 JSON 直接当成 provider 的请求体。
 
-如果问题需要编号、日期或数值，先读[类型化输出](typed-values.md)与[10-20 Clairic 核查](../research/2026-10-20/README.md)。新的[实验题本](../experiments/typed-values/README.md)讨论怎样把字段带进判断；它不是已接入生产的流水线。
+如果问题需要编号、日期或数值，先读[类型化输出](typed-values.md)与[10-20 Clairic 核查](../research/2026-10-20/README.md)。新的[实验题本与离线 CLI](../experiments/typed-values/README.md)可以准备请求、导入本地响应并回放字段／计算／预测评分。它没有 Clairic 网络采集或生产接线。
 
 ![建议与执行的边界](../site/flow.svg)
 
@@ -18,7 +18,7 @@
 
 模型返回一个 action ID 和原生概率/置信度；代码先校验 contract，再呈现建议、原文位置与上下文。操作者选择采纳、改选或补充上下文。只有执行端自己的权限与前置条件允许时，后续工具才执行动作。
 
-本仓库已实现的是合成输入到记录、重放、评估的实验路径，以及需要显式开启的 collector。上图右端的人类反馈和实际执行是**接入设计**，尚未接入任何生产系统。
+本仓库已实现 next-action 的合成输入到记录、重放、评估路径及需显式开启的 collector；typed-values 使用独立的离线导入与评分路径。上图右端的人类反馈和实际执行是**接入设计**，尚未接入任何生产系统。
 
 ## 采用顺序
 
@@ -42,4 +42,4 @@
 
 [项目地图](projects.md)按接线、开放模型、运行时、工作流机制和评估证据分组。优先读官方客户端确定 transport/contract；从工作流项目学习一个具体机制；再拿本地任务验证。是否安装、自托管或依赖某个项目，应基于确切 revision、许可、硬件与维护成本另作判断。列入地图不等于采用推荐。
 
-我们暂不建立通用万能 router、统一 provider confidence 或自主记忆写入层。当前任务只需要两个明确的原生 profile 和一个能解释错误的 replay 路径；扩展应由新的具体用例推动。
+我们暂不建立通用万能 router、统一 provider confidence 或自主记忆写入层。next-action 保留两个明确的原生 Choice profile；typed-values 通过独立记录解释字段、计算和预测错误，尚无网络 collector。进一步扩展由具体用例推动。

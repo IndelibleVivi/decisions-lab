@@ -2,9 +2,112 @@
 
 [字段方法](../../docs/typed-values.md) · [原创请求与编辑答案](examples.json) · [10-20 契约核查](../../research/2026-10-20/README.md)
 
-**状态：NOT_RUN。** 本目录提供实验设计与原创合成材料：3 组实验、7 个请求案例，尚无模型响应。`examples.json` 中的 `editorial_oracle` 是编辑依据输入写出的预期答案，第三组另有原创的事后观测；`provider_results` 为空。下面的确定性计算只验证这些教学材料，没有测得模型质量。
+**Provider 状态：NOT_RUN。** 本目录提供实验设计与原创合成材料：3 组实验、7 个请求案例，尚无模型响应。`examples.json` 中的 `editorial_oracle` 是编辑依据输入写出的预期答案，第三组另有原创的事后观测；`provider_results` 为空。下面的确定性计算只验证这些教学材料，没有测得模型质量。
 
-请求草案采用 Clairic 的原生 `model`、`state`、`fields` 形状，字段依据 [2026-10-20 核查](../../research/2026-10-20/README.md)及[固定版本的官方 schema](https://github.com/cloudflare/cloudflare-docs/blob/39cb53c8e8aa663096c589831bcecd1e5d657641/src/content/workers-ai-models/clairic.json)。本目录不提供 collector；原有 `decision_lab` CLI 仍使用 [next-action 契约](../next-action/README.md)，不接受这份 JSON。
+请求草案采用 Clairic 的原生 `model`、`state`、`fields` 形状，字段依据 [2026-10-20 核查](../../research/2026-10-20/README.md)及[固定版本的官方 schema](https://github.com/cloudflare/cloudflare-docs/blob/39cb53c8e8aa663096c589831bcecd1e5d657641/src/content/workers-ai-models/clairic.json)。`python3 -m decision_lab typed-values` 提供完全离线的请求准备、synthetic baseline／demo、外部 JSON 响应导入与评分回放；不提供 Clairic 网络 collector，也不复用 [next-action Choice 契约](../next-action/README.md)的 action/probabilities 记录。
+
+## 离线 CLI
+
+从仓库根目录运行，默认题本为 `examples.json`：
+
+```bash
+python3 -m decision_lab typed-values validate
+python3 -m decision_lab typed-values prepare --case-id source-missing
+python3 -m decision_lab typed-values prepare --experiment extract-compute-decide
+python3 -m decision_lab typed-values baseline-run --run-dir runs/typed-baseline-001
+python3 -m decision_lab typed-values demo --run-dir runs/typed-demo-001
+python3 -m decision_lab typed-values import --responses /tmp/responses.json --run-dir runs/typed-import-001
+python3 -m decision_lab typed-values replay runs/typed-import-001
+```
+
+`prepare` 接受可选 suite 路径、`--experiment`、可重复的 `--case-id` 与 `--limit`。它输出 suite digest、`@cf/cloudflare/clairic` 标识，以及每项的 `experiment_id`、`case_id` 和只含 `model/state/fields/options`（必要时 `reference_date`）的 native request。`editorial_oracle`、`source_group`、diagnostic、后续观测、路径期望值、span 答案与评分规则都不进入请求。三个记录命令共用这些筛选参数，但 `replay` 必须重放整份已选 case 集，不能把它当子集评分。
+
+`baseline-run` 运行本页所述的固定模板规则；`demo` 使用编辑 oracle 构造回答，并保留 `value: null` 的 `guess/confidence/p_null` 示例。两者都是明确标注的 `value_source: synthetic`，不经过 native envelope 校验，也不冒充 provider inference。第三组 baseline 直接输出经验历史 median/分位，不被 native `min/max/step` 限制。CLI 没有 live 命令、网络代码或凭据读取；import 的记录写 `provenance: import`、`live_verified: false`，只说明本地响应被导入，不能证明项目发起了调用、响应属于某个模型版本或价格／可用性成立。
+
+输出必须进入全新目录，写入 `typed-values-record.json`。repo 内只允许 `runs/`；`runs/` 已被忽略。已有非空目录、已有记录或其它源目录会被拒绝，没有 clobber 开关。记录含 case 与 suite 摘要、完整 retained request、原始 `raw` response、导入时的 outcome 分类和重算 digest；重放从 suite + request + raw response 重新评分，并拒绝错 case、重复、未知 field、request／suite 关联变化及评分摘要篡改。
+
+### 导入文件
+
+外部文件为 UTF-8 JSON，顶层 schema 固定如下。`response` 可以是 REST 的 `{"result": {"answers": ...}}` 外壳或 binding 的 `{"answers": ...}`；保留它作为原始响应，不把它改写成 Choice。`kind` 缺省为 `native`。以下 JSON 是手写的格式示例，usage 数字是占位，均非 provider 实测。
+
+```json
+{
+  "schema": "decisions-lab.typed-values-responses/1",
+  "provenance": "import",
+  "span_convention": {"unit": "utf8", "end": "exclusive"},
+  "responses": [
+    {
+      "experiment_id": "source-null-identity",
+      "case_id": "source-missing",
+      "http_status": 200,
+      "kind": "native",
+      "value_source": "native",
+      "response": {
+        "result": {
+          "model": "clairic",
+          "answers": {
+            "current_order_id": {"type": "text", "value": "PO-842"},
+            "current_recipient": {"type": "text", "value": "林遥"},
+            "current_delivery_date": {"type": "date", "value": null},
+            "current_delivery_evidence": {"type": "text", "value": null}
+          },
+          "truncated": false,
+          "usage": {"input_tokens": 1, "output_tokens": 0}
+        }
+      }
+    }
+  ]
+}
+```
+
+导入文件必须覆盖本次选中的每个 case，不能夹带未选中的 case，也不能重复。显式拒答、unknown 与错误分开记录：
+
+```json
+{"experiment_id": "estimate-intervals", "case_id": "interval-wide-support",
+ "kind": "refusal", "detail": "provider-native refusal text or imported note"}
+```
+
+`kind` 可为 `native`、`unknown`、`refusal`、`error`。后三者要求非空 `detail`，不要求也不得伪造 `response`；`http_status` 非 200 的原生响应记录为 error。`unknown` 是导入方保留的模型原生状态或明确分类，不能由 `value: null` 推断；`refusal` 也不能由 null 推断。带字段响应的 entry 必须写 `value_source`：真实响应用 `native`，明确构造的 fixture 用 `synthetic`。无字段结果也可显式标注来源；同一次 import 逐 case 保留来源。
+
+原生 `value_source: native` 的 response 必须保留并满足固定 schema 的 `model`、`answers`、`truncated`、`usage` 外层；`model` 必须为 `clairic`，`usage` 必须含非负整数 `input_tokens`、`output_tokens`。`state_text`、其他 usage 字段及 answer 辅助字段可缺省。合成 baseline／demo 使用自己的显式 synthetic 表示，不借这个校验冒充原生响应。当前 CLI 的严格值校验只覆盖这 7 题本使用的 text、number、date、estimate；time、list、forecast 不做未经验证的通用解释。
+
+畸形 envelope、缺失或未知 field、错误 response type、非法日期、bool 冒充数字、非有限数、超过请求 decimals 的数值和超大整数都进入可读的 `response_contract` error。显式 `value: null` 是正常字段结果，继续检查是否漏提；缺整个 field 是响应契约错误，不能伪装成 null。`350`、`350.0` 与编辑 Decimal 答案 `"350.00"` 按数值比较，不按字符串序列化判错。未知布局的可选 `quantiles` 数组原样保留，区间评分只读取已核定的 `value/median/p10/p90`。
+
+三路径下游动作可用可选的 `downstream_decisions` 导入：
+
+```json
+{
+  "experiment_id": "extract-compute-decide",
+  "case_id": "amount-disputed",
+  "http_status": 200,
+  "value_source": "native",
+  "response": {
+    "result": {
+      "model": "clairic",
+      "answers": {
+        "quantity": {"type": "number", "value": 3},
+        "unit_price": {"type": "number", "value": 350.0},
+        "shipping": {"type": "number", "value": 50.0},
+        "computed_total": {"type": "number", "value": 1100.0},
+        "status_evidence": {"type": "text", "value": "版本 v2 的验收状态：第三件尚未验收；供应商所称全部已交付已被仓库纠正，争议未解决。"}
+      },
+      "truncated": false,
+      "usage": {"input_tokens": 1, "output_tokens": 0}
+    }
+  },
+  "downstream_decisions": {
+    "direct": "inspect_dispute",
+    "extracted_only": "needs_more_context",
+    "source_linked": "inspect_dispute"
+  }
+}
+```
+
+该对象只允许 `direct`、`extracted_only`、`source_linked` 三键和本实验四个动作；它是独立的 provider-neutral 下游结果，不是 Clairic answer，也不进入 next-action 动作集。没提供的路径写 `imported_action: null`、`action_source: deterministic_path_baseline`，按规则 baseline 评分；不能把它补成下游模型成绩。提供后，`honest_under_input` 与 `full_task_completed` 只按导入动作计算，规则 baseline 另存。
+
+规则 baseline 只处理本题本的固定模板。`direct` 独立读取完整原文；`source_linked` 保留提取值、任务指定的实体／版本，以及在目标版本验收句中确实出现的证据片段，不能夹带完整原文来偷偷恢复投影丢掉的操作数。丢失限定语仍会导致补材料。`expected_under_input_contract` 按本次实际可见输入的规则结果计算，编辑完整任务答案只用于 `full_task_completed`；原题本的参考投影答案另存。金额超限本身不证明交付争议，现有动作没有合适答案时保留 unknown。汇总分别给出 `imported_cases`、`baseline_cases`、未提供动作数和导入动作的正确／完成数。
+
+字段汇总同时给出本应存在却返回 null 的计数／比例，以及本应 null 却被填入值的计数／比例。响应契约错误保留在案例错误分母，不进入有效字段分母。区间同时显示覆盖、宽度、不可评估数和同源组；经验历史 baseline 的范围与模型请求范围分列，不能将 `[2,8]` 超过窄请求的 `max=7` 记成 provider 错误。
 
 ## 资料怎么使用
 
@@ -74,13 +177,23 @@ PY
 
 资料另列两个**人为构造的坏候选**：`周岚` 和 `2026-10-18`。它们都能在原文找到，却属于归档订单。这不是模型发生过的错误，而是将来验证评分器能否识别的反例。
 
-Clairic 官方示例中，null 字段仍可能带有 `guess` 和 span；我们读取字段值时不得用 guess 补空。[模型示例与含义](../../research/2026-10-20/README.md) 若未来返回 `value: null`，记录应保留 null；若缺少整个字段，则是响应契约问题，不能伪装成正确识别缺失。
+Clairic 官方示例中，null 字段仍可能带有 `guess` 和 span；我们读取字段值时不得用 guess 补空。[模型示例与含义](../../research/2026-10-20/README.md) 返回 `value: null` 时保留正常 null；缺少整个 field 则记响应契约错误，不能伪装成正确识别缺失。`unknown`、refusal 与正常 null 分列。
 
 ### 确定性 baseline
 
 对这个明确模板，先按“当前订单 PO-842”到“归档订单”之间的文本划定目标范围，再提取订单号、`收件人为…；` 和该范围内的 ISO 日期。没有日期就返回 null。这个 baseline 已足以解决教学输入；它的模板依赖应与结果一起展示，不能外推到任意合同或扫描件。
 
 对 text 值先检查它是否逐字出现在目标范围。自动数值 span 校验单独列为待验证项：本轮官方来源没有建立位置的编码单位及端点约定。不能先假定 Python 切片或 JavaScript substring 的结果就是 provider 定义。
+
+CLI 默认把每个 `span` 报为 `unverified_no_convention`，不会把它算成定位正确。若导入文件顶层写入 `span_convention`，则只接受以下两个明确选择：
+
+```json
+{"span_convention": {"unit": "utf8", "end": "exclusive"}}
+```
+
+官方 span 是 `[start,end]` 两整数数组；dict 形状不是原生契约。`unit` 为 `utf8`、`codepoint` 或 `utf16`，`end` 为 `inclusive` 或 `exclusive`。这是**调用方声明的校验假设**，不是官方约定已核实的声明。UTF-8 按字节、codepoint 按码点、UTF-16 按 code unit；endpoint 明确后才做切片。切片切到编码单位中间、越界或文本不等于保留的 value／guess 时，该 field 报 `invalid`。含中文、emoji、预组合字符和组合字符的题本不会在导入时自动 NFC 规范化。
+
+原生响应含 `state_text` 时，span 只对这段返回文本校验，并记录 `state_text_matches_request`；请求原文只在没有 returned `state_text` 且非 truncated 时作为定位文本。`truncated: true` 的命中标为 `valid_in_truncated_state_text`，不宣称对完整原文定位通过；返回文本与请求不同则标为 `valid_in_returned_state_text` 或 invalid。null 字段可保留 guess 与 span，span 校验针对 guess，但 guess 永不填入 value。
 
 ### 控制变量
 
@@ -203,7 +316,7 @@ assert total == Decimal('1100.00')
 
 仅使用截点前的八条历史耗时。点预测取普通样本中位数，为 4.5 天；区间端点使用固定的 nearest-rank 定义 `sorted_values[ceil(p*n)-1]`，得到经验 q10 为 2、q90 为 8，宽度为 6 天。这些数值由给定材料算出，并不称为模型输出，也不承诺覆盖率为 80%。
 
-教学后续结果 12 天落在该 baseline 区间之外。一个案例只能展示怎么算命中，不能用来评判整体校准。要判断是否比这个基线有用，需要更多独立时间组和最终观测。
+教学后续结果 12 天落在该 baseline 区间之外。一个案例只能展示怎么算命中，不能用来评判整体校准。要判断是否比这个基线有用，需要更多独立时间组和最终观测。历史 baseline 是离线计算，不受 native `max` 网格限制；`max=7` 时它仍保留 median 4.5、区间 `[2,8]`，并另报 `within_requested_range:false`，不能记成 provider 响应错误。
 
 ### 控制变量与时间切分
 
@@ -226,12 +339,24 @@ absolute_error = abs(median - observed_days)
 
 同时报告全部预测数、可评估结果数、pending/censored 数、接口及结构错误数。以上分母要可见，避免慢工单未完成就从报告中消失。结构有效至少要求数值有限、分位点顺序一致；缺失字段应单独记错，不能给零宽区间。
 
+原生 `estimate` 的 point 是 numeric `value`，区间分位读取 answer 同级的 `median`、`p10`、`p90`；不作 `value` 对象、`point`／`point_estimate` 或 quantiles 数组布局的等价解释。`quantiles`、`mean` 等可原样保留，但不拿来猜分位。native `value` 必须落在请求的 `min`／`max`／`step` 网格上；`mean` 可不在网格。三点还须满足 `p10 <= median <= p90`。缺少分位时保留可得值并标 `insufficient`，不补零宽区间；显式 `value: null` 标 `null`，不采用同时出现的 median。
+
 比较模型与 baseline 时，覆盖率和宽度一起看，并按工单类型、时间段及历史样本多少分组。不能只靠把区间放大获得更高覆盖，也不能把过窄区间的整齐数字当作更精确。小样本报告实际计数，不以单次命中宣布“已经校准”；若后续要设置接受门槛，应在看测试结果之前确定目标覆盖、可接受宽度和样本要求。
 
 应判为实验失效的情况包括：请求中泄漏后续结果；为迎合希望的工期缩窄范围后仍声称没有尾部风险；把 pending 记为零天；只展示区间命中的工单；修改字段或范围后将结果混成同一版本。这些是实验过程错误，先修过程，再讨论模型表现。
 
 ## 后续实现需要守住的接口边界
 
-本目录的单值 null、text span、数值操作数和 estimate 区间，都与现有 Choice action/probabilities 不同。若将来实现 collector，应先为本任务定义结果记录和评分，继续保留原始响应、精确输入与来源；不能把任意字段塞进 `choice`，也不能将 null 当作现有 `unknown` action。
+本目录的单值 null、text span、数值操作数和 estimate 区间，都与现有 Choice action/probabilities 不同。后续若实现 live collector，应沿用本页的独立结果记录和评分，继续保留原始响应、精确输入与来源；不能把任意字段塞进 `choice`，也不能将 null 当作现有 `unknown` action。
 
 实验册、`examples.json` 和方法正文分别负责设计、原创材料与解释。模型实测记录仍应进入独立运行目录，待有实际运行后再补充带条件的观察结论。
+
+## 结果怎样读
+
+`replay` 输出按 `ok`、`unknown`、`refusal`、`error` 分开计数，并重算以下部分：
+
+- 实验一：逐 field 保留值、显式 null、guess、confidence 与 p_null；`type_format_valid`、`exact_match`、`text_match`（是否在完整原文逐字出现）、`in_target_scope` 与 entity/version 关系分别报告。错选归档实体可同时是 `text_match:true`、`in_target_scope:false`；span status 不混入精确值或语义正确性计数。
+- 实验二：用 `Decimal` 重算数量、单价、运费与总额；保留模型总额及与代码总额的差异。`direct/extracted_only/source_linked` 三种输入投影分别从各自可见输入产生规则动作，并保留 `rule_baseline_action` 与可选导入 `imported_action`。`honest_under_input` 与 `full_task_completed` 分列；导入未提供的路径以 `action_source: deterministic_path_baseline` 明示，缺分母不填成 provider 成绩。
+- 实验三：报告点估计、区间宽度、是否命中后续观测、误差，以及同组最近秩 baseline；并标出 `independent_samples_claimed=false`、`calibration_claimed=false` 和按 `source_group` 的分组计数。原生 null／缺失分位进入 `not_evaluable` 分母；经验 baseline 另报 `within_requested_range`，不因超出请求网格变成 response error。
+
+这些记录是离线响应／synthetic 演示的证据，不是模型质量、API 可用性、真实价格或校准的结论。七个 authored case 仍然只有三个共享来源组，不能当作七个独立样本。

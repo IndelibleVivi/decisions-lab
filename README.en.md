@@ -12,7 +12,7 @@ Stable methods, dated research, and replayable experiments have different lifeti
 
 The [October 20 investigation](research/2026-10-20/README.md) adds Cloudflare Clairic with eight official sources and seven change records. A [field guide](docs/typed-values.md) distinguishes extraction, computation and prediction. [Three experiment dossiers](experiments/typed-values/README.md) provide original synthetic inputs, native requests, editorial oracles, controls and scoring plans for missing values, context loss after extraction, and prediction intervals.
 
-These are prepared experiment designs, marked NOT_RUN; they contain no collected model results and are not supported by the existing CLI. The runnable experiment below remains next-action. The October 8 census and October 15 investigation retain their original dates.
+The provider experiments remain NOT_RUN, with no collected model results. A separate `typed-values` CLI now prepares requests, runs explicitly synthetic baselines/demos, imports local responses and replays field, arithmetic and interval scoring. It uses its own result contract alongside next-action; a Clairic live collector is not implemented. The October 8 census and October 15 investigation retain their original dates.
 
 ## Run offline
 
@@ -32,6 +32,18 @@ python3 tools/catalog.py recipes --query NPC --json
 ```
 
 The next-action task recommends a reading or verification action for supplied evidence and a claim. It has 25 original synthetic cases in Chinese, English and mixed language, grouped by source across dev/test splits. The baseline is deterministic; the demo deliberately includes an error and an explicit unknown. Neither is model inference or a model-quality benchmark. Use a fresh output directory for each run.
+
+Typed values use a separate subcommand under the same entry point:
+
+```bash
+python3 -m decision_lab typed-values validate
+python3 -m decision_lab typed-values prepare --case-id source-missing
+python3 -m decision_lab typed-values baseline-run --run-dir runs/typed-baseline-001
+python3 -m decision_lab typed-values demo --run-dir runs/typed-demo-001
+python3 -m decision_lab typed-values replay runs/typed-demo-001
+```
+
+`prepare` only prints requests; the baseline and demo are synthetic. Import existing local responses with `typed-values import --responses <responses.json> --run-dir <new-directory>`, then recompute scoring with `replay`. The [typed-values guide](experiments/typed-values/README.md) defines the import format, three decision paths and explicit span conventions. These commands read no credentials, make no provider calls and do not change the authored suite's NOT_RUN status.
 
 The opt-in live collector has native profiles for TypeSafe Jev and OpenAI Decisions. It requires credentials via environment variables, an explicit network switch and a call limit. It does not execute the recommended action, retry implicitly, or fall back to another provider. See the [experiment contract and commands](experiments/next-action/README.md). Live availability, quality, billing and production integration remain unverified.
 

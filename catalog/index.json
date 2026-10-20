@@ -85,8 +85,8 @@
     {
       "id": "cloudflare-clairic",
       "entity": "cloudflare_clairic",
-      "purpose": "类型化取值、上下文损失与区间评估题本；尚无 collector，事实见 10-20 增量",
-      "state": "experiment-design",
+      "purpose": "类型化取值、上下文损失与区间评估的离线 CLI；无 live collector，provider 事实见 10-20 增量",
+      "state": "offline-tools",
       "live_verified": false
     }
   ],

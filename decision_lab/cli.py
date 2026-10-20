@@ -1,6 +1,7 @@
-"""Command-line interface for the next-action experiment lab.
+"""Command-line interface for Choice and typed-values experiments.
 
 Commands (all offline by default):
+  typed-values prepare, import and score independent typed-value records offline
   validate      validate a suite file (schema, ids, split isolation)
   baseline-run  run the deterministic rules baseline; write a synthetic record
   demo          run a constructed offline demo with a wrong + unknown example
@@ -30,6 +31,7 @@ from .record import (
     write_record,
 )
 from .routes import ROUTE_KEYS, all_routes, build_request, get_route, protocol_profiles
+from . import typed_values as tv
 
 DEFAULT_SUITE = "experiments/next-action/cases.json"
 
@@ -200,12 +202,125 @@ def _cmd_collect_live(args) -> int:
     return 0
 
 
+def _tv_cases(args) -> tuple[tv.TypedSuite, list[tv.TypedCase]]:
+    suite = tv.load_suite(args.suite)
+    cases = tv.select_cases(
+        suite,
+        experiment_id=args.experiment_id,
+        case_ids=args.case_id or None,
+    )
+    if args.limit is not None:
+        if args.limit <= 0:
+            raise tv.TypedValuesError("--limit must be positive")
+        cases = cases[: args.limit]
+    if not cases:
+        raise tv.TypedValuesError("case selection is empty")
+    return suite, cases
+
+
+def _tv_write_and_evaluate(
+    args,
+    *,
+    provenance: str,
+    entries: list[tv.ResponseEntry],
+    span_convention: dict[str, str] | None = None,
+    notes: str = "",
+) -> int:
+    suite, cases = _tv_cases(args)
+    record = tv.build_record(
+        suite,
+        cases,
+        entries,
+        provenance=provenance,
+        span_convention=span_convention,
+        notes=notes,
+    )
+    output = tv.write_record(args.run_dir, record)
+    report = tv.replay_record(output, args.suite)
+    print(f"{provenance} typed-values record written: {output}")
+    print(
+        "NOTE: offline records are not project live-provider verification."
+        if provenance == tv.PROVENANCE_IMPORT
+        else "NOTE: synthetic offline records, not provider inference."
+    )
+    print(json.dumps(report["evaluation"]["counts"], ensure_ascii=False))
+    return 0
+
+
+def _cmd_tv_validate(args) -> int:
+    suite = tv.load_suite(args.suite)
+    groups = len({case.source_group for case in suite.cases})
+    print(
+        f"OK: {len(suite.cases)} typed-values cases in "
+        f"{len(suite.experiments)} experiments, {groups} source groups; status NOT_RUN"
+    )
+    return 0
+
+
+def _cmd_tv_prepare(args) -> int:
+    suite, cases = _tv_cases(args)
+    _print_json(tv.prepare_payload(suite, cases))
+    return 0
+
+
+def _cmd_tv_baseline(args) -> int:
+    suite, cases = _tv_cases(args)
+    return _tv_write_and_evaluate(
+        args,
+        provenance=tv.PROVENANCE_BASELINE,
+        entries=tv.baseline_entries(cases),
+        notes="Deterministic template baseline over authored synthetic cases.",
+    )
+
+
+def _cmd_tv_demo(args) -> int:
+    suite, cases = _tv_cases(args)
+    return _tv_write_and_evaluate(
+        args,
+        provenance=tv.PROVENANCE_DEMO,
+        entries=tv.demo_entries(cases),
+        notes=(
+            "Constructed offline demonstration from authored oracles; "
+            "not provider output."
+        ),
+    )
+
+
+def _cmd_tv_import(args) -> int:
+    suite, cases = _tv_cases(args)
+    entries, span_convention = tv.load_response_file(args.responses)
+    selected_ids = {case.case_id for case in cases}
+    supplied_ids = {entry.case_id for entry in entries}
+    extra = sorted(supplied_ids - selected_ids)
+    missing = sorted(selected_ids - supplied_ids)
+    if extra:
+        raise tv.TypedValuesError(
+            f"response file contains cases outside this selection: {extra}"
+        )
+    if missing:
+        raise tv.TypedValuesError(
+            f"response file is missing selected cases: {missing}"
+        )
+    return _tv_write_and_evaluate(
+        args,
+        provenance=tv.PROVENANCE_IMPORT,
+        entries=entries,
+        span_convention=span_convention,
+        notes="External offline JSON import; provenance is import, not live.",
+    )
+
+
+def _cmd_tv_replay(args) -> int:
+    _print_json(tv.replay_record(args.record, args.suite))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="python3 -m decision_lab",
         description=(
-            "Decisions Lab next-action experiment: recommend a next reading/checking "
-            "action for a supplied document/claim. The lab never executes the action."
+            "Decisions Lab: run next-action Choice and typed-values experiments. "
+            "Default commands are offline; the lab never executes recommended actions."
         ),
         epilog=(
             "Actions: " + ", ".join(ALLOWED_ACTIONS) + ". "
@@ -214,6 +329,57 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--version", action="version", version=f"decision_lab {__version__}")
     sub = p.add_subparsers(dest="command", required=True)
+
+    def add_typed_selection(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("suite", nargs="?", default=tv.DEFAULT_SUITE)
+        parser.add_argument(
+            "--experiment",
+            dest="experiment_id",
+            default=None,
+            help="restrict to an experiment id",
+        )
+        parser.add_argument(
+            "--case-id",
+            action="append",
+            default=None,
+            help="restrict to a case id (may be repeated)",
+        )
+        parser.add_argument("--limit", type=int, default=None)
+
+    tv_parser = sub.add_parser(
+        "typed-values",
+        help="offline Clairic typed-values prepare/demo/import/replay",
+    )
+    tv_sub = tv_parser.add_subparsers(dest="typed_command", required=True)
+
+    sp = tv_sub.add_parser("validate", help="validate the 3-experiment / 7-case suite")
+    sp.add_argument("suite", nargs="?", default=tv.DEFAULT_SUITE)
+    sp.set_defaults(func=_cmd_tv_validate)
+
+    sp = tv_sub.add_parser("prepare", help="print native requests without oracle data")
+    add_typed_selection(sp)
+    sp.set_defaults(func=_cmd_tv_prepare)
+
+    sp = tv_sub.add_parser("baseline-run", help="run the template baseline offline")
+    add_typed_selection(sp)
+    sp.add_argument("--run-dir", required=True)
+    sp.set_defaults(func=_cmd_tv_baseline)
+
+    sp = tv_sub.add_parser("demo", help="write constructed synthetic examples offline")
+    add_typed_selection(sp)
+    sp.add_argument("--run-dir", required=True)
+    sp.set_defaults(func=_cmd_tv_demo)
+
+    sp = tv_sub.add_parser("import", help="record responses from an external JSON file")
+    add_typed_selection(sp)
+    sp.add_argument("--responses", required=True)
+    sp.add_argument("--run-dir", required=True)
+    sp.set_defaults(func=_cmd_tv_import)
+
+    sp = tv_sub.add_parser("replay", help="recompute and score a typed-values record")
+    sp.add_argument("record")
+    sp.add_argument("suite", nargs="?", default=tv.DEFAULT_SUITE)
+    sp.set_defaults(func=_cmd_tv_replay)
 
     sp = sub.add_parser("validate", help="validate a suite file")
     sp.add_argument("suite", nargs="?", default=DEFAULT_SUITE)
@@ -274,7 +440,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
-    except (CaseError, RecordError, KeyError) as exc:
+    except (CaseError, RecordError, tv.TypedValuesError, KeyError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except AssertionError as exc:

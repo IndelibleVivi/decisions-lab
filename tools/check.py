@@ -13,7 +13,8 @@ def main():
     parser.add_argument('--core-only', action='store_true', help='stdlib CLI/data checks; skip static site and JavaScript checks')
     args = parser.parse_args()
     commands = [[sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py'],
-                [sys.executable, '-m', 'decision_lab', 'validate', 'experiments/next-action/cases.json']]
+                [sys.executable, '-m', 'decision_lab', 'validate', 'experiments/next-action/cases.json'],
+                [sys.executable, '-m', 'decision_lab', 'typed-values', 'validate']]
     if not args.core_only:
         node = shutil.which('node')
         if not node:
