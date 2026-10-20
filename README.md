@@ -1,18 +1,25 @@
 # Decisions Lab
 
-**把有限选项的判断，变成可以检查的实验。**
+**把判断与取值，变成可以检查的实验。**
 
-[English](README.en.md) · [10-15 更新](research/2026-10-15/README.md) · [妙妙玩法](docs/playbook.md) · [项目地图](docs/projects.md) · [运行实验](experiments/next-action/README.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [10-20 更新](research/2026-10-20/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [运行实验](experiments/next-action/README.md) · [当前状态](docs/current-state.md)
 
-Decisions Lab 研究 decision models 与 typed decision APIs：它们接受证据和明确的选项，返回结构化判断。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
+Decisions Lab 研究 decision models 与类型化取值：从证据中选择动作、提取字段、计算数值，或估计尚未确定的结果。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
 这里有三种不同寿命的内容：可持续使用的方法、带日期的调查、可以重新运行的实验。版本和价格会变；当时的来源、请求和结论不应跟着消失。
+
+## 这轮学什么
+
+[10-20 调查](research/2026-10-20/README.md)加入 Cloudflare Clairic，并把“结构合法”与“有证据、选对实体、判断正确”分开。[方法章](docs/typed-values.md)沿具体字段解释摘录、计算和预测的区别；[三组实验题本](experiments/typed-values/README.md)提供原创输入、原生请求、编辑答案、对照和评分办法，分别研究缺失值、提取后的上下文损失、预测区间。
+
+题本是准备好的实验设计，尚无模型采集结果，也未接入现有 CLI。当前可运行的仍是下面的 next-action 实验；Choice 与字段取值各自保留真实语义。
 
 ## 先做哪件事
 
 | 你想做什么 | 从这里开始 |
 | --- | --- |
-| 查看最近 API、模型与价格变化 | [2026-10-15 定向核查](research/2026-10-15/README.md) |
+| 查看最近 API、模型与价格变化 | [2026-10-20 Clairic 增量](research/2026-10-20/README.md)；[10-15 原生契约调查](research/2026-10-15/README.md) |
+| 学会设计字段提取与预测实验 | [类型化输出](docs/typed-values.md) → [三组实验题本](experiments/typed-values/README.md) |
 | 找一个有趣、可以动手的用法 | [20 种玩法与现成项目](docs/playbook.md) |
 | 理解这个领域和证据边界 | [2026-10-08 调查及复算](research/2026-10-08/README.md) |
 | 找 SDK、开放模型、运行时或评测项目 | [按问题分组的项目地图](docs/projects.md) |
@@ -41,7 +48,8 @@ python3 -m decision_lab prepare experiments/next-action/cases.json --route decis
 # 离线查询调查记录
 python3 tools/catalog.py projects --query calibration
 python3 tools/catalog.py models --query clef --json
-python3 tools/catalog.py updates --query jev
+python3 tools/catalog.py updates --query clairic
+python3 tools/catalog.py updates --date 2026-10-15 --query jev
 python3 tools/catalog.py recipes --query NPC --json
 ```
 
@@ -70,6 +78,8 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory _site
 首期调查包含 23 个模型/服务实体、21 个相关仓库、6 项研究、171 条来源索引。我们复算了随包历史输入：1,000 个案例、4,000 条概率记录，14 项作者汇总核对一致。原始预测记录不随仓库分发；有原始 evidence bundle 的读者可以按[复算说明](research/2026-10-08/README.md)检查。
 
 [2026-10-15 增量](research/2026-10-15/README.md)另存 30 条来源、12 条变化记录，覆盖 Jev 1.14、OpenAI Decisions 契约与 SDK 差异、Cloudflare、Fastino、Upstage。它没有覆盖全部首期条目，也没有重写历史快照；玩法中每项项目证据另标截点。公开文档和标价不等于实际调用、账单或质量验证。
+
+[2026-10-20 增量](research/2026-10-20/README.md)追加 8 项官方来源、7 项变化记录，核查 Clairic 字段契约与 Cloudflare 标价。文档 schema 和官方示例固定到源码 revision；预测区间、中文位置映射及长输入边界等待实验。模型列表仍是 10-08 历史 census，新实体先进入有日期的变化索引，不静默改写历史数量。
 
 这些是特定任务与历史版本的证据。选项集合、语言、上下文截断、问题依赖和 confidence 定义都会改变解释。高 maxP 不能替代针对实际任务的校准；unknown、API refusal 和错误也不能混记成“否”。[评估方法](docs/method.md)说明如何读结果。
 

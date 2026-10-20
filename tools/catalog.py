@@ -49,8 +49,11 @@ def main():
     parser.add_argument("kind", choices=("models", "projects", "sources", "watchlist", "updates", "recipes", "render"))
     parser.add_argument("--query", default="", help="case-insensitive substring across the complete record")
     parser.add_argument("--json", action="store_true", help="return complete matching records")
+    parser.add_argument("--date", help="select a recorded update date (updates only; default: latest)")
     args = parser.parse_args()
     index, data = load()
+    if args.date and args.kind != "updates":
+        parser.error("--date is supported only for updates; other catalogs retain their own source date")
     if args.kind == "render":
         target = ROOT / "docs/projects.md"
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -63,7 +66,13 @@ def main():
                "sources": data["source_index"]["sources"],
                "watchlist": data["watchlist"]["unverified_candidates"]}.get(args.kind)
     if args.kind == "updates":
-        update = json.loads((ROOT / index["latest_update"]["path"]).read_text(encoding="utf-8"))
+        selected = index["latest_update"]
+        if args.date:
+            history = {entry["date"]: entry for entry in index["update_history"]}
+            if args.date not in history:
+                parser.error("unknown update date; available: " + ", ".join(sorted(history)))
+            selected = history[args.date]
+        update = json.loads((ROOT / selected["path"]).read_text(encoding="utf-8"))
         records, as_of = update["changes"], update["checked_at"]
     elif args.kind == "recipes":
         book = json.loads((ROOT / index["recipes"]).read_text(encoding="utf-8"))

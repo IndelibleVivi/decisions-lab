@@ -5,9 +5,10 @@
 ## 真源与边界
 
 - `README.md` / `README.en.md` 管读者入口、已支持能力、命令与限制；`docs/` 管解释、维护方法和当前状态。
-- `research/2026-10-08/` 拥有首期调查快照；`research/2026-10-15/` 拥有定向增量正文和 `updates.json`。增量只覆盖其中列出的来源，不刷新全量 census。历史事实不能在构建时自动刷新；勘误单独说明。
+- `research/2026-10-08/` 拥有首期调查快照；`research/2026-10-15/`、`research/2026-10-20/` 分别拥有各自定向增量正文和 `updates.json`。`catalog/index.json` 的 `update_history` 保留可查询日期，`latest_update` 指向最新一轮。增量只覆盖其中列出的来源，不刷新全量 census。历史事实不能在构建时自动刷新；勘误单独说明。
 - `catalog/` 拥有模型、服务路线、相关项目与来源的结构化索引；`index.json` 分别声明历史快照和最新增量。`recipes.json` 拥有玩法卡片事实、来源日期与实现状态；`docs/playbook.md` 拥有解释及用法，二者的稳定 recipe ID 必须对应。官方文档、原作者报告、历史数据复算与本项目实测是不同证据。
 - `decision_lab/` 拥有实验 CLI；`experiments/next-action/` 拥有原创合成任务、标签和实验说明；`tests/` 提供相应行为证据。
+- `docs/typed-values.md` 拥有类型化输出的方法；`experiments/typed-values/` 拥有三组实验题本和原创 `examples.json`，状态为 NOT_RUN。它们尚无 collector，不属于现有 Choice CLI；编辑答案不冒充模型响应。
 - `tools/` 拥有内容投影与统一检查入口；构建输出和真实运行记录不提交。正文和 catalog 是编辑源，生成页不另行维护。
 - `site/` 拥有阅读站样式与渐进交互；`tools/build_site.py` 的显式 allowlist 决定站点内容。首页 WebGL 粒子作品不编码事实，无 WebGL 时保留 SVG；`lettering.js` 只增强原语义 H1 的有限位移与回弹。`atlas.js` 只切换 catalog／repositories 快照生成的分类入口。`theme.js` 仅保存外观偏好。
 - `recipes.js` 拥有玩法筛选、单配方选择、稳定 fragment、手动试选／离线结果示例和 provider-neutral 任务复制；`build_site.py` 的 `option_kind()` 拥有 UI 分类元数据。unknown 独立显示为 UNK／×，仍保留在请求选项里；补材料／交人工为正常 ok 选项，业务文案的「拒绝」「不适用」不等于 API refusal 或 unknown。`.choice-machine` 的 outcome／previewMode 同步 HTML、SVG 和 `pixels.js` 信号场；refusal/error 示例明确标注离线、取消全部选项，不能假装有可采用动作或真实调用。默认未试选；不生成概率／confidence、不改任务 JSON。当前只演示 Choice profile，归一化状态与原生输出类型分别说明。

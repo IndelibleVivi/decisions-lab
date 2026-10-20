@@ -1,12 +1,18 @@
 # Decisions Lab
 
-**Make bounded decisions inspectable.**
+**Make decisions and typed values inspectable.**
 
-[中文](README.md) · [October 15 update](research/2026-10-15/README.md) · [Playbook](docs/playbook.md) · [Project map](docs/projects.md) · [Experiment](experiments/next-action/README.md)
+[中文](README.md) · [October 20 update](research/2026-10-20/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md) · [Experiment](experiments/next-action/README.md)
 
-Decisions Lab studies decision models and typed decision APIs: their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
+Decisions Lab studies decision models and typed value extraction: selecting actions, extracting fields, computing values, and estimating unknown outcomes. It examines their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
 
 Stable methods, dated research, and replayable experiments have different lifetimes. The initial snapshot indexes 23 model/service entities, 21 repositories, 6 studies and 171 sources. The supplied historical dataset was recomputed: 1,000 cases, 4,000 probability records and 14 matching author aggregates. Historical predictions are not redistributed. See the [snapshot guide](research/2026-10-08/README.md) for reproduction using an independently supplied bundle.
+
+## New content: typed values and evidence
+
+The [October 20 investigation](research/2026-10-20/README.md) adds Cloudflare Clairic with eight official sources and seven change records. A [field guide](docs/typed-values.md) distinguishes extraction, computation and prediction. [Three experiment dossiers](experiments/typed-values/README.md) provide original synthetic inputs, native requests, editorial oracles, controls and scoring plans for missing values, context loss after extraction, and prediction intervals.
+
+These are prepared experiment designs, marked NOT_RUN; they contain no collected model results and are not supported by the existing CLI. The runnable experiment below remains next-action. The October 8 census and October 15 investigation retain their original dates.
 
 ## Run offline
 
@@ -20,7 +26,8 @@ python3 -m decision_lab replay runs/demo-001 experiments/next-action/cases.json
 python3 -m decision_lab prepare experiments/next-action/cases.json --route jev --limit 1
 python3 -m decision_lab prepare experiments/next-action/cases.json --route decisions --limit 1
 python3 tools/catalog.py projects --query calibration
-python3 tools/catalog.py updates --query jev
+python3 tools/catalog.py updates --query clairic
+python3 tools/catalog.py updates --date 2026-10-15 --query jev
 python3 tools/catalog.py recipes --query NPC --json
 ```
 

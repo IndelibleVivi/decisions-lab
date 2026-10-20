@@ -72,4 +72,33 @@ class ContentTests(unittest.TestCase):
             self.assertEqual(output['records'], expected)
             self.assertEqual(output['count'], len(expected))
 
+    def test_dated_update_queries_preserve_old_records(self):
+        index, _ = catalog.load()
+        dates = [entry['date'] for entry in index['update_history']]
+        self.assertEqual(len(dates), len(set(dates)))
+        self.assertEqual(max(dates), index['latest_update']['date'])
+        for entry in index['update_history']:
+            source = json.loads((ROOT/entry['path']).read_text(encoding='utf-8'))
+            result = subprocess.run([sys.executable, str(ROOT/'tools/catalog.py'), 'updates',
+                                     '--date', entry['date'], '--json'], check=True,
+                                    capture_output=True, text=True)
+            output = json.loads(result.stdout)
+            self.assertEqual(output['as_of'], source['checked_at'])
+            self.assertEqual(output['records'], source['changes'])
+            self.assertTrue((ROOT/entry['reader']).is_file())
+        latest = subprocess.run([sys.executable, str(ROOT/'tools/catalog.py'), 'updates', '--json'],
+                                check=True, capture_output=True, text=True)
+        self.assertEqual(json.loads(latest.stdout)['as_of'], max(dates))
+
+    def test_date_is_not_a_path_or_a_way_to_redate_the_census(self):
+        for kind, date, message in (
+            ('updates', '../../README.md', 'unknown update date'),
+            ('models', '2026-10-20', '--date is supported only for updates'),
+        ):
+            result = subprocess.run([sys.executable, str(ROOT/'tools/catalog.py'), kind,
+                                     '--date', date, '--json'], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(message, result.stderr)
+            self.assertEqual(result.stdout, '')
+
 if __name__ == '__main__': unittest.main()
