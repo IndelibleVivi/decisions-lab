@@ -13,12 +13,16 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 from markdown_it import MarkdownIt
 
 ROOT = Path(__file__).resolve().parents[1]
+LATEST_UPDATE = json.loads((ROOT / 'catalog/index.json').read_text(encoding='utf-8'))['latest_update']
+LATEST_UPDATE_PAGE = LATEST_UPDATE['reader'].removesuffix('.md') + '.html'
 PAGES = (
     'README.md', 'README.en.md', 'LICENSING.md', 'LICENSE-DOCUMENTATION.md',
     'docs/projects.md', 'docs/playbook.md', 'docs/method.md', 'docs/integration.md',
-    'docs/maintenance.md', 'docs/current-state.md',
+    'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md',
     'experiments/next-action/README.md',
+    'experiments/typed-values/README.md',
     'research/2026-10-08/README.md', 'research/2026-10-08/report.md', 'research/2026-10-15/README.md',
+    'research/2026-10-20/README.md',
 )
 SNAPSHOT_FILES = (
     'calculations.json', 'calculations.py', 'census.json', 'llamacpp_route.json',
@@ -30,7 +34,7 @@ SNAPSHOT_FILES = (
     'reanalysis/sys1_reanalysis.json',
 )
 ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/reader.js', 'site/lab.js', 'site/field.js', 'site/evidence.js', 'site/sculpture.js', 'site/atlas.js', 'site/theme.js', 'site/flow.svg',
-          'catalog/index.json', 'catalog/recipes.json', 'research/2026-10-15/updates.json', 'site/recipes.js', 'site/pixels.js', 'site/lettering.js', 'site/motion.js', 'experiments/next-action/cases.json') + tuple(
+          'catalog/index.json', 'catalog/recipes.json', 'research/2026-10-15/updates.json', 'research/2026-10-20/updates.json', 'experiments/typed-values/examples.json', 'site/recipes.js', 'site/pixels.js', 'site/lettering.js', 'site/motion.js', 'experiments/next-action/cases.json') + tuple(
               'site/fonts/' + f for f in ('OFL-1.1.txt', 'README.md',
                                           'space-grotesk-500-latin.woff2', 'space-grotesk-500-latin-ext.woff2',
                                           'space-grotesk-600-latin.woff2', 'space-grotesk-600-latin-ext.woff2',
@@ -87,7 +91,10 @@ PAGE_CONTEXT = {
     'docs/projects.html': ('02', '相关项目', 'Directory'),
     'docs/playbook.html': ('09', '妙妙玩法', 'Playbook'),
     'research/2026-10-15/README.html': ('01', '10 月增量核查', 'Research update'),
+    'research/2026-10-20/README.html': ('01', 'Clairic 与类型化取值', 'Research update'),
     'experiments/next-action/README.html': ('03', 'Next-action 实验', 'Experiment'),
+    'experiments/typed-values/README.html': ('11', '类型化取值实验', 'Offline experiment'),
+    'docs/typed-values.html': ('10', '类型化输出', 'Typed values'),
     'docs/method.html': ('04', '评估方法', 'Method'),
     'docs/integration.html': ('05', '工作流接入', 'Integration'),
     'docs/maintenance.html': ('06', '维护与更新', 'Maintenance'),
@@ -106,7 +113,7 @@ def shell(title, body, current, toc=()):
     is_home = current == 'index.html'
     is_en = current == 'README.en.html'
     number, section, english = PAGE_CONTEXT.get(current, ('00', '研究索引', 'Index'))
-    nav_items = (('index.html', '索引'), ('research/2026-10-15/README.html', '更新'), ('docs/playbook.html', '玩法'),
+    nav_items = (('index.html', '索引'), (LATEST_UPDATE_PAGE, '更新'), ('docs/playbook.html', '玩法'),
                  ('docs/projects.html', '项目'), ('experiments/next-action/README.html', '实验'),
                  ('docs/method.html', '方法'))
     nav = ''.join(f'<a href="{prefix}{path}"' +
@@ -343,7 +350,7 @@ def home():
 <div class="cover-bottom"><a href="#playground">向下探索 <span aria-hidden="true">↓</span></a><div class="sculpture-controls" hidden><div role="group" aria-label="粒子形态"><button type="button" data-sculpture-mode="0" aria-pressed="true">编织</button><button type="button" data-sculpture-mode="1" aria-pressed="false">分岔</button><button type="button" data-sculpture-mode="2" aria-pressed="false">环流</button></div><button type="button" id="sculpture-burst">冲散 ↗</button><button type="button" id="sculpture-reset">复位 ↺</button></div><button id="sculpture-pause" type="button" hidden>暂停动态</button></div><p id="sculpture-status" class="sr-only" role="status"></p>
 </section>
 
-<section class="fresh-strip"><a href="research/2026-10-15/README.html" data-rise><span>15 OCT / 新观察</span><strong>Jev 1.14 · Clef-omni · Decisions 契约更新</strong><span>读增量核查 ↗</span></a></section>
+<section class="fresh-strip"><a href="{html.escape(LATEST_UPDATE_PAGE)}" data-rise><span>{html.escape(LATEST_UPDATE['date'])} / 新观察</span><strong>{html.escape(LATEST_UPDATE['title'])}</strong><span>读增量核查 ↗</span></a></section>
 <nav class="lab-wayfinding" aria-label="实验室入口" data-rise="children"><a href="#playground">{pixel_glyph('creative-interactive')}<span>01</span><strong>挑个玩法</strong><small>装入一个问题</small><i aria-hidden="true">↓</i></a><a href="#experiments">{pixel_glyph('reliability-lab')}<span>02</span><strong>拨动实验</strong><small>看看变化怎么发生</small><i aria-hidden="true">↓</i></a><a href="#explore">{pixel_glyph('reading-research')}<span>03</span><strong>带走灵感</strong><small>从这里接到真实项目</small><i aria-hidden="true">↓</i></a></nav>
 {recipe_explorer()}
 <div class="lab-chapter" id="experiments"><div class="chapter-pixels" aria-hidden="true" data-sign-glyph="reliability-lab">{pixel_glyph("reliability-lab")}</div><p class="eyebrow">02 / 实验进行中</p><h2>小小改动，<br>不同结果。</h2><p>从分布的形状，走到判断的证据，再亲自选一次下一步。</p><nav aria-label="选择实验"><a href="#probability-artifact">A / 调一调概率 ↓</a><a href="#evidence">B / 看一眼错误 ↓</a><a href="#exercise">C / 自己选一次 ↓</a></nav></div>

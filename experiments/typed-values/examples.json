@@ -1,0 +1,407 @@
+{
+  "schema": "decisions-lab.typed-values-examples/1",
+  "created_at": "2026-10-20",
+  "status": "NOT_RUN",
+  "kind": "authored_experiment_material",
+  "input_origin": "original_synthetic",
+  "purpose": "teaching_seeds_not_evaluation_dataset",
+  "request_contract_source": "https://github.com/cloudflare/cloudflare-docs/blob/39cb53c8e8aa663096c589831bcecd1e5d657641/src/content/workers-ai-models/clairic.json",
+  "request_target": {
+    "model_id": "@cf/cloudflare/clairic",
+    "endpoint_template": "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/cloudflare/clairic"
+  },
+  "provider_results": [],
+  "request_boundary": "Only a case.request is a proposed native request body. All editorial_oracle, source_group, diagnostic_examples, and design fields stay outside the request.",
+  "experiments": [
+    {
+      "id": "source-null-identity",
+      "cases": [
+        {
+          "id": "source-missing",
+          "source_group": "orders-842",
+          "request": {
+            "model": "clairic",
+            "state": "资料版本 v2（2026-10-20）。当前订单 PO-842：收件人为林遥；没有列出交付日期。归档订单 PO-497：收件人为周岚；交付日期为 2026-10-18。",
+            "fields": {
+              "current_order_id": {
+                "type": "text",
+                "instructions": "逐字摘录当前订单的订单号；不取归档订单。"
+              },
+              "current_recipient": {
+                "type": "text",
+                "instructions": "逐字摘录当前订单 PO-842 的收件人姓名；不取归档订单。"
+              },
+              "current_delivery_date": {
+                "type": "date",
+                "instructions": "当前订单 PO-842 的交付日期。原文没有给出时返回 null，不取其他订单的日期。"
+              },
+              "current_delivery_evidence": {
+                "type": "text",
+                "instructions": "逐字摘录原文明确给出的当前订单 PO-842 的交付日期；原文未给出日期时返回 null。"
+              }
+            },
+            "options": {
+              "return_state_text": true
+            }
+          },
+          "editorial_oracle": {
+            "kind": "editorial_expected_values",
+            "values": {
+              "current_order_id": "PO-842",
+              "current_recipient": "林遥",
+              "current_delivery_date": null,
+              "current_delivery_evidence": null
+            },
+            "target_entity": "PO-842",
+            "target_version": "v2",
+            "text_evidence": {
+              "current_order_id": "PO-842",
+              "current_recipient": "林遥"
+            },
+            "span_offsets": null,
+            "span_offset_status": "UNVERIFIED_PROVIDER_CONVENTION",
+            "rationale": "交付日期只属于归档订单 PO-497；当前订单缺少该事实。"
+          }
+        },
+        {
+          "id": "source-present",
+          "source_group": "orders-842",
+          "request": {
+            "model": "clairic",
+            "state": "资料版本 v2（2026-10-20）。当前订单 PO-842：收件人为林遥；交付日期为 2026-10-23。归档订单 PO-497：收件人为周岚；交付日期为 2026-10-18。",
+            "fields": {
+              "current_order_id": {
+                "type": "text",
+                "instructions": "逐字摘录当前订单的订单号；不取归档订单。"
+              },
+              "current_recipient": {
+                "type": "text",
+                "instructions": "逐字摘录当前订单 PO-842 的收件人姓名；不取归档订单。"
+              },
+              "current_delivery_date": {
+                "type": "date",
+                "instructions": "当前订单 PO-842 的交付日期。原文没有给出时返回 null，不取其他订单的日期。"
+              },
+              "current_delivery_evidence": {
+                "type": "text",
+                "instructions": "逐字摘录原文明确给出的当前订单 PO-842 的交付日期；原文未给出日期时返回 null。"
+              }
+            },
+            "options": {
+              "return_state_text": true
+            }
+          },
+          "editorial_oracle": {
+            "kind": "editorial_expected_values",
+            "values": {
+              "current_order_id": "PO-842",
+              "current_recipient": "林遥",
+              "current_delivery_date": "2026-10-23",
+              "current_delivery_evidence": "2026-10-23"
+            },
+            "target_entity": "PO-842",
+            "target_version": "v2",
+            "text_evidence": {
+              "current_order_id": "PO-842",
+              "current_recipient": "林遥",
+              "current_delivery_evidence": "2026-10-23"
+            },
+            "span_offsets": null,
+            "span_offset_status": "UNVERIFIED_PROVIDER_CONVENTION",
+            "rationale": "仅补入当前订单交付日期，归档订单内容不变。"
+          }
+        },
+        {
+          "id": "source-unicode-prefix",
+          "source_group": "orders-842",
+          "request": {
+            "model": "clairic",
+            "state": "🧪 café / café。资料版本 v2（2026-10-20）。当前订单 PO-842：收件人为林遥；交付日期为 2026-10-23。归档订单 PO-497：收件人为周岚；交付日期为 2026-10-18。",
+            "fields": {
+              "current_order_id": {
+                "type": "text",
+                "instructions": "逐字摘录当前订单的订单号；不取归档订单。"
+              },
+              "current_recipient": {
+                "type": "text",
+                "instructions": "逐字摘录当前订单 PO-842 的收件人姓名；不取归档订单。"
+              },
+              "current_delivery_date": {
+                "type": "date",
+                "instructions": "当前订单 PO-842 的交付日期。原文没有给出时返回 null，不取其他订单的日期。"
+              },
+              "current_delivery_evidence": {
+                "type": "text",
+                "instructions": "逐字摘录原文明确给出的当前订单 PO-842 的交付日期；原文未给出日期时返回 null。"
+              }
+            },
+            "options": {
+              "return_state_text": true
+            }
+          },
+          "editorial_oracle": {
+            "kind": "editorial_expected_values",
+            "values": {
+              "current_order_id": "PO-842",
+              "current_recipient": "林遥",
+              "current_delivery_date": "2026-10-23",
+              "current_delivery_evidence": "2026-10-23"
+            },
+            "target_entity": "PO-842",
+            "target_version": "v2",
+            "text_evidence": {
+              "current_order_id": "PO-842",
+              "current_recipient": "林遥",
+              "current_delivery_evidence": "2026-10-23"
+            },
+            "span_offsets": null,
+            "span_offset_status": "UNVERIFIED_PROVIDER_CONVENTION",
+            "rationale": "只加入无关前缀：emoji、预组合 é 与 e + combining acute；语义值不变，位置必须相对新输入重新解释。"
+          }
+        }
+      ],
+      "diagnostic_examples": [
+        {
+          "kind": "authored_bad_candidate_not_provider_output",
+          "case_id": "source-missing",
+          "field": "current_recipient",
+          "candidate_value": "周岚",
+          "failure": "Substring exists in state, but it belongs to archived order PO-497."
+        },
+        {
+          "kind": "authored_bad_candidate_not_provider_output",
+          "case_id": "source-missing",
+          "field": "current_delivery_date",
+          "candidate_value": "2026-10-18",
+          "failure": "A valid date for the wrong order must not fill the current order missing value."
+        }
+      ]
+    },
+    {
+      "id": "extract-compute-decide",
+      "cases": [
+        {
+          "id": "amount-disputed",
+          "source_group": "procurement-731",
+          "request": {
+            "model": "clairic",
+            "state": "任务规则：只有金额不超过 1200.00 CNY 且交付无未解决争议时，才建议继续处理；存在未解决争议时建议先核对争议；缺少必要事实时建议补材料。\n采购单 PO-731，版本 v2。数量 3 件；单价 350.00 CNY；运费 50.00 CNY。金额按数量乘单价再加运费计算，不含其他费用。\n版本 v2 的验收状态：第三件尚未验收；供应商所称全部已交付已被仓库纠正，争议未解决。",
+            "fields": {
+              "quantity": {
+                "type": "number",
+                "decimals": 0,
+                "unit": "件",
+                "instructions": "采购单 PO-731 的货物数量。"
+              },
+              "unit_price": {
+                "type": "number",
+                "decimals": 2,
+                "unit": "CNY",
+                "instructions": "采购单 PO-731 的单件价格，不含运费。"
+              },
+              "shipping": {
+                "type": "number",
+                "decimals": 2,
+                "unit": "CNY",
+                "instructions": "采购单 PO-731 的运费。"
+              },
+              "computed_total": {
+                "type": "number",
+                "decimals": 2,
+                "unit": "CNY",
+                "instructions": "采购单 PO-731 的数量乘单价再加运费；不含其他费用。"
+              },
+              "status_evidence": {
+                "type": "text",
+                "instructions": "逐字摘录版本 v2 的验收状态整句，包括关于供应商说法的纠正和争议是否解决；不进行概括。"
+              }
+            },
+            "options": {
+              "return_state_text": true
+            }
+          },
+          "editorial_oracle": {
+            "kind": "editorial_expected_values_and_decision",
+            "values": {
+              "quantity": 3,
+              "unit_price": "350.00",
+              "shipping": "50.00",
+              "computed_total": "1100.00",
+              "status_evidence": "版本 v2 的验收状态：第三件尚未验收；供应商所称全部已交付已被仓库纠正，争议未解决。"
+            },
+            "numeric_serialization": "Decimal strings are editorial exact-value oracles; native numeric fields may be JSON numbers.",
+            "deterministic_total_decimal": "1100.00",
+            "expected_decision": "inspect_dispute",
+            "rationale": "金额低于门槛，仍有未解决争议。",
+            "target_entity": "PO-731",
+            "target_version": "v2",
+            "expected_decisions_by_input_path": {
+              "direct": "inspect_dispute",
+              "extracted_only": "needs_more_context",
+              "source_linked": "inspect_dispute"
+            }
+          }
+        },
+        {
+          "id": "amount-clear",
+          "source_group": "procurement-731",
+          "request": {
+            "model": "clairic",
+            "state": "任务规则：只有金额不超过 1200.00 CNY 且交付无未解决争议时，才建议继续处理；存在未解决争议时建议先核对争议；缺少必要事实时建议补材料。\n采购单 PO-731，版本 v2。数量 3 件；单价 350.00 CNY；运费 50.00 CNY。金额按数量乘单价再加运费计算，不含其他费用。\n版本 v2 的验收状态：全部三件已经验收；仓库与供应商记录一致，无未解决争议。",
+            "fields": {
+              "quantity": {
+                "type": "number",
+                "decimals": 0,
+                "unit": "件",
+                "instructions": "采购单 PO-731 的货物数量。"
+              },
+              "unit_price": {
+                "type": "number",
+                "decimals": 2,
+                "unit": "CNY",
+                "instructions": "采购单 PO-731 的单件价格，不含运费。"
+              },
+              "shipping": {
+                "type": "number",
+                "decimals": 2,
+                "unit": "CNY",
+                "instructions": "采购单 PO-731 的运费。"
+              },
+              "computed_total": {
+                "type": "number",
+                "decimals": 2,
+                "unit": "CNY",
+                "instructions": "采购单 PO-731 的数量乘单价再加运费；不含其他费用。"
+              },
+              "status_evidence": {
+                "type": "text",
+                "instructions": "逐字摘录版本 v2 的验收状态整句，包括关于供应商说法的纠正和争议是否解决；不进行概括。"
+              }
+            },
+            "options": {
+              "return_state_text": true
+            }
+          },
+          "editorial_oracle": {
+            "kind": "editorial_expected_values_and_decision",
+            "values": {
+              "quantity": 3,
+              "unit_price": "350.00",
+              "shipping": "50.00",
+              "computed_total": "1100.00",
+              "status_evidence": "版本 v2 的验收状态：全部三件已经验收；仓库与供应商记录一致，无未解决争议。"
+            },
+            "numeric_serialization": "Decimal strings are editorial exact-value oracles; native numeric fields may be JSON numbers.",
+            "deterministic_total_decimal": "1100.00",
+            "expected_decision": "suggest_continue",
+            "rationale": "金额低于门槛，全部验收且无未解决争议。",
+            "target_entity": "PO-731",
+            "target_version": "v2",
+            "expected_decisions_by_input_path": {
+              "direct": "suggest_continue",
+              "extracted_only": "needs_more_context",
+              "source_linked": "suggest_continue"
+            }
+          }
+        }
+      ],
+      "downstream_decision_contract": {
+        "kind": "experiment_specification_not_native_provider_request",
+        "question": "依照给定任务规则，建议下一步怎样处理采购单 PO-731？",
+        "options": {
+          "suggest_continue": "金额不超限且交付无未解决争议，建议继续。",
+          "inspect_dispute": "存在未解决争议，先核对争议。",
+          "needs_more_context": "缺少判定金额或交付状态的必要事实，先补材料。",
+          "unknown": "给定动作没有适配当前问题的选项。"
+        },
+        "paths": {
+          "direct": "Full source text, same task rules and same downstream question.",
+          "extracted_only": "Same task rules and question; only quantity, unit_price, shipping, currency, deterministic_total. No status or source quote.",
+          "source_linked": "Same task rules and question; extracted_only fields plus source ID/version, status_evidence and the corresponding exact source passage."
+        }
+      }
+    },
+    {
+      "id": "estimate-intervals",
+      "cases": [
+        {
+          "id": "interval-wide-support",
+          "source_group": "ticket-205",
+          "request": {
+            "model": "clairic",
+            "state": "预测截点：2026-09-01T09:00:00+08:00。目标工单 T-205 在该时刻提交，类型为普通文档校对，共 8 页，预计涉及两个术语核查；提交时队列有 3 件。请预测从提交到完成的日历天数。\n在截点前已经完成的同类工单，按完成日期从早到晚，其耗时分别为 2、3、4、4、5、6、7、8 天。这里没有目标工单的完成结果。",
+            "fields": {
+              "completion_days": {
+                "type": "estimate",
+                "min": 0,
+                "max": 30,
+                "step": 1,
+                "instructions": "预测目标工单 T-205 自提交起至完成的日历天数；这是尚未知晓的结果。"
+              }
+            },
+            "options": {
+              "include_quantiles": true
+            }
+          },
+          "editorial_oracle": {
+            "kind": "editorial_synthetic_later_observation",
+            "observed_at": "2026-09-13T09:00:00+08:00",
+            "completed_at": "2026-09-13T09:00:00+08:00",
+            "elapsed_calendar_days": 12,
+            "not_visible_at_prediction_time": true,
+            "rationale": "原创教学用的后续结果，放在 request 之外；不是某个真实客户或模型实测。"
+          }
+        },
+        {
+          "id": "interval-narrow-support",
+          "source_group": "ticket-205",
+          "request": {
+            "model": "clairic",
+            "state": "预测截点：2026-09-01T09:00:00+08:00。目标工单 T-205 在该时刻提交，类型为普通文档校对，共 8 页，预计涉及两个术语核查；提交时队列有 3 件。请预测从提交到完成的日历天数。\n在截点前已经完成的同类工单，按完成日期从早到晚，其耗时分别为 2、3、4、4、5、6、7、8 天。这里没有目标工单的完成结果。",
+            "fields": {
+              "completion_days": {
+                "type": "estimate",
+                "min": 0,
+                "max": 7,
+                "step": 1,
+                "instructions": "预测目标工单 T-205 自提交起至完成的日历天数；这是尚未知晓的结果。"
+              }
+            },
+            "options": {
+              "include_quantiles": true
+            }
+          },
+          "editorial_oracle": {
+            "kind": "editorial_synthetic_later_observation",
+            "observed_at": "2026-09-13T09:00:00+08:00",
+            "completed_at": "2026-09-13T09:00:00+08:00",
+            "elapsed_calendar_days": 12,
+            "not_visible_at_prediction_time": true,
+            "rationale": "原创教学用的后续结果，放在 request 之外；不是某个真实客户或模型实测。"
+          }
+        }
+      ],
+      "deterministic_baseline": {
+        "kind": "calculation_from_synthetic_input_not_provider_output",
+        "history_days": [
+          2,
+          3,
+          4,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "median": 4.5,
+        "q10": 2,
+        "q90": 8,
+        "interval_quantile_method": "nearest_rank: sorted_values[ceil(p*n)-1], p in (0,1]",
+        "point_method": "ordinary sample median",
+        "interval_width": 6,
+        "contains_editorial_outcome": false
+      },
+      "temporal_protocol": "Use only observations completed before each forecast cutoff. Select field settings on earlier groups, freeze them, and report later held-out groups. Report pending or censored outcomes separately."
+    }
+  ]
+}

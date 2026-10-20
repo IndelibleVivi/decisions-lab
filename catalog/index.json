@@ -81,6 +81,13 @@
       "purpose": "后续图文与本地/托管对照",
       "state": "watch",
       "live_verified": false
+    },
+    {
+      "id": "cloudflare-clairic",
+      "entity": "cloudflare_clairic",
+      "purpose": "类型化取值、上下文损失与区间评估的离线 CLI；无 live collector，provider 事实见 10-20 增量",
+      "state": "offline-tools",
+      "live_verified": false
     }
   ],
   "evidence_scope": "日期快照；source inspection 来自原调查。目录纳入不证明当前服务可用或推荐采用。",
@@ -116,10 +123,23 @@
     "Chinese/regional vendors beyond Alibaba/Tencent": "调查没有形成穷尽性否定结论；确认 Alibaba/Tencent 不证明其他中国、日本或俄罗斯生态没有产品。"
   },
   "latest_update": {
-    "date": "2026-10-15",
-    "path": "research/2026-10-15/updates.json",
-    "reader": "research/2026-10-15/README.md",
-    "scope": "定向增量：Jev、OpenAI Decisions、Cloudflare、Fastino、Upstage；不刷新全量 census"
+    "date": "2026-10-20",
+    "path": "research/2026-10-20/updates.json",
+    "reader": "research/2026-10-20/README.md",
+    "title": "Clairic · 类型化取值与三组新实验题本",
+    "scope": "定向增量：Clairic 契约与 Cloudflare 标价；不刷新全量 census"
   },
+  "update_history": [
+    {
+      "date": "2026-10-15",
+      "path": "research/2026-10-15/updates.json",
+      "reader": "research/2026-10-15/README.md"
+    },
+    {
+      "date": "2026-10-20",
+      "path": "research/2026-10-20/updates.json",
+      "reader": "research/2026-10-20/README.md"
+    }
+  ],
   "recipes": "catalog/recipes.json"
 }

@@ -1,0 +1,334 @@
+{
+  "schema": "decisions-lab.updates/1",
+  "checked_at": "2026-10-20",
+  "baseline": "research/2026-10-08",
+  "previous_update": "research/2026-10-15/updates.json",
+  "live_verified": false,
+  "coverage": {
+    "kind": "targeted_increment",
+    "entities": [
+      "cloudflare_clairic",
+      "cloudflare_clef"
+    ],
+    "scope": "Clairic 发布、字段契约、官方 schema 与 Cloudflare 四条路线输入标价；新增任务方法与原创实验题本。",
+    "limits": "不更新历史 census；不刷新其他供应商的既有事实。",
+    "evidence": [
+      "official_documentation",
+      "official_schema_source",
+      "official_example_source"
+    ],
+    "not_performed": [
+      "credential_access",
+      "live_inference",
+      "billing_measurement",
+      "quality_or_calibration_evaluation",
+      "production_activation"
+    ]
+  },
+  "not_rechecked": [
+    {
+      "scope": "Jev、OpenAI Decisions、Fastino、Upstage 与其他供应商的版本及契约",
+      "reason": "沿用各自历史调查日期。"
+    },
+    {
+      "scope": "历史 23 个实体、21 个仓库、171 项来源的全面复查",
+      "reason": "本轮为 Clairic 定向增量。"
+    },
+    {
+      "scope": "Clef 家族媒体和完整请求 schema",
+      "reason": "本轮仅复核价格表中的四条路线。"
+    }
+  ],
+  "sources": [
+    {
+      "id": "CF-CLAIRIC-RELEASE",
+      "title": "Clairic release",
+      "url": "https://developers.cloudflare.com/changelog/post/2026-10-19-clairic-workers-ai/",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_changelog",
+      "access": "Official text retrieved through web search; direct open failed",
+      "published_at": "2026-10-19"
+    },
+    {
+      "id": "CF-CLAIRIC-BLOG",
+      "title": "Clairic release article",
+      "url": "https://blog.cloudflare.com/clairic-extraction-model/",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_author_report",
+      "access": "Official article retrieved through web search; direct open failed",
+      "published_at": "2026-10-19"
+    },
+    {
+      "id": "CF-CLAIRIC-MODEL",
+      "title": "Clairic model reference",
+      "url": "https://developers.cloudflare.com/workers-ai/models/clairic/",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_api_reference",
+      "access": "HTML inspected"
+    },
+    {
+      "id": "CF-CLAIRIC-SCHEMA",
+      "title": "Clairic raw schema",
+      "url": "https://github.com/cloudflare/cloudflare-docs/blob/39cb53c8e8aa663096c589831bcecd1e5d657641/src/content/workers-ai-models/clairic.json",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_schema_source",
+      "access": "GitHub file inspected at fixed revision",
+      "observed_ref": "39cb53c8e8aa663096c589831bcecd1e5d657641"
+    },
+    {
+      "id": "CF-CLAIRIC-EXAMPLE",
+      "title": "Clairic example source",
+      "url": "https://github.com/cloudflare/cloudflare-docs/blob/39cb53c8e8aa663096c589831bcecd1e5d657641/src/components/models/code/ClairicCode.astro",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_example_source",
+      "access": "GitHub file inspected at fixed revision; author labels response real with rounded probabilities",
+      "observed_ref": "39cb53c8e8aa663096c589831bcecd1e5d657641"
+    },
+    {
+      "id": "CF-EXTRACTION",
+      "title": "Extraction models",
+      "url": "https://developers.cloudflare.com/workers-ai/concepts/extraction-models/",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_documentation",
+      "access": "HTML inspected"
+    },
+    {
+      "id": "CF-PRICE",
+      "title": "Workers AI pricing",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_documentation",
+      "access": "HTML inspected"
+    },
+    {
+      "id": "CF-JSON-MODE",
+      "title": "Workers AI JSON Mode",
+      "url": "https://developers.cloudflare.com/workers-ai/features/json-mode/",
+      "checked_at": "2026-10-20",
+      "evidence_type": "official_documentation",
+      "access": "HTML inspected"
+    }
+  ],
+  "changes": [
+    {
+      "id": "clairic-preview",
+      "entity": "cloudflare_clairic",
+      "title": "Clairic hosted preview 带来类型化取值",
+      "status": "new_model",
+      "current": {
+        "model": "@cf/cloudflare/clairic",
+        "request_model": "clairic",
+        "released_at": "2026-10-19",
+        "stage": "preview",
+        "open_weights": "planned_not_established_as_released",
+        "task_family": "typed_extraction_computation_estimation_forecasting"
+      },
+      "source_ids": [
+        "CF-CLAIRIC-RELEASE",
+        "CF-CLAIRIC-BLOG"
+      ],
+      "limits": [
+        "不把开放权重计划写成已发布；不把厂商效果报告当成本项目结果。"
+      ]
+    },
+    {
+      "id": "typed-values-versus-choice",
+      "entity": "cloudflare_clairic",
+      "title": "Jev / Clef 的有限选项与 Clairic 字段值分别建模",
+      "status": "new_contract_family",
+      "current": {
+        "distinction": "decision choices / typed field values / generative structured output",
+        "clairic_request_keys": [
+          "model",
+          "state",
+          "fields"
+        ],
+        "llm_json_mode_request_key": "response_format"
+      },
+      "source_ids": [
+        "CF-CLAIRIC-BLOG",
+        "CF-EXTRACTION",
+        "CF-JSON-MODE"
+      ],
+      "limits": [
+        "提到 Jev 仅为任务分类对照；本轮没有复核其版本、价格或 endpoint。",
+        "Clairic 不是已有 Choice collector 的第三个可互换 provider。"
+      ]
+    },
+    {
+      "id": "clairic-native-schema",
+      "entity": "cloudflare_clairic",
+      "title": "原生字段与响应 schema 固定到文档 revision",
+      "status": "newly_established",
+      "current": {
+        "endpoint": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/@cf/cloudflare/clairic",
+        "auth": "Bearer",
+        "required_request_keys": [
+          "model",
+          "fields"
+        ],
+        "field_types": [
+          "text",
+          "number",
+          "date",
+          "time",
+          "datetime",
+          "duration",
+          "list",
+          "estimate",
+          "forecast"
+        ],
+        "options": [
+          "include_quantiles",
+          "return_state_text"
+        ],
+        "reference_date": "anchors dates without a year",
+        "forecast_horizon": [
+          1,
+          64
+        ],
+        "required_answer_keys": [
+          "type",
+          "value"
+        ],
+        "rest_result_envelope": true
+      },
+      "source_ids": [
+        "CF-CLAIRIC-SCHEMA",
+        "CF-CLAIRIC-EXAMPLE",
+        "CF-CLAIRIC-MODEL"
+      ],
+      "limits": [
+        "描述中的部分类型条件没有被 JSON Schema 强制表达；schema 合法不等于服务端实测通过。",
+        "响应辅助字段多数 optional；不能假定每个 answer 都有 confidence 或 span。",
+        "模型 schema 没有定义独立 refusal/unknown；不从 null 推断这些状态。"
+      ]
+    },
+    {
+      "id": "null-guess-and-provenance",
+      "entity": "cloudflare_clairic",
+      "title": "高 confidence、guess 与 null 可以同时存在",
+      "status": "integration_semantics",
+      "current": {
+        "official_example": {
+          "field": "po_number",
+          "value": null,
+          "guess": "INV-2291",
+          "p_null": 1,
+          "confidence": 0.9995
+        },
+        "null_threshold": {
+          "default": 0.5,
+          "valid_range": "0 < x <= 1"
+        },
+        "unestablished": [
+          "confidence_formula",
+          "unicode_span_unit",
+          "universal_span_endpoint_convention"
+        ]
+      },
+      "source_ids": [
+        "CF-CLAIRIC-MODEL",
+        "CF-CLAIRIC-SCHEMA",
+        "CF-CLAIRIC-EXAMPLE"
+      ],
+      "limits": [
+        "官方例子，不是本项目采集。",
+        "guess 不可自动填回 value；span 匹配不证明实体语义正确。"
+      ]
+    },
+    {
+      "id": "estimate-and-forecast-evaluation",
+      "entity": "cloudflare_clairic",
+      "title": "预测值需要按结果、覆盖和宽度评估",
+      "status": "evaluation_implication",
+      "current": {
+        "distribution_summary": [
+          "median",
+          "p10",
+          "p90"
+        ],
+        "quantiles_opt_in": true,
+        "input_evidence_may_be_insufficient_even_when_prediction_returned": true
+      },
+      "source_ids": [
+        "CF-EXTRACTION",
+        "CF-CLAIRIC-BLOG",
+        "CF-CLAIRIC-SCHEMA"
+      ],
+      "limits": [
+        "任务分布上的覆盖率未测；预测结果不能当已知事实。",
+        "多步算术和长程预测是官方自述的早期边界。",
+        "本项目三组实验题本状态 NOT_RUN。"
+      ]
+    },
+    {
+      "id": "cloudflare-input-prices",
+      "entity": "cloudflare_workers_ai",
+      "title": "Clairic 与 Clef 家族输入标价复核",
+      "status": "pricing_checked",
+      "current": {
+        "observed_at": "2026-10-20",
+        "currency": "USD",
+        "unit": "per 1M input tokens",
+        "prices": {
+          "@cf/cloudflare/clef": 0.24,
+          "@cf/cloudflare/clef-flash": 0.038,
+          "@cf/cloudflare/clef-omni": 0.15,
+          "@cf/cloudflare/clairic": 0.1
+        },
+        "clairic_output_tokens": 0
+      },
+      "source_ids": [
+        "CF-PRICE",
+        "CF-CLAIRIC-MODEL"
+      ],
+      "limits": [
+        "公开标价与账单、实际 token 用量分开。",
+        "未核实特定账户可用性。"
+      ]
+    },
+    {
+      "id": "clairic-context-and-passes",
+      "entity": "cloudflare_clairic",
+      "title": "65,536 context 与 8,192 pass 的关系仍待探针",
+      "status": "unresolved_documentation_boundary",
+      "current": {
+        "model_property_context_tokens": 65536,
+        "field_description_pass_tokens": 8192,
+        "official_usage_example": {
+          "state_tokens": 61,
+          "schema_tokens": 472,
+          "passes": 3,
+          "input_tokens": 655
+        }
+      },
+      "source_ids": [
+        "CF-CLAIRIC-SCHEMA",
+        "CF-CLAIRIC-EXAMPLE"
+      ],
+      "limits": [
+        "同一个 schema 内的两处数字尚无解释，不据此断言服务端错误或完整 64K 可用。",
+        "61*3+472=655 是示例算术，不确立所有情况的计费公式。",
+        "应记录 truncated、返回的 state_text 与 provider usage。"
+      ]
+    }
+  ],
+  "repository_disposition": {
+    "historical_snapshot_changed": false,
+    "collector_or_normalizer_changed": false,
+    "new_content": [
+      "docs/typed-values.md",
+      "experiments/typed-values/README.md",
+      "experiments/typed-values/examples.json"
+    ],
+    "examples_status": "NOT_RUN",
+    "real_model_responses_added": false
+  },
+  "access_notes": [
+    "公告和博客的直接 open 返回访问错误，搜索结果成功提供官方正文；模型页、概念、价格和 JSON Mode 页可读。",
+    "原始 schema 与示例源通过官方 GitHub 仓库固定 revision 读取。",
+    "以上是文档与源码核对，不是账号权限或模型质量验证。"
+  ]
+}
+

@@ -10,7 +10,14 @@
 | 日期快照 | 来源、模型/路线、版本、价格、作者报告 | 新调查放入新的日期目录；历史勘误明确标注 |
 | 实验记录 | 输入、profile、模型、输出、用量、错误 | 每次写新目录；原始结果不覆写为新结果 |
 
-`research/2026-10-08/` 是首期快照，`catalog/index.json` 分别声明 `source_root` 和 `latest_update`。后者目前指向 `research/2026-10-15/updates.json`：用变化记录关联来源 ID，保留核查日期、访问结果、未覆盖范围和 live 状态。新增定向增量不重写首期 census，也不代表所有链接已重新检查。`docs/current-state.md` 只描述本项目目前做到了哪里，不承担整份领域百科。
+`research/2026-10-08/` 是首期快照，`catalog/index.json` 分别声明 `source_root`、`update_history` 和 `latest_update`。最新增量目前为 `research/2026-10-20/updates.json`；10-15 记录继续可读、可查询。每轮用变化记录关联来源 ID，保留核查日期、访问结果、未覆盖范围和 live 状态。新增定向增量不重写首期 census，也不代表所有链接已重新检查。`docs/current-state.md` 只描述本项目目前做到了哪里，不承担整份领域百科。
+
+```bash
+python3 tools/catalog.py updates --query clairic
+python3 tools/catalog.py updates --date 2026-10-15 --query jev --json
+```
+
+`models/projects/sources` 仍查询首期快照；`updates` 默认仅查最新增量，`--date` 可选择已登记的历史日期。不要把旧 Jev 记录因新一轮发布而改写成今天复核。新增调查时登记 `update_history`、切换 `latest_update`，并给 builder 的正文／资产 allowlist 添加新文件；首页更新入口和标题从同一索引读取。
 
 ## 按变化的后果重查
 
@@ -34,6 +41,8 @@ python3 tools/build_site.py
 `docs/projects.md` 是生成投影：分组和面向读者的中文边界摘要编辑 `catalog/index.json`，事实来自相应日期的结构化来源。阅读站 `_site/` 只由 builder 生成；不要同时维护 Markdown 和 HTML 两套正文。英文 README 保持能力、命令、边界与中文版一致，其余详细正文当前以中文为准。
 
 玩法卡片编辑 `catalog/recipes.json`，详细解释与操作路径编辑 `docs/playbook.md`。稳定 ID 同时用于 Markdown 标题、站点 fragment 和测试映射；修改标题不应破坏 ID。项目机制、核查日期、原创提案与已实现离线实验必须分别表述。首页复制的是通用任务定义，不是可直接发送给任意 provider 的请求体；原生请求以带日期的 API 示例及实验 adapter 为准。新增来源更新各自的截点，不把文档编辑日期当成全部链接的复核日期。
+
+类型化取值的解释由 `docs/typed-values.md` 拥有；三组题本和原创请求在 `experiments/typed-values/`。`examples.json` 的编辑答案、干预和观测结果与 provider 输出分开保存，状态为 NOT_RUN。`decision_lab typed-values` 使用独立的离线记录和评分契约；不改 Choice 的 action/probabilities，也不改变配方卡片的已实现数量。修改题本或评分时，同时验证请求不含编辑答案／事后观测、null 不补 guess、三路径的作答正确性与任务完成率分列、区间覆盖与宽度分列。真实采集仍需单独实现并满足网络、凭据和调用上限约束。
 
 更换站点资产后，旧 `_site/` 可能留下已退役的文件；builder 会报 `Unexpected existing output`，不会擅自清空目录。先检查报错路径，确认它仅是旧的生成文件，再移除该文件并重新构建。当前源码不再生成旧版的 `site/orbit.js`。
 
