@@ -360,3 +360,7 @@ absolute_error = abs(median - observed_days)
 - 实验三：报告点估计、区间宽度、是否命中后续观测、误差，以及同组最近秩 baseline；并标出 `independent_samples_claimed=false`、`calibration_claimed=false` 和按 `source_group` 的分组计数。原生 null／缺失分位进入 `not_evaluable` 分母；经验 baseline 另报 `within_requested_range`，不因超出请求网格变成 response error。
 
 这些记录是离线响应／synthetic 演示的证据，不是模型质量、API 可用性、真实价格或校准的结论。七个 authored case 仍然只有三个共享来源组，不能当作七个独立样本。
+
+## 扩展题本与采集账本
+
+7 例是随包fixture的数量，loader允许在现有三种实验类型中增加合法案例；未知experiment仍明确拒绝。字段schema、rubric与来源关系校验不因数量解耦而放宽。`research plan --kind typed-values` 从同一题本保留native请求和selected set；显式有界collector、失败/恢复语义与只读 `research ledger` 见[研究基础设施](../../docs/research-infrastructure.md)。默认typed-values命令仍完全离线，原生null不补guess。estimate原生值与区间评价单列，没有定义二元loss时不能通过公共compare冒充准确率。

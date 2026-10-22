@@ -57,10 +57,10 @@
         "single vs bundled vs joint"
       ],
       "metrics": [
-        "truth error",
-        "coarse/fine mass drift",
-        "joint/marginal coherence",
-        "single/bundled difference"
+        "numeric event truth error",
+        "numeric event coherence",
+        "descriptive coarse/fine answer-menu mass drift",
+        "single/bundled numeric difference"
       ],
       "lab": {
         "state": "offline_tools",
@@ -74,7 +74,7 @@
       "provider_status": "NOT_RUN",
       "provider_results": [],
       "limits": [
-        "事件概率、数值答案、选项概率与 confidence 分开；一致不保证正确。"
+        "事件概率、数值答案、原生答案菜单质量与 confidence 分开；正确的one-hot众数答案也可能mass delta=1，不构成事件概率违例。"
       ]
     },
     {

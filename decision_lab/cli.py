@@ -339,13 +339,13 @@ def _cmd_api_list(args):
 
 def _cmd_api_prepare(args):
     suite, rows = _api_select(args)
-    _print_json(al.prepare_payload(suite, rows, route=args.route, model=args.model))
+    _print_json(al.prepare_payload(suite, rows, route=args.route, model=args.model, replicates=args.replicates))
     return 0
 
 
 def _cmd_api_demo(args):
     suite, rows = _api_select(args)
-    manifest = al.prepare_payload(suite, rows, route=args.route, model=args.model)
+    manifest = al.prepare_payload(suite, rows, route=args.route, model=args.model, replicates=args.replicates)
     record = al.build_record(manifest, al.synthetic_entries(manifest), provenance="synthetic")
     output = al.write_record(args.run_dir, record)
     _print_json({"record": str(output), "synthetic": True, "live_verified": False,
@@ -370,6 +370,72 @@ def _cmd_api_replay(args):
     result = al.replay_record(args.record, overrides=overrides)
     if args.output:
         al.write_evaluation(args.output, result)
+    _print_json(result)
+    return 0
+
+
+def _cmd_research(args):
+    from . import collection, comparison, generators, ledger, rule_workflow
+    command = args.research_command
+    if command == "generate":
+        result = generators.generate_dataset(args.kind, seed=args.seed, units=args.units)
+    elif command == "probes":
+        from .conformance import prepare_probes
+        result = prepare_probes(args.route, args.model)
+    elif command == "partition-events":
+        from .api_tasks import partition_event_cases
+        rows = partition_event_cases()
+        result = al.prepare_payload(al.Suite({}, rows), rows, route=args.route,
+                                    model=args.model, replicates=args.replicates)
+    elif command == "oracle":
+        manifest = al.read_json(args.manifest)
+        record = al.build_record(manifest, al.oracle_entries(manifest, mode=args.mode), provenance="synthetic")
+        result = {"record": str(al.write_record(args.run_dir, record)), "synthetic": True, "live_verified": False}
+    elif command == "rule-workflow":
+        dataset = al.read_json(args.dataset) if args.dataset else generators.generate_dataset("rules", seed=args.seed, units=args.units)
+        result = rule_workflow.run_rule_workflow(dataset, compiler=args.compiler, control=args.control,
+                                                max_rounds=args.max_rounds, uses=args.uses, seed=args.seed,
+                                                proposals=al.read_json(args.proposals) if args.proposals else None)
+    elif command == "rule-replay":
+        result = rule_workflow.replay_workflow(al.read_json(args.record))
+    elif command == "plan":
+        if args.kind == "api-lab":
+            al.require(args.manifest, "api-lab plan requires --manifest")
+            result = collection.api_plan(al.read_json(args.manifest))
+        else:
+            suite = tv.load_suite(args.suite)
+            cases = tv.select_cases(suite, case_ids=args.case_id)
+            if args.limit is not None:
+                al.require(args.limit > 0, "limit must be positive")
+                cases = cases[:args.limit]
+            result = collection.typed_plan(suite, cases, replicates=args.replicates)
+    elif command == "collect":
+        result = collection.collect(al.read_json(args.plan), args.run_dir, allow_network=args.allow_network,
+                                    max_calls=args.max_calls, max_questions=args.max_questions,
+                                    max_estimated_tokens=args.max_estimated_tokens, max_attempts=args.max_attempts,
+                                    timeout_s=args.timeout, retry_delay_s=args.retry_delay, seed=args.seed,
+                                    resume=args.resume, retry_uncertain=args.retry_uncertain)
+        result = {"state": result["state"], "attempts": len(result["attempts"]), "live_verified": False,
+                  "record": str(__import__("pathlib").Path(args.run_dir) / "collection.json")}
+    elif command == "ledger":
+        result = ledger.load_ledger(args.record, suite_path=args.suite)
+    elif command == "compare":
+        left = ledger.load_ledger(args.left, suite_path=args.suite)
+        right = ledger.load_ledger(args.right, suite_path=args.suite)
+        left.setdefault("run_id", args.left)
+        right.setdefault("run_id", args.right)
+        result = comparison.compare_runs(left, right, seed=args.seed, bootstrap_samples=args.bootstrap_samples,
+                                         failure_loss=args.failure_loss, split=args.split, condition=args.condition,
+                                         plan=al.read_json(args.analysis_plan) if args.analysis_plan else None)
+    elif command == "freeze-plan":
+        result = comparison.freeze_analysis_plan(dataset_id=args.dataset_id, comparison=[args.left, args.right],
+                                                 failure_loss=args.failure_loss, split=args.split,
+                                                 condition=args.condition)
+    else:
+        raise al.ApiLabError("unknown research command")
+    if getattr(args, "output", None):
+        path = al._safe_output(args.output)
+        al._write(path, result)
     _print_json(result)
     return 0
 
@@ -464,6 +530,7 @@ def build_parser() -> argparse.ArgumentParser:
         add_api_selection(sp)
         sp.add_argument("--route", required=True, choices=al.ROUTES)
         sp.add_argument("--model")
+        sp.add_argument("--replicates", type=int, default=1)
         if name == "demo":
             sp.add_argument("--run-dir", required=True)
         sp.set_defaults(func=func)
@@ -481,6 +548,80 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--rubric")
         sp.add_argument("--output", help="save a new evaluation without modifying inference evidence")
         sp.set_defaults(func=_cmd_api_replay)
+
+    research = sub.add_parser("research", help="offline research generation, evidence and comparison; opt-in collection")
+    rs = research.add_subparsers(dest="research_command", required=True)
+    def research_parser(name):
+        parser = rs.add_parser(name)
+        parser.add_argument("--output", help="new local JSON file; source tree restricted to runs/")
+        parser.set_defaults(func=_cmd_research)
+        return parser
+    sp = research_parser("probes")
+    sp.add_argument("--route", required=True, choices=al.ROUTES)
+    sp.add_argument("--model")
+    sp = research_parser("partition-events")
+    sp.add_argument("--route", required=True, choices=al.ROUTES)
+    sp.add_argument("--model")
+    sp.add_argument("--replicates", type=int, default=1)
+    sp = research_parser("oracle")
+    sp.add_argument("--manifest", required=True)
+    sp.add_argument("--mode", choices=("perfect", "uniform", "wrong"), default="perfect")
+    sp.add_argument("--run-dir", required=True)
+    sp = research_parser("generate")
+    sp.add_argument("--kind", required=True, choices=("probability", "documents", "rules", "geometry"))
+    sp.add_argument("--seed", type=int, default=0)
+    sp.add_argument("--units", type=int, default=20)
+    sp = research_parser("rule-workflow")
+    sp.add_argument("--dataset")
+    sp.add_argument("--proposals")
+    sp.add_argument("--compiler", choices=("imperfect", "exact", "memorize"), default="imperfect")
+    sp.add_argument("--control", choices=("counterexample", "repeated-original", "random-feedback"), default="counterexample")
+    sp.add_argument("--max-rounds", type=int, default=8)
+    sp.add_argument("--uses", type=int, default=100)
+    sp.add_argument("--seed", type=int, default=0)
+    sp.add_argument("--units", type=int, default=20)
+    sp = research_parser("rule-replay")
+    sp.add_argument("record")
+    sp = research_parser("plan")
+    sp.add_argument("--kind", required=True, choices=("api-lab", "typed-values"))
+    sp.add_argument("--manifest")
+    sp.add_argument("--suite", default=tv.DEFAULT_SUITE)
+    sp.add_argument("--case-id", action="append")
+    sp.add_argument("--limit", type=int)
+    sp.add_argument("--replicates", type=int, default=1)
+    sp = research_parser("collect")
+    sp.add_argument("plan")
+    sp.add_argument("--run-dir", required=True)
+    sp.add_argument("--allow-network", action="store_true")
+    sp.add_argument("--max-calls", required=True, type=int)
+    sp.add_argument("--max-questions", required=True, type=int)
+    sp.add_argument("--max-estimated-tokens", required=True, type=int)
+    sp.add_argument("--max-attempts", type=int, default=1)
+    sp.add_argument("--timeout", type=float, default=30)
+    sp.add_argument("--retry-delay", type=float, default=1)
+    sp.add_argument("--seed", type=int, default=0)
+    sp.add_argument("--resume", action="store_true")
+    sp.add_argument("--retry-uncertain", action="store_true")
+    sp = research_parser("ledger")
+    sp.add_argument("record")
+    sp.add_argument("--suite")
+    sp = research_parser("compare")
+    sp.add_argument("left")
+    sp.add_argument("right")
+    sp.add_argument("--suite")
+    sp.add_argument("--split")
+    sp.add_argument("--condition")
+    sp.add_argument("--analysis-plan")
+    sp.add_argument("--failure-loss", type=float, default=1.0)
+    sp.add_argument("--seed", type=int, default=0)
+    sp.add_argument("--bootstrap-samples", type=int, default=2000)
+    sp = research_parser("freeze-plan")
+    sp.add_argument("--dataset-id", required=True)
+    sp.add_argument("--left", required=True)
+    sp.add_argument("--right", required=True)
+    sp.add_argument("--split", default="test")
+    sp.add_argument("--condition")
+    sp.add_argument("--failure-loss", type=float, default=1.0)
 
     sp = sub.add_parser("validate", help="validate a suite file")
     sp.add_argument("suite", nargs="?", default=DEFAULT_SUITE)
@@ -541,7 +682,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
-    except (CaseError, RecordError, tv.TypedValuesError, al.ApiLabError, KeyError) as exc:
+    except (CaseError, RecordError, tv.TypedValuesError, al.ApiLabError, KeyError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except AssertionError as exc:

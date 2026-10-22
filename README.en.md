@@ -2,11 +2,23 @@
 
 **Make decisions and typed values inspectable.**
 
-[中文](README.md) · [October 22 update](research/2026-10-22/README.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
+[中文](README.md) · [October 22 update](research/2026-10-22/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
 
 Decisions Lab studies decision models and typed value extraction: selecting actions, extracting fields, computing values, and estimating unknown outcomes. It examines their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
 
 Stable methods, dated research, and replayable experiments have different lifetimes. The initial snapshot indexes 23 model/service entities, 21 repositories, 6 studies and 171 sources. The supplied historical dataset was recomputed: 1,000 cases, 4,000 probability records and 14 matching author aggregates. Historical predictions are not redistributed. See the [snapshot guide](research/2026-10-08/README.md) for reproduction using an independently supplied bundle.
+
+## Research infrastructure
+
+The [research guide](docs/research-infrastructure.md) separates numeric event probabilities from modal-menu option mass, adds perfect/uniform/wrong oracle controls and explicit trial repetitions, and provides a read-only common ledger over the native contracts. Four deterministic generators retain exact truth, source families and grouped splits. The offline rule workflow connects compilation, exhaustive verification, minimal counterexamples, repair controls, version changes and replay. Paired comparisons retain failures in the workflow-loss denominator, aggregate units and bootstrap source families; small cluster counts remain descriptive.
+
+```bash
+python3 -m decision_lab research generate --kind rules --seed 17 --units 20 --output runs/rule-worlds.json
+python3 -m decision_lab research rule-workflow --dataset runs/rule-worlds.json --output runs/rule-repair.json
+python3 -m decision_lab research rule-replay runs/rule-repair.json
+```
+
+The opt-in `research collect` requires explicit network permission, credentials and call/question/estimated-input-token budgets. Sequential attempts retain raw bytes, elapsed time, failures, cancellation and uncertain delivery across checkpoints and resume. The byte-based input estimate is not an output-token or billing cap. Live calls still require a separately selected model, input boundary and budget; none were made in this upgrade. Synthetic controls demonstrate the research machinery, not model performance.
 
 ## New content: API capabilities and experiments
 
@@ -16,7 +28,7 @@ The [capability guide](docs/api-capabilities.md) covers seven research direction
 
 The [October 20 investigation](research/2026-10-20/README.md) adds Cloudflare Clairic with eight official sources and seven change records. A [field guide](docs/typed-values.md) distinguishes extraction, computation and prediction. [Three experiment dossiers](experiments/typed-values/README.md) provide original synthetic inputs, native requests, editorial oracles, controls and scoring plans for missing values, context loss after extraction, and prediction intervals.
 
-The provider experiments remain NOT_RUN, with no collected model results. A separate `typed-values` CLI now prepares requests, runs explicitly synthetic baselines/demos, imports local responses and replays field, arithmetic and interval scoring. It uses its own result contract alongside next-action; a Clairic live collector is not implemented. The October 8 census and October 15 investigation retain their original dates.
+The provider experiments remain NOT_RUN, with no collected model results. A separate `typed-values` CLI now prepares requests, runs explicitly synthetic baselines/demos, imports local responses and replays field, arithmetic and interval scoring. It uses its own result contract alongside next-action; an opt-in bounded collector now covers Clairic and api-lab; no live provider collection has been performed. The October 8 census and October 15 investigation retain their original dates.
 
 ## Run offline
 

@@ -43,7 +43,7 @@ python3 tools/build_site.py
 
 玩法卡片编辑 `catalog/recipes.json`，详细解释与操作路径编辑 `docs/playbook.md`。稳定 ID 同时用于 Markdown 标题、站点 fragment 和测试映射；修改标题不应破坏 ID。项目机制、核查日期、原创提案与已实现离线实验必须分别表述。首页复制的是通用任务定义，不是可直接发送给任意 provider 的请求体；原生请求以带日期的 API 示例及实验 adapter 为准。新增来源更新各自的截点，不把文档编辑日期当成全部链接的复核日期。
 
-类型化取值的解释由 `docs/typed-values.md` 拥有；三组题本和原创请求在 `experiments/typed-values/`。`examples.json` 的编辑答案、干预和观测结果与 provider 输出分开保存，状态为 NOT_RUN。`decision_lab typed-values` 使用独立的离线记录和评分契约；不改 Choice 的 action/probabilities，也不改变配方卡片的已实现数量。修改题本或评分时，同时验证请求不含编辑答案／事后观测、null 不补 guess、三路径的作答正确性与任务完成率分列、区间覆盖与宽度分列。真实采集仍需单独实现并满足网络、凭据和调用上限约束。
+类型化取值的解释由 `docs/typed-values.md` 拥有；三组题本和原创请求在 `experiments/typed-values/`。`examples.json` 的编辑答案、干预和观测结果与 provider 输出分开保存，状态为 NOT_RUN。`decision_lab typed-values` 使用独立的离线记录和评分契约；不改 Choice 的 action/probabilities，也不改变配方卡片的已实现数量。修改题本或评分时，同时验证请求不含编辑答案／事后观测、null 不补 guess、三路径的作答正确性与任务完成率分列、区间覆盖与宽度分列。显式 collector 已实现，真实采集仍需满足单独的模型/输入授权、网络、凭据和预算约束，见[研究基础设施](research-infrastructure.md)。
 
 API 能力方向编辑 `catalog/capabilities.json` 和 `docs/api-capabilities.md`，来源 ID 解析到索引指定的日期增量。`api-lab` 的三组题本与运行说明在 `experiments/api-capabilities/`，不增加玩法卡片的已实现数量。新日期的 12 probes 保留历史 source ID 的原来源日期，并修订已失效的接口前提；设计状态不能因某个新题本实现而改为已实测。修改生成器、原生请求或评分时，检查 ground truth 隔离、分题 refusal/error、完整 request 快照、缺失/部分导入 coverage、概率对象语义以及最小反例。推理记录和评价分开核对，不能由当前 adapter 的变化抹去历史请求。
 

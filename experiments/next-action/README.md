@@ -193,3 +193,7 @@ python3 tools/check.py --core-only
 覆盖：标签泄漏拒绝、畸形/错误响应归一化、伪造的「缺失数据成功」、重复 id /
 来源组切分泄漏、unknown/refusal/error 混淆、不安全的 redirect/retry 行为、
 覆盖拒绝、以及离线命令不触发网络。
+
+## 计划子集与历史兼容读取
+
+新collector记录包含`planned_case_ids`；显式case子集可按当时计划重放，checkpoint缺结果不会被当完整成功。旧记录没有此字段时仍按全suite校验。`research ledger <record>` 提供只读公共视图：旧文件没有planned set时保守显示全suite的missing，不猜测当时subset；新字段将未计划与计划但未返回分开。历史live requested model与保留body一起校验，研究兼容读取不依赖今天的默认模型，不覆写历史文件。旧`replay`对当前adapter的严格校验仍保留。新api-lab/Clairic采集与跨run比较见[研究基础设施](../../docs/research-infrastructure.md)；unknown/refusal/error和多答案acceptable set不折成单一概率标签。

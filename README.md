@@ -2,7 +2,7 @@
 
 **把判断与取值，变成可以检查的实验。**
 
-[English](README.en.md) · [10-22 能力核查](research/2026-10-22/README.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [10-22 能力核查](research/2026-10-22/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
 
 Decisions Lab 研究 decision models 与类型化取值：从证据中选择动作、提取字段、计算数值，或估计尚未确定的结果。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
@@ -14,7 +14,19 @@ Decisions Lab 研究 decision models 与类型化取值：从证据中选择动�
 
 [10-20 调查](research/2026-10-20/README.md)加入 Cloudflare Clairic，并把“结构合法”与“有证据、选对实体、判断正确”分开。[方法章](docs/typed-values.md)沿具体字段解释摘录、计算和预测的区别；[三组实验题本](experiments/typed-values/README.md)提供原创输入、原生请求、编辑答案、对照和评分办法，分别研究缺失值、提取后的上下文损失、预测区间。
 
-题本的 provider 状态仍是 `NOT_RUN`，尚无模型采集结果。现在可以用独立的 `typed-values` 子命令准备请求、运行明确标注的 synthetic baseline／demo、导入本地响应，再回放字段、金额与区间评分。它与下面的 next-action 实验各用自己的结果契约；Clairic 尚无 live collector。
+题本的 provider 状态仍是 `NOT_RUN`，尚无模型采集结果。现在可以用独立的 `typed-values` 子命令准备请求、运行明确标注的 synthetic baseline／demo、导入本地响应，再回放字段、金额与区间评分。它与下面的 next-action 实验各用自己的结果契约；Clairic 与 api-lab 已有显式开启的有界 collector，尚未进行真实模型采集。
+
+## 研究升级
+
+[研究基础设施](docs/research-infrastructure.md)把数值事件概率和答案菜单效应分开，加入 perfect/uniform/wrong oracle、显式重复身份、planned set 与只读公共账本。四类 seed 生成器提供精确真值、source family 和固定 split；规则链可以从编译贯通穷举验证、最小反例、修复与版本过期检查。跨 run 比较保留失败分母，按 unit 汇总并按来源族估计区间；少簇只做描述。它们都是离线方法与 synthetic 控制，不能当作模型质量结论。
+
+```bash
+python3 -m decision_lab research generate --kind rules --seed 17 --units 20 --output runs/rule-worlds.json
+python3 -m decision_lab research rule-workflow --dataset runs/rule-worlds.json --output runs/rule-repair.json
+python3 -m decision_lab research rule-replay runs/rule-repair.json
+```
+
+`research collect` 复用保留的 api-lab 或 Clairic 请求，显式网络开关、凭据和三项预算缺一不可；串行执行，保留 raw bytes、失败耗时、取消和不确定发送，支持 checkpoint/resume。输入 token 估算不是输出或账单硬上限。真实调用需另定模型、输入和预算；本轮没有执行。完整命令、恢复纪律、统计与后续方向见方法章。
 
 ## 先做哪件事
 

@@ -18,6 +18,7 @@ LATEST_UPDATE_PAGE = LATEST_UPDATE['reader'].removesuffix('.md') + '.html'
 PAGES = (
     'README.md', 'README.en.md', 'LICENSING.md', 'LICENSE-DOCUMENTATION.md',
     'docs/projects.md', 'docs/playbook.md', 'docs/method.md', 'docs/integration.md',
+    'docs/research-infrastructure.md', 'experiments/generated/README.md', 'experiments/comparison/README.md',
     'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md', 'docs/api-capabilities.md',
     'experiments/next-action/README.md',
     'experiments/typed-values/README.md', 'experiments/api-capabilities/README.md',
@@ -94,6 +95,9 @@ PAGE_CONTEXT = {
     'docs/playbook.html': ('09', '妙妙玩法', 'Playbook'),
     'research/2026-10-15/README.html': ('01', '10 月增量核查', 'Research update'),
     'research/2026-10-22/README.html': ('01', 'API 能力与实验', 'Research update'),
+    'docs/research-infrastructure.html': ('14', '研究基础设施', 'Research tools'),
+    'experiments/generated/README.html': ('15', '有限世界与规则修复', 'Synthetic workflow'),
+    'experiments/comparison/README.html': ('16', '配对比较与统计', 'Analysis'),
     'docs/api-capabilities.html': ('12', 'API 能力研究', 'Capabilities'),
     'experiments/api-capabilities/README.html': ('13', 'API 能力实验', 'Offline experiment'),
     'research/2026-10-20/README.html': ('01', 'Clairic 与类型化取值', 'Research update'),

@@ -117,8 +117,40 @@ def probability_cases():
         for condition, choices, masses in menus:
             q, grade = _choice("region", "下一次抽样最可能落入哪个互斥区域？", choices,
                                acceptable=[key for key, value in masses.items() if value == max(masses.values())])
-            cases.append(_case(f"prob-{group}-{condition}", "probability", text, [q], {"region": grade},
-                               group=group, condition=condition, world=world, event_masses=masses))
+            cases.append(_case(f"prob-{group}-{condition}", "probability", text, [q],
+                               {"region": grade}, group=group, condition=condition,
+                               world=world, event_masses=masses))
+    return cases
+
+def partition_event_cases():
+    """Optional numeric A/A1/A2/region-B cases; not part of the legacy suite."""
+    worlds = {"correlated": dict(zip(STATES, (.5, 0., 0., .5))),
+              "anticorrelated": dict(zip(STATES, (0., .5, .5, 0.))),
+              "split": dict(zip(STATES, (.2, .2, .3, .3)))}
+    numeric_choices = [(f"{i / 10:.1f}", f"{i / 10:.1f}") for i in range(11)]
+    regions = (
+        ("a", "A={10,11}（即 A=1，状态 10 或 11）", {"10", "11"}),
+        ("a1", "A1={10}（即状态 10）", {"10"}),
+        ("a2", "A2={11}（即状态 11）", {"11"}),
+        ("region_b", "区域 B={00,01}（即 A=0，状态 00 或 01）", {"00", "01"}),
+    )
+    cases = []
+    for group, world in worlds.items():
+        text = ("每次抽样得到一个二值状态；00 表示 A=0,B=0，01 表示 A=0,B=1，"
+                "10 表示 A=1,B=0，11 表示 A=1,B=1。四个互斥且穷尽状态的概率："
+                + "，".join(f"{key}={world[key]:.1f}" for key in STATES) + "。")
+        questions, grades = [], {}
+        for event, definition, states in regions:
+            probability = sum(world[state] for state in states)
+            qid = "p_" + event
+            question, grade = _choice(
+                qid, f"事件「{definition}」的概率是多少？", numeric_choices,
+                f"{probability:.1f}", event=event, numeric_truth=probability)
+            questions.append(question)
+            grades[qid] = grade
+        cases.append(_case(f"prob-{group}-partition", "probability", text,
+                           questions, grades, group=group, condition="partition",
+                           world=world))
     return cases
 
 

@@ -357,4 +357,5 @@ def _assemble_record(plan: LivePlan, prof, results: list[CaseResult]) -> Record:
         results=results,
         synthetic=False,
         notes="Live provider responses; transport failures recorded as non-choice errors.",
+        planned_case_ids=[case.id for case in plan.cases],
     )

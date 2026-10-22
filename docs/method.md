@@ -48,7 +48,7 @@ next-action 的两条 adapter 选项说明目前固定为英文，案例正文�
 
 选中已有选项会更新路线和 `ok`；unknown 有独立的 × 出口与读数。点击「看 API 拒答示例」或「看调用失败示例」会清除当前选项，显示明确标注的离线状态；再点一个选项即可离开示例，也可清除回到未试选。复制的通用任务 JSON 始终来自 catalog，不包含试选或示例结果。
 
-新增的 [API 能力实验](../experiments/api-capabilities/README.md)使用独立的多问题离线记录，可分别检查 Choice、Predicate／Noul、Score；它不改变首页试选的含义。数值答案、原生选项质量和 confidence 不能互换，单问／打包与粗／细菜单也必须区分，见[能力方法](api-capabilities.md)。
+新增的 [API 能力实验](../experiments/api-capabilities/README.md)使用独立的多问题离线记录，可分别检查 Choice、Predicate／Noul、Score；它不改变首页试选的含义。公共[研究账本与比较](research-infrastructure.md)保留 planned/missing 和失败分母，按 source family 聚类；少簇仅作描述。数值答案、原生选项质量和 confidence 不能互换，单问／打包与粗／细菜单也必须区分，见[能力方法](api-capabilities.md)。
 
 状态也不同于输出 primitive。带日期的 [10-15 API 核查](../research/2026-10-15/README.md)讨论 Choice、Score、Box 等类型；首页及 next-action adapter 只演示固定 Choice profile，没有实现其它 primitive 的交互或真实调用。概率分布和 provider confidence 是另一些返回字段：手动选择不能推导出它们，所以结果区保持「未调用模型 · 无测量值」。下面的概率地形另标数学示意，历史矩阵另标历史复算，两者都不作为此次试选的模型结果。
 

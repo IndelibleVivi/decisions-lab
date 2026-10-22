@@ -105,6 +105,42 @@ class TestSuiteAndPrepare(unittest.TestCase):
         self.assertEqual(len(suite.cases), 7)
         self.assertEqual(len({case.source_group for case in suite.cases}), 3)
 
+    def test_eighth_valid_case_is_loaded_without_fixture_count_coupling(self):
+        data = json.loads(SUITE.read_text(encoding="utf-8"))
+        extra = json.loads(json.dumps(data["experiments"][0]["cases"][0]))
+        extra["id"] = "source-missing-extra"
+        data["experiments"][0]["cases"].append(extra)
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "eight-cases.json"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            suite = tv.load_suite(path)
+        self.assertEqual(len(suite.cases), 8)
+        self.assertEqual(suite.by_id()["source-missing-extra"].experiment_id,
+                         "source-null-identity")
+
+    def test_unknown_experiment_type_is_not_reported_as_supported(self):
+        data = json.loads(SUITE.read_text(encoding="utf-8"))
+        data["experiments"].append({"id": "unsupported-extra", "cases": [
+            json.loads(json.dumps(data["experiments"][0]["cases"][0]))
+        ]})
+        data["experiments"][-1]["cases"][0]["id"] = "unsupported-case"
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "unsupported.json"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaises(tv.TypedValuesError) as raised:
+                tv.load_suite(path)
+        self.assertIn("unsupported experiment type", str(raised.exception))
+
+    def test_empty_experiment_list_is_rejected(self):
+        data = json.loads(SUITE.read_text(encoding="utf-8"))
+        data["experiments"] = []
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "empty.json"
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaises(tv.TypedValuesError) as raised:
+                tv.load_suite(path)
+        self.assertIn("experiments must be a non-empty array", str(raised.exception))
+
     def test_prepare_exports_no_editorial_or_label_data(self):
         code, out, _ = _run(["typed-values", "prepare", "--limit", "1"])
         self.assertEqual(code, 0)

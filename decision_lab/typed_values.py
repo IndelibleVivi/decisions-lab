@@ -40,12 +40,11 @@ OUTCOME_REFUSAL = "refusal"
 OUTCOME_ERROR = "error"
 OUTCOMES = {OUTCOME_OK, OUTCOME_UNKNOWN, OUTCOME_REFUSAL, OUTCOME_ERROR}
 
-EXPECTED_EXPERIMENTS = (
+SUPPORTED_EXPERIMENTS = (
     "source-null-identity",
     "extract-compute-decide",
     "estimate-intervals",
 )
-EXPECTED_CASE_COUNT = 7
 ALLOWED_FIELD_TYPES = {
     "text",
     "number",
@@ -240,7 +239,8 @@ def load_suite(path: str | Path = DEFAULT_SUITE) -> TypedSuite:
         f"{where}: unsupported or missing schema",
     )
     experiments = data.get("experiments")
-    _require(isinstance(experiments, list), f"{where}: experiments must be an array")
+    _require(isinstance(experiments, list) and experiments,
+             f"{where}: experiments must be a non-empty array")
 
     suite = TypedSuite(source_path=p, raw=data, experiments=experiments)
     seen_ids: set[str] = set()
@@ -252,6 +252,10 @@ def load_suite(path: str | Path = DEFAULT_SUITE) -> TypedSuite:
         _require(
             isinstance(experiment_id, str) and experiment_id.strip(),
             f"{ew}: id must be a non-empty string",
+        )
+        _require(
+            experiment_id in SUPPORTED_EXPERIMENTS,
+            f"{ew}: unsupported experiment type {experiment_id!r}",
         )
         cases = experiment.get("cases")
         _require(isinstance(cases, list) and cases, f"{ew}: cases must be a non-empty array")
@@ -377,14 +381,9 @@ def load_suite(path: str | Path = DEFAULT_SUITE) -> TypedSuite:
         len(experiment_ids) == len(set(experiment_ids)),
         f"{where}: duplicate experiment id",
     )
-    actual_experiments = tuple(experiment_ids)
     _require(
-        actual_experiments == EXPECTED_EXPERIMENTS,
-        f"{where}: expected experiments {EXPECTED_EXPERIMENTS}, got {actual_experiments}",
-    )
-    _require(
-        len(suite.cases) == EXPECTED_CASE_COUNT,
-        f"{where}: expected {EXPECTED_CASE_COUNT} cases, got {len(suite.cases)}",
+        all(experiment_id in SUPPORTED_EXPERIMENTS for experiment_id in experiment_ids),
+        f"{where}: unsupported experiment types",
     )
     return suite
 

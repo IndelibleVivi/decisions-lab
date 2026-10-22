@@ -84,6 +84,86 @@ class ApiLabTests(unittest.TestCase):
         self.assertEqual([c["value"] for c in fine["body"]["questions"][0]["choices"]], ["A1", "A2", "B"])
         self.assertEqual(coarse["body"]["input"], fine["body"]["input"])
 
+    def test_partition_numeric_events_are_self_contained_and_optional(self):
+        cases = tasks.partition_event_cases()
+        self.assertEqual(len(cases), 3)
+        manifest = lab.prepare_payload(lab.Suite({}, cases), cases, route="decisions")
+        split = next(request for request in manifest["requests"]
+                     if request["id"] == "prob-split-partition")
+        instructions = {q["name"]: q["instructions"] for q in split["body"]["questions"]}
+        self.assertEqual(set(instructions), {"p_a", "p_a1", "p_a2", "p_region_b"})
+        self.assertIn("状态 10 或 11", instructions["p_a"])
+        self.assertIn("状态 10", instructions["p_a1"])
+        self.assertIn("状态 11", instructions["p_a2"])
+        self.assertIn("状态 00 或 01", instructions["p_region_b"])
+        report = lab.evaluate(manifest, lab.oracle_entries(manifest))
+        self.assertEqual(report["coverage"]["expected_questions"], 12)
+        self.assertEqual(report["coverage"]["ok"], 12)
+        split_report = next(item for item in report["probability"]
+                            if item["unit_id"] == "split")
+        self.assertEqual(split_report["numeric_event_mae"], 0.)
+        trial = split_report["trials"][0]
+        self.assertEqual(trial["numeric_truth"],
+                         {"a": .6, "a1": .3, "a2": .3, "region_b": .4})
+        self.assertEqual(trial["coherence_errors"], [])
+
+    def test_numeric_partition_violation_uses_explicit_answers(self):
+        cases = tasks.partition_event_cases()
+        manifest = lab.prepare_payload(lab.Suite({}, cases), cases, route="decisions")
+        entries = lab.oracle_entries(manifest)
+        answer = next(a for a in entries[-1]["response"]["answers"] if a["name"] == "p_a1")
+        answer["choice"] = "0.2"
+        answer["probabilities"] = [{"value": f"{i / 10:.1f}", "probability": float(i == 2)} for i in range(11)]
+        split = next(r for r in lab.evaluate(manifest, entries)["probability"] if r["unit_id"] == "split")
+        self.assertEqual(split["trials"][0]["coherence_errors"], ["partition_additivity"])
+        self.assertGreater(split["numeric_event_mae"], 0)
+
+    def test_score_grade_preserves_native_score_separate_from_mean(self):
+        normalized = {"outcome": "ok", "value": .25, "distribution_mean": .75}
+        self.assertTrue(lab._grade(normalized, {"kind": "number", "expected": .25}))
+        self.assertFalse(lab._grade(normalized, {"kind": "number", "expected": .75}))
+
+    def test_joint_choice_mass_is_retained_as_menu_distribution(self):
+        manifest = self.manifest(ids=["prob-split-joint"])
+        report = lab.evaluate(manifest, lab.oracle_entries(manifest))
+        trial = report["probability"][0]["trials"][0]
+        self.assertEqual(sum(trial["menu_distribution"].values()), 1)
+        self.assertIsNone(trial["numeric_events"])
+        self.assertIsNone(trial["coherence_errors"])
+
+    def test_unmatched_nullable_seeds_are_not_paired_or_crashed(self):
+        rows = copy.deepcopy(lab.select_rows(self.suite, experiment="probability",
+                             case_ids=["prob-correlated-single-a", "prob-correlated-bundled"]))
+        rows[1]["trial"] = {"seed": 7}
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions")
+        report = lab.evaluate(manifest, lab.oracle_entries(manifest))
+        self.assertIsNone(report["probability"][0]["single_bundled_delta"])
+
+    def test_order_consistency_checks_every_variant_and_replicate(self):
+        rows = [r for r in self.suite.rows if r["id"].startswith("r00-w0-compile")]
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions", replicates=2)
+        entries = lab.oracle_entries(manifest)
+        entry = next(e for e in entries if "reversed-r1" in e["request_id"])
+        request = next(r for r in manifest["requests"] if r["id"] == entry["request_id"])
+        answer = entry["response"]["answers"][0]
+        choice = next(c["value"] for c in request["body"]["questions"][0]["choices"]
+                      if c["value"] != answer["choice"] and c["value"] in request["rubric"]["choice_tables"])
+        answer["choice"] = choice
+        answer["probabilities"] = [{"value": c["value"], "probability": float(c["value"] == choice)} for c in request["body"]["questions"][0]["choices"]]
+        summary = lab.evaluate(manifest, entries)["rule_compile"]["order_id_consistency"][0]
+        self.assertTrue(summary["complete"])
+        self.assertFalse(summary["same_prediction"])
+        self.assertEqual([r["same_prediction"] for r in summary["replicates"]], [True, False])
+
+    def test_visual_repeat_compatibility_keeps_all_values_and_truth(self):
+        rows = [r for r in self.suite.rows if r["experiment"] == "visual-criteria"][:1]
+        manifest = lab.prepare_payload(self.suite, rows, route="jev", replicates=2)
+        report = lab.evaluate(manifest, lab.oracle_entries(manifest))
+        cases = report["visual_criteria"]["cases"][rows[0]["rubric"]["group"]]["text"]
+        self.assertEqual(cases["count"], 2)
+        self.assertEqual({r["trial"]["replicate"] for r in cases["trials"]}, {0, 1})
+        self.assertTrue(all(r["defined_relation"] == r["truth"] for r in cases["trials"]))
+
     def test_single_and_bundled_questions_are_identical(self):
         manifest = self.manifest()
         for group in ("correlated", "anticorrelated", "split"):
@@ -241,6 +321,56 @@ class ApiLabTests(unittest.TestCase):
                                     {"label": "High", "value": 1, "probability": .75}]}
         self.assertEqual(lab.normalize_answer(q, answer, "decisions")["value"], .75)
 
+    def test_oracle_score_supports_fractional_rubric_and_uniform_expectation(self):
+        case = {
+            "id": "fractional-score",
+            "experiment": "custom",
+            "input": "Score the fixture.",
+            "questions": [{
+                "id": "quality",
+                "type": "score",
+                "instructions": "Rate quality.",
+                "levels": [{"label": label, "description": label}
+                           for label in ("low", "medium", "high")],
+            }],
+            "rubric": {"questions": {
+                "quality": {"kind": "number", "expected": 1.5, "tolerance": 1e-6}}},
+        }
+        manifest = lab.prepare_payload(lab.Suite({}, [case]), [case], route="decisions")
+        perfect = lab.oracle_entries(manifest, mode="perfect")
+        self.assertEqual(lab.evaluate(manifest, perfect)["accuracy_on_valid_answers"], 1.)
+        score = perfect[0]["response"]["answers"][0]
+        self.assertEqual(score["probabilities"],
+                         [{"label": "low", "value": 0, "probability": 0.},
+                          {"label": "medium", "value": 1, "probability": .5},
+                          {"label": "high", "value": 2, "probability": .5}])
+        self.assertEqual(score["score"], 1.5)
+        uniform = lab.oracle_entries(manifest, mode="uniform")[0]["response"]["answers"][0]
+        self.assertEqual(uniform["score"], 1.)
+        normalized = lab.normalize_answer(
+            manifest["requests"][0]["body"]["questions"][0], uniform, "decisions")
+        self.assertEqual(normalized["score"] if "score" in normalized else uniform["score"], 1.)
+        self.assertEqual(normalized["distribution_mean"], 1.)
+
+    def test_trial_family_and_split_consistency_are_validated(self):
+        rows = lab.select_rows(self.suite, experiment="probability",
+                               case_ids=["prob-split-bundled"])
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions", replicates=2)
+        changed = copy.deepcopy(manifest)
+        changed["requests"][1]["trial"]["source_family"] = "other-family"
+        changed.pop("manifest_digest")
+        changed["manifest_digest"] = lab.digest(changed)
+        with self.assertRaises(lab.ApiLabError) as raised:
+            lab.validate_manifest(changed)
+        self.assertIn("multiple source families", str(raised.exception))
+        changed = copy.deepcopy(manifest)
+        changed["requests"][1]["trial"]["split"] = "test"
+        changed.pop("manifest_digest")
+        changed["manifest_digest"] = lab.digest(changed)
+        with self.assertRaises(lab.ApiLabError) as raised:
+            lab.validate_manifest(changed)
+        self.assertIn("spans multiple splits", str(raised.exception))
+
     def test_jev_refusal_is_not_invented(self):
         manifest = self.mixed("jev")
         entries = lab.synthetic_entries(manifest)
@@ -318,6 +448,45 @@ class ApiLabTests(unittest.TestCase):
         report = lab.evaluate(manifest, entries)["probability"][0]
         self.assertIn("intersection_bounds", report["coherence"]["bundled"]["violations"])
 
+    def test_two_replicates_get_two_independent_coherence_checks(self):
+        rows = lab.select_rows(self.suite, experiment="probability",
+                               case_ids=["prob-correlated-bundled"])
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions", replicates=2)
+        entries = lab.oracle_entries(manifest)
+        by_name = {answer["name"]: answer for answer in entries[1]["response"]["answers"]}
+        for name, value in (("p_a", "0.5"), ("p_b", "0.5"), ("p_and", "1.0")):
+            by_name[name]["choice"] = value
+            by_name[name]["probabilities"] = [
+                {"value": f"{index / 10:.1f}",
+                 "probability": float(f"{index / 10:.1f}" == value)}
+                for index in range(11)]
+        report = lab.evaluate(manifest, entries)["probability"][0]
+        self.assertEqual(report["bundled"]["replicates"], 2)
+        self.assertEqual(report["coherence"]["checkable_replicates"], 2)
+        self.assertEqual(report["coherence"]["violation_replicates"], 1)
+        per_trial = sorted((row["trial"]["replicate"], bool(row["coherence_errors"]))
+                           for row in report["trials"] if row["condition"] == "bundled")
+        self.assertEqual(per_trial, [(0, False), (1, True)])
+
+    def test_rule_and_visual_pairs_remain_complete_with_repeats(self):
+        rows = lab.select_rows(self.suite, experiment="rule-compile", case_ids=[
+            "r04-w0-compile-baseline", "r04-w0-compile-reversed",
+            "r04-w0-compile-opaque"])
+        rule = lab.prepare_payload(self.suite, rows, route="decisions", replicates=2)
+        consistency = lab.evaluate(rule, lab.oracle_entries(rule))[
+            "rule_compile"]["order_id_consistency"][0]
+        self.assertTrue(consistency["complete"])
+        self.assertTrue(consistency["same_prediction"])
+        rows = lab.select_rows(self.suite, experiment="visual-criteria", case_ids=[
+            "visual-001-image", "visual-001-swapped-image"])
+        visual = lab.prepare_payload(self.suite, rows, route="jev", replicates=2)
+        entries = lab.oracle_entries(visual)
+        first = lab.evaluate(visual, entries)["visual_criteria"]
+        second = lab.evaluate(visual, list(reversed(entries)))["visual_criteria"]
+        self.assertEqual(len(first["definition_swap"]), 2)
+        self.assertEqual(first["counts"], {"image": 2, "swapped-image": 2})
+        self.assertEqual(first["definition_swap"], second["definition_swap"])
+
     def test_visual_label_flip_alone_is_not_success(self):
         manifest = self.manifest("visual-criteria", "jev",
                                  ids=["visual-001-image", "visual-001-swapped-image"])
@@ -345,6 +514,131 @@ class ApiLabTests(unittest.TestCase):
         for malformed in (entries + entries, [{**entries[0], "request_id": "foreign"}]):
             with self.assertRaises(lab.ApiLabError):
                 lab.build_record(manifest, malformed, provenance="imported", allow_partial=True)
+
+    def test_perfect_oracle_is_offline_fixture_semantics(self):
+        rows = lab.select_rows(self.suite, experiment="probability")
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions")
+        entries = lab.oracle_entries(manifest, mode="perfect")
+        self.assertEqual(len(entries), 27)
+        self.assertEqual(len(manifest["requests"]), 27)
+        report = lab.evaluate(manifest, entries)
+        self.assertEqual(report["coverage"]["expected_questions"], 39)
+        self.assertEqual(report["coverage"]["ok"], 39)
+        self.assertEqual(report["accuracy_on_valid_answers"], 1.)
+        self.assertEqual(lab.oracle_entries(manifest, mode="uniform")[0]["request_id"],
+                         entries[0]["request_id"])
+        wrong = lab.evaluate(manifest, lab.oracle_entries(manifest, mode="wrong"))
+        self.assertLess(wrong["accuracy_on_valid_answers"], 1.)
+
+    def test_replicates_keep_unique_ids_identical_bodies_and_trial_identity(self):
+        rows = lab.select_rows(self.suite, experiment="probability",
+                               case_ids=["prob-split-bundled"])
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions", replicates=3)
+        self.assertEqual([r["id"] for r in manifest["requests"]],
+                         ["prob-split-bundled", "prob-split-bundled-r1",
+                          "prob-split-bundled-r2"])
+        self.assertEqual([r["trial"]["replicate"] for r in manifest["requests"]], [0, 1, 2])
+        self.assertEqual({r["trial"]["unit_id"] for r in manifest["requests"]}, {"split"})
+        self.assertTrue(all(r["body"] == manifest["requests"][0]["body"]
+                            for r in manifest["requests"]))
+        report = lab.evaluate(manifest, lab.oracle_entries(manifest))
+        self.assertEqual(report["coverage"]["ok"], 15)
+        split = report["probability"][0]
+        self.assertEqual(split["counts"], {"bundled": 3})
+        self.assertEqual(split["bundled"]["replicates"], 3)
+        self.assertEqual(split["bundled"]["mean_absolute_error"], 0.)
+
+    def test_custom_case_trial_identity_is_preserved_across_replicates(self):
+        case = {
+            "id": "custom-trial",
+            "experiment": "custom",
+            "input": "A fixture.",
+            "questions": [{
+                "id": "flag",
+                "type": "predicate",
+                "instructions": "Is the fixture present?",
+            }],
+            "rubric": {
+                "questions": {"flag": {"kind": "boolean", "expected": True}},
+            },
+            "trial": {
+                "unit_id": "fixture-unit",
+                "source_family": "fixture-family",
+                "condition": "with-context",
+                "replicate": 4,
+                "split": "held-out",
+                "seed": 17,
+            },
+        }
+        manifest = lab.prepare_payload(
+            lab.Suite({}, [case]), [case], route="decisions", replicates=2)
+        self.assertEqual([request["trial"] for request in manifest["requests"]], [
+            case["trial"],
+            {**case["trial"], "replicate": 5},
+        ])
+        self.assertEqual([request["id"] for request in manifest["requests"]],
+                         ["custom-trial-r4", "custom-trial-r5"])
+
+    def test_repeat_order_invariance_and_explicit_missing_repeat(self):
+        rows = lab.select_rows(self.suite, experiment="probability",
+                               case_ids=["prob-correlated-bundled"])
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions", replicates=2)
+        entries = lab.oracle_entries(manifest)
+        entries[1]["response"]["answers"] = [
+            {**answer, "choice": "0.0", "probabilities": [
+                {"value": f"{index / 10:.1f}", "probability": float(index == 0)}
+                for index in range(11)]}
+            for answer in entries[1]["response"]["answers"]
+        ]
+        first = lab.evaluate(manifest, entries)["probability"][0]
+        second = lab.evaluate(manifest, list(reversed(entries)))["probability"][0]
+        self.assertEqual(first["bundled"]["replicates"], 2)
+        self.assertAlmostEqual(first["bundled"]["mean_absolute_error"], .2)
+        self.assertEqual(first["bundled"]["mean_absolute_error"],
+                         second["bundled"]["mean_absolute_error"])
+        self.assertEqual({row["trial"]["replicate"] for row in first["trials"]}, {0, 1})
+        partial = lab.evaluate(manifest, entries[:1])["probability"][0]
+        self.assertEqual(partial["bundled"]["replicates"], 1)
+        self.assertEqual(partial["counts"], {"bundled": 1})
+
+    def test_duplicate_logical_slots_and_malformed_trial_are_rejected(self):
+        rows = lab.select_rows(self.suite, experiment="probability",
+                               case_ids=["prob-correlated-bundled"])
+        manifest = lab.prepare_payload(self.suite, rows, route="decisions", replicates=2)
+        duplicate = copy.deepcopy(manifest)
+        duplicate["requests"][1]["trial"]["replicate"] = 0
+        duplicate.pop("manifest_digest")
+        duplicate["manifest_digest"] = lab.digest(duplicate)
+        with self.assertRaises(lab.ApiLabError) as raised:
+            lab.validate_manifest(duplicate)
+        self.assertIn("duplicate logical trial slot", str(raised.exception))
+        for mutate in (
+            lambda trial: trial.update({"replicate": True}),
+            lambda trial: trial.update({"seed": -1}),
+            lambda trial: trial.update({"condition": ""}),
+            lambda trial: trial.update({"unknown": 1}),
+        ):
+            malformed = copy.deepcopy(manifest)
+            mutate(malformed["requests"][0]["trial"])
+            malformed.pop("manifest_digest")
+            malformed["manifest_digest"] = lab.digest(malformed)
+            with self.subTest(trial=malformed["requests"][0]["trial"]), \
+                    self.assertRaises(lab.ApiLabError):
+                lab.validate_manifest(malformed)
+
+    def test_old_manifest_replays_with_default_trial_without_mutation(self):
+        manifest = self.manifest(ids=["prob-correlated-bundled"])
+        for request in manifest["requests"]:
+            request.pop("trial")
+        manifest.pop("manifest_digest")
+        manifest["manifest_digest"] = lab.digest(manifest)
+        before = copy.deepcopy(manifest)
+        report = lab.evaluate(manifest, lab.oracle_entries(manifest))
+        self.assertEqual(manifest, before)
+        trial = report["requests"][0]["trial"]
+        self.assertEqual(trial["replicate"], 0)
+        self.assertEqual(trial["split"], "unspecified")
+        self.assertIsNone(trial["seed"])
 
     def test_snapshot_replay_and_two_rubrics(self):
         manifest = self.mixed()

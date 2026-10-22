@@ -158,6 +158,7 @@ class Record:
     created_at: str = ""
     notes: str = ""
     version: int = RECORD_VERSION
+    planned_case_ids: list[str] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -172,6 +173,7 @@ class Record:
             "protocol": self.protocol,
             "notes": self.notes,
             "results": [r.as_dict() for r in self.results],
+            "planned_case_ids": self.planned_case_ids,
         }
 
 
@@ -555,7 +557,14 @@ def evaluate(record: Record, suite: Suite, *, suite_path: str | None = None) -> 
         if r.case_id not in suite_cases:
             raise RecordError(f"record contains foreign case id {r.case_id!r} not in suite")
 
-    missing = set(suite_cases) - seen
+    planned = record.planned_case_ids
+    if planned is not None:
+        if (not isinstance(planned, list) or not planned or any(not isinstance(i, str) for i in planned)
+                or len(planned) != len(set(planned)) or not set(planned) <= set(suite_cases)):
+            raise RecordError("invalid planned_case_ids")
+        if not seen <= set(planned):
+            raise RecordError("result outside planned_case_ids")
+    missing = (set(suite_cases) if planned is None else set(planned)) - seen
     if missing:
         raise RecordError(
             f"record is missing cases {sorted(missing)}; refusing to evaluate a subset as complete"
@@ -692,6 +701,7 @@ def load_record(path: str | Path) -> Record:
         created_at=data.get("created_at", ""),
         notes=data.get("notes", ""),
         version=data.get("record_version", RECORD_VERSION),
+        planned_case_ids=data.get("planned_case_ids"),
     )
 
 
