@@ -2,13 +2,15 @@
 
 **把判断与取值，变成可以检查的实验。**
 
-[English](README.en.md) · [10-20 更新](research/2026-10-20/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [运行实验](experiments/next-action/README.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [10-22 能力核查](research/2026-10-22/README.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
 
 Decisions Lab 研究 decision models 与类型化取值：从证据中选择动作、提取字段、计算数值，或估计尚未确定的结果。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
 这里有三种不同寿命的内容：可持续使用的方法、带日期的调查、可以重新运行的实验。版本和价格会变；当时的来源、请求和结论不应跟着消失。
 
 ## 这轮学什么
+
+[10-22 核查](research/2026-10-22/README.md)把 API 能力接到可证伪的实验：一次 Choice 编译布尔规则、比较概率的粗细分类与联合关系、用参考图片重定义 Jev criteria。独立的 `api-lab` CLI 处理原生多问题请求、离线响应导入、分题评分与反例报告。题本真值来自穷举、已知世界和几何生成规则；synthetic demo 不代表模型表现，provider 状态仍为 `NOT_RUN`。[能力方法章](docs/api-capabilities.md)保留 7 个研究方向的对照与实现边界；[能力索引](catalog/capabilities.json)可以离线查询来源、假设、指标和请求覆盖。
 
 [10-20 调查](research/2026-10-20/README.md)加入 Cloudflare Clairic，并把“结构合法”与“有证据、选对实体、判断正确”分开。[方法章](docs/typed-values.md)沿具体字段解释摘录、计算和预测的区别；[三组实验题本](experiments/typed-values/README.md)提供原创输入、原生请求、编辑答案、对照和评分办法，分别研究缺失值、提取后的上下文损失、预测区间。
 
@@ -18,6 +20,7 @@ Decisions Lab 研究 decision models 与类型化取值：从证据中选择动�
 
 | 你想做什么 | 从这里开始 |
 | --- | --- |
+| 研究 API 能力、准备原生多问题实验 | [能力方法](docs/api-capabilities.md) → [规则编译、概率组合、视觉判据](experiments/api-capabilities/README.md) |
 | 查看最近 API、模型与价格变化 | [2026-10-20 Clairic 增量](research/2026-10-20/README.md)；[10-15 原生契约调查](research/2026-10-15/README.md) |
 | 学会设计字段提取与预测实验 | [类型化输出](docs/typed-values.md) → [三组实验题本](experiments/typed-values/README.md) |
 | 找一个有趣、可以动手的用法 | [20 种玩法与现成项目](docs/playbook.md) |
@@ -30,6 +33,17 @@ Decisions Lab 研究 decision models 与类型化取值：从证据中选择动�
 ## 五分钟跑通离线实验
 
 需要 Python 3.11+，核心 CLI 无第三方依赖。在仓库根目录运行：
+
+```bash
+python3 -m decision_lab api-lab list
+python3 -m decision_lab api-lab validate
+python3 -m decision_lab api-lab prepare --experiment rule-compile --route decisions --limit 1
+python3 tools/catalog.py capabilities --query probability --json
+```
+
+新实验的 demo、响应导入、回放和比较命令见[实验说明](experiments/api-capabilities/README.md)。它们不读取凭据、不发送请求；图片 criteria 只为 Jev 准备原生 assets 与所需的非秘密 header。字段答案、原生选项概率和 confidence 分开保存，外部导入不被标成项目 live 采集。模型原始结果与独立评分保存在新的运行目录，旧 next-action 与 typed-values 记录保持各自的契约。
+
+原有 next-action 实验继续使用相同入口：
 
 ```bash
 python3 -m decision_lab validate experiments/next-action/cases.json
@@ -62,6 +76,8 @@ python3 tools/catalog.py projects --query calibration
 python3 tools/catalog.py models --query clef --json
 python3 tools/catalog.py updates --query clairic
 python3 tools/catalog.py updates --date 2026-10-15 --query jev
+python3 tools/catalog.py updates --date 2026-10-20 --query clairic
+python3 tools/catalog.py capabilities --query criteria --json
 python3 tools/catalog.py recipes --query NPC --json
 ```
 
@@ -86,6 +102,8 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory _site
 打开 `http://127.0.0.1:8765`。`_site/` 是派生输出；构建器只发布显式列出的正文、公共研究文件与站点资源。只验证核心 CLI 和数据时，可用标准库执行 `python3 tools/check.py --core-only`。CI 的唯一入口也是 `tools/check.py`。
 
 ## 证据与限制
+
+[2026-10-22 能力核查](research/2026-10-22/README.md)记录 16 项来源、8 条变化，并为旧 12 probes 保留新的日期版本。OpenAI reference 的 400 题与固定 Python SDK 说明的 200 题差异仍待服务端验证；Jev 图像标准处于实验状态。语义特征、语义寻址、Clairic list/forecast、时间与音视频是已写明对照的研究设计，尚无这些完整实验的采集结果。历史快照计数不会因新增能力卡片而自动刷新。
 
 首期调查包含 23 个模型/服务实体、21 个相关仓库、6 项研究、171 条来源索引。我们复算了随包历史输入：1,000 个案例、4,000 条概率记录，14 项作者汇总核对一致。原始预测记录不随仓库分发；有原始 evidence bundle 的读者可以按[复算说明](research/2026-10-08/README.md)检查。
 

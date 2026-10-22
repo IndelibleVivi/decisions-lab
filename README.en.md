@@ -2,13 +2,17 @@
 
 **Make decisions and typed values inspectable.**
 
-[中文](README.md) · [October 20 update](research/2026-10-20/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md) · [Experiment](experiments/next-action/README.md)
+[中文](README.md) · [October 22 update](research/2026-10-22/README.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
 
 Decisions Lab studies decision models and typed value extraction: selecting actions, extracting fields, computing values, and estimating unknown outcomes. It examines their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
 
 Stable methods, dated research, and replayable experiments have different lifetimes. The initial snapshot indexes 23 model/service entities, 21 repositories, 6 studies and 171 sources. The supplied historical dataset was recomputed: 1,000 cases, 4,000 probability records and 14 matching author aggregates. Historical predictions are not redistributed. See the [snapshot guide](research/2026-10-08/README.md) for reproduction using an independently supplied bundle.
 
-## New content: typed values and evidence
+## New content: API capabilities and experiments
+
+The [October 22 investigation](research/2026-10-22/README.md) connects documented capabilities to falsifiable experiments: compiling Boolean rules with Choice, testing probability composition, and defining Jev criteria with reference images. A separate `api-lab` CLI prepares native multi-question requests, imports raw responses, replays per-question scoring and reports counterexamples. Ground truth comes from enumeration, known synthetic worlds and geometry. Synthetic demos are not model measurements; provider status remains `NOT_RUN`.
+
+The [capability guide](docs/api-capabilities.md) covers seven research directions with controls and implementation limits. The [queryable index](catalog/capabilities.json) connects each hypothesis to dated sources, metrics and request coverage. Semantic features, semantic addressing, Clairic list/forecast transformations, and temporal/multimodal evaluation remain research designs. The current reference documents 400 questions while the inspected Python SDK docstring says 200; the service boundary is untested. Experimental Jev image criteria use their own assets/header contract.
 
 The [October 20 investigation](research/2026-10-20/README.md) adds Cloudflare Clairic with eight official sources and seven change records. A [field guide](docs/typed-values.md) distinguishes extraction, computation and prediction. [Three experiment dossiers](experiments/typed-values/README.md) provide original synthetic inputs, native requests, editorial oracles, controls and scoring plans for missing values, context loss after extraction, and prediction intervals.
 
@@ -17,6 +21,15 @@ The provider experiments remain NOT_RUN, with no collected model results. A sepa
 ## Run offline
 
 Python 3.11+; no third-party dependencies for the experiment CLI. From the repository root:
+
+```bash
+python3 -m decision_lab api-lab list
+python3 -m decision_lab api-lab validate
+python3 -m decision_lab api-lab prepare --experiment rule-compile --route decisions --limit 1
+python3 tools/catalog.py capabilities --query probability --json
+```
+
+See the [experiment guide](experiments/api-capabilities/README.md) for synthetic demos, import format, replay and comparison. These commands do not read credentials or make provider calls. Imported responses are not described as Lab live collection. Numeric event answers, native option probabilities and confidence retain separate meanings. Legacy next-action and typed-values records remain supported under their own contracts:
 
 ```bash
 python3 -m decision_lab validate experiments/next-action/cases.json

@@ -1,0 +1,354 @@
+{
+  "schema": "decisions-lab.updates/1",
+  "checked_at": "2026-10-22",
+  "baseline": "research/2026-10-08",
+  "previous_update": "research/2026-10-20/updates.json",
+  "live_verified": false,
+  "coverage": {
+    "kind": "targeted_increment",
+    "entities": [
+      "openai_decisions",
+      "typesafe_jev",
+      "cloudflare_clairic",
+      "cloudflare_clef"
+    ],
+    "scope": "API 多问题、输入、图像标准、类型化输出、时间和多模态能力依据，连接可证伪实验。",
+    "limits": "不是全量 census 更新，不刷新所有模型、价格、SDK release 或托管区域。",
+    "evidence": [
+      "official_documentation",
+      "official_source",
+      "official_author_report",
+      "research_paper"
+    ],
+    "not_performed": [
+      "credential_access",
+      "live_inference",
+      "billing_measurement",
+      "production_activation"
+    ]
+  },
+  "not_rechecked": [
+    {
+      "scope": "10-08 的23实体/21项目/171来源全量 census 与所有供应商价格",
+      "reason": "本轮为能力定向增量。"
+    },
+    {
+      "scope": "Clef-Omni 自托管解码实现、视频采样率和托管一致性",
+      "reason": "只核查模型卡架构与托管 context 文档，不将计划中的采样率说成已核事实。"
+    }
+  ],
+  "sources": [
+    {
+      "id": "OA-REF",
+      "title": "OpenAI Decisions create reference",
+      "url": "https://developers.openai.com/api/reference/resources/decisions/methods/create/",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_api_reference",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "OA-SDK",
+      "title": "OpenAI Python request types at inspected HEAD",
+      "url": "https://github.com/openai/openai-python/blob/d40a5e1283e6d91ed4bebac6e569b27d5fe02c52/src/openai/types/decision_create_params.py",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_source",
+      "access": "Direct official page or source inspected; no provider inference",
+      "revision": "d40a5e1283e6d91ed4bebac6e569b27d5fe02c52"
+    },
+    {
+      "id": "TS-API",
+      "title": "TypeSafe System One reference",
+      "url": "https://docs.typesafe.ai/api/system-one",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_api_reference",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "TS-IMAGES",
+      "title": "TypeSafe Images: assets, criteria and experimental limits",
+      "url": "https://docs.typesafe.ai/images",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_api_reference",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "TS-MODELS",
+      "title": "TypeSafe model IDs and context budgets",
+      "url": "https://docs.typesafe.ai/models",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_api_reference",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "TS-INTRO",
+      "title": "TypeSafe independent parallel question semantics",
+      "url": "https://docs.typesafe.ai/introduction",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_documentation",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "TS-FEATURES",
+      "title": "TypeSafe autoresearch feature discovery",
+      "url": "https://docs.typesafe.ai/cookbooks/autoresearch_feature_discovery",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_author_report",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "TS-FIND",
+      "title": "TypeSafe line-by-line semantic search",
+      "url": "https://docs.typesafe.ai/cookbooks/semantic_find",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_example",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "TS-HIERARCHY",
+      "title": "TypeSafe hierarchical classification",
+      "url": "https://docs.typesafe.ai/cookbooks/hierarchical_classification",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_example",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "CF-CLAIRIC",
+      "title": "Cloudflare Clairic model reference",
+      "url": "https://developers.cloudflare.com/workers-ai/models/clairic/",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_api_reference",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "CF-RELEASE",
+      "title": "Cloudflare Clairic release and forecast limits",
+      "url": "https://developers.cloudflare.com/changelog/post/2026-10-19-clairic-workers-ai/",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_author_report",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "OA-LIVE",
+      "title": "OpenAI Live Decisions integration",
+      "url": "https://developers.openai.com/api/docs/guides/decisions-voice",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_documentation",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "CF-OMNI",
+      "title": "Cloudflare hosted Clef-Omni media and truncation",
+      "url": "https://developers.cloudflare.com/workers-ai/models/clef-omni/",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_api_reference",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "CF-CARD",
+      "title": "Cloudflare Clef-Omni model card",
+      "url": "https://huggingface.co/Cloudflare/clef-omni",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_model_card",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "DB-PAPER",
+      "title": "Dutch Books for Language Models",
+      "url": "https://arxiv.org/html/2609.02797v1",
+      "checked_at": "2026-10-22",
+      "evidence_type": "research_paper",
+      "access": "Direct official page or source inspected; no provider inference"
+    },
+    {
+      "id": "TS-SCORE",
+      "title": "TypeSafe Score levels and native probability map",
+      "url": "https://docs.typesafe.ai/primitives/score",
+      "checked_at": "2026-10-22",
+      "evidence_type": "official_api_reference",
+      "access": "Direct official page inspected; Jev Score uses 2..10 criteria and index-keyed probabilities."
+    }
+  ],
+  "changes": [
+    {
+      "id": "openai-question-budget",
+      "entity": "openai_decisions",
+      "title": "OpenAI reference 与 SDK 的多问题上限描述分离",
+      "status": "documentation_drift",
+      "current": {
+        "reference_max_questions": 400,
+        "sdk_docstring_max_questions": 200,
+        "choice_max_options": 255,
+        "native_model": "gpt-6-luna",
+        "server_boundary_verified": false
+      },
+      "source_ids": [
+        "OA-REF",
+        "OA-SDK"
+      ],
+      "limits": [
+        "网页和源码说明不是服务端边界实测；TypedDict 的说明文字不是本地运行时强制校验。"
+      ]
+    },
+    {
+      "id": "openai-input-cache-surface",
+      "entity": "openai_decisions",
+      "title": "原生输入项、缓存参数和逐题拒答分开记录",
+      "status": "contract_rechecked",
+      "current": {
+        "reference_input": [
+          "text",
+          "messages",
+          "images",
+          "function_calls_and_outputs",
+          "custom_tool_calls_and_outputs"
+        ],
+        "sdk_top_level_cache_fields": [
+          "prompt_cache_key",
+          "prompt_cache_options"
+        ],
+        "experimental_lab_input_scope": "synthetic text; Jev image criteria uses its own native asset contract"
+      },
+      "source_ids": [
+        "OA-REF",
+        "OA-SDK"
+      ],
+      "limits": [
+        "新题本不宣称覆盖所有 input item、缓存命中或所有模型；不把加入参数当作账号可用证据。"
+      ]
+    },
+    {
+      "id": "jev-native-image-criteria",
+      "entity": "typesafe_jev",
+      "title": "图片直接作为判断标准：assets 引用与实验开关",
+      "status": "contract_rechecked",
+      "current": {
+        "model": "jev-1.14.0",
+        "image_locations": [
+          "state",
+          "instructions",
+          "criteria"
+        ],
+        "asset_shape": {
+          "type": "image",
+          "format": "png or jpg",
+          "data_base64": "base64 bytes"
+        },
+        "required_header": {
+          "TypeSafe-Danger-Zone-Images": "true"
+        },
+        "image_side_pixels": [
+          280,
+          1568
+        ],
+        "stage": "experimental"
+      },
+      "source_ids": [
+        "TS-API",
+        "TS-IMAGES",
+        "TS-MODELS"
+      ],
+      "limits": [
+        "不使用 OpenAI input_image 结构替代 Jev assets；图片能力未 live 验证。"
+      ]
+    },
+    {
+      "id": "jev-isolation-context",
+      "entity": "typesafe_jev",
+      "title": "独立并行求值声明与两种 context 预算",
+      "status": "contract_rechecked",
+      "current": {
+        "per_request_tokens": "64k",
+        "per_question_tokens": "32k",
+        "explicit_long_context_tokens": "262k for both with required experimental header",
+        "question_count_limit": "no independent count cap within both context budgets"
+      },
+      "source_ids": [
+        "TS-INTRO",
+        "TS-MODELS"
+      ],
+      "limits": [
+        "增加问题不应改变其他题这一声明仍需重复/单问/打包对照；固定文本窗口不证明任何长文本都被完整利用。"
+      ]
+    },
+    {
+      "id": "first-capability-experiments",
+      "entity": "decision_lab",
+      "title": "规则编译、概率组合、视觉判据成为独立实验族",
+      "status": "offline_tools",
+      "current": {
+        "experiments": [
+          "rule-compile",
+          "probability",
+          "visual-criteria"
+        ],
+        "provider_status": "NOT_RUN",
+        "source_of_truth": "generated synthetic tasks and independent arithmetic/geometry"
+      },
+      "source_ids": [
+        "OA-REF",
+        "TS-IMAGES",
+        "DB-PAPER"
+      ],
+      "limits": [
+        "合成 demo 只验证请求、归一化和评分；不报告模型正确率、价格或延迟收益。"
+      ]
+    },
+    {
+      "id": "semantic-features-addressing",
+      "entity": "typesafe_jev",
+      "title": "问题库表征与层级语义寻址进入后续能力研究",
+      "status": "research_design",
+      "current": {
+        "feature_reference_model": "jev-1.12",
+        "feature_reference_result": "author report, not Lab result",
+        "hierarchy_score": "geometric mean of edge scores, not established leaf probability"
+      },
+      "source_ids": [
+        "TS-FEATURES",
+        "TS-FIND",
+        "TS-HIERARCHY"
+      ],
+      "limits": [
+        "不自动安装 CatBoost 或运行 proposer；不把搜索排序分数当联合概率。"
+      ]
+    },
+    {
+      "id": "clairic-representation-controls",
+      "entity": "cloudflare_clairic",
+      "title": "列表语义、预测单位变换与分 pass 需要独立实验",
+      "status": "research_design",
+      "current": {
+        "list": "matching items in input order",
+        "forecast": "up to 64 future steps; longer horizons flatten toward mean",
+        "fields": "fields that do not fit share state across parallel passes",
+        "existing_lab_types": "text, number, date, estimate only"
+      },
+      "source_ids": [
+        "CF-CLAIRIC",
+        "CF-RELEASE"
+      ],
+      "limits": [
+        "list、forecast、time、datetime 的非空响应不在既有 typed-values CLI 覆盖范围；本轮未扩充该处理器。"
+      ]
+    },
+    {
+      "id": "time-and-multimodality",
+      "entity": "openai_decisions_and_cloudflare_clef",
+      "title": "Live 前缀修正与原生音视频建立分开的研究条件",
+      "status": "research_design",
+      "current": {
+        "live_result_alignment": "source_event_id; deltas may coalesce and results arrive out of order",
+        "clef_architecture": "joint schema head per model card",
+        "hosted_context": "media and questions occupy context; remaining text state may be truncated"
+      },
+      "source_ids": [
+        "OA-LIVE",
+        "CF-OMNI",
+        "CF-CARD"
+      ],
+      "limits": [
+        "没有 Live session、音视频采集或 hosted/self-hosted 一致性验证；不继承尚未核定的 2 fps 细节。"
+      ]
+    }
+  ]
+}

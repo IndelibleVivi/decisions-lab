@@ -1,0 +1,259 @@
+{
+  "schema": "decisions-lab.capabilities/1",
+  "checked_at": "2026-10-22",
+  "source_registry": "research/2026-10-22/updates.json",
+  "reader": "docs/api-capabilities.md",
+  "scope": "API 能力依据、可证伪假设、原生请求覆盖和结果状态；不等于供应商普查或质量排行。",
+  "capabilities": [
+    {
+      "id": "rule-compile",
+      "title": "自然语言规则 → 有界程序",
+      "checked_at": "2026-10-22",
+      "source_ids": [
+        "OA-REF",
+        "TS-API"
+      ],
+      "hypothesis": "一次选择完整函数，是否比逐状态判断更能保持规则整体语义？",
+      "controls": [
+        "compile vs four-question apply",
+        "equivalent wording",
+        "opaque IDs and order",
+        "necessary-only rules"
+      ],
+      "metrics": [
+        "全函数正确率",
+        "四状态 Hamming error",
+        "改写/顺序/ID 一致性",
+        "欠说明识别"
+      ],
+      "lab": {
+        "state": "offline_tools",
+        "experiment": "rule-compile",
+        "routes": [
+          "decisions",
+          "jev"
+        ],
+        "reader": "experiments/api-capabilities/README.md"
+      },
+      "provider_status": "NOT_RUN",
+      "provider_results": [],
+      "limits": [
+        "16函数穷举；欠说明条件不能硬选完整函数。"
+      ]
+    },
+    {
+      "id": "probability-composition",
+      "title": "返回概率的组合与表示变化",
+      "checked_at": "2026-10-22",
+      "source_ids": [
+        "OA-REF",
+        "TS-API",
+        "DB-PAPER"
+      ],
+      "hypothesis": "换菜单、拆分互斥类别与打包问题后，返回分布保留哪些可组合关系？",
+      "controls": [
+        "coarse vs refined exhaustive partition",
+        "correlated vs anticorrelated world",
+        "single vs bundled vs joint"
+      ],
+      "metrics": [
+        "truth error",
+        "coarse/fine mass drift",
+        "joint/marginal coherence",
+        "single/bundled difference"
+      ],
+      "lab": {
+        "state": "offline_tools",
+        "experiment": "probability",
+        "routes": [
+          "decisions",
+          "jev"
+        ],
+        "reader": "experiments/api-capabilities/README.md"
+      },
+      "provider_status": "NOT_RUN",
+      "provider_results": [],
+      "limits": [
+        "事件概率、数值答案、选项概率与 confidence 分开；一致不保证正确。"
+      ]
+    },
+    {
+      "id": "visual-criteria",
+      "title": "用图片现场定义视觉关系",
+      "checked_at": "2026-10-22",
+      "source_ids": [
+        "TS-IMAGES",
+        "TS-MODELS"
+      ],
+      "hypothesis": "无意义标签的图片定义被交换后，分类会跟随定义而非颜色或标签吗？",
+      "controls": [
+        "text",
+        "image",
+        "text+image",
+        "swapped-image"
+      ],
+      "metrics": [
+        "分类正确率",
+        "定义交换翻转",
+        "无关视觉变化稳定性"
+      ],
+      "lab": {
+        "state": "offline_tools",
+        "experiment": "visual-criteria",
+        "routes": [
+          "jev"
+        ],
+        "reader": "experiments/api-capabilities/README.md"
+      },
+      "provider_status": "NOT_RUN",
+      "provider_results": [],
+      "limits": [
+        "Jev 顶层 assets 引用；实验 header；OpenAI 图像输入不视为同构 criteria。"
+      ]
+    },
+    {
+      "id": "semantic-features",
+      "title": "问题库作为语义特征",
+      "checked_at": "2026-10-22",
+      "source_ids": [
+        "TS-FEATURES"
+      ],
+      "hypothesis": "自动修改问题库能否改善真正留出样本，而不只适应开发集？",
+      "controls": [
+        "direct prediction",
+        "fixed manual bank",
+        "one-shot proposed bank",
+        "dev-error iteration",
+        "embedding baseline"
+      ],
+      "metrics": [
+        "held-out RMSE/MAE",
+        "feature redundancy",
+        "quality vs question count",
+        "reported cost/latency"
+      ],
+      "lab": {
+        "state": "research_design",
+        "experiment": null,
+        "routes": [
+          "jev"
+        ],
+        "reader": "docs/api-capabilities.md#semantic-features"
+      },
+      "provider_status": "NOT_RUN",
+      "provider_results": [],
+      "limits": [
+        "未接数据与训练；测试集不进入问题提案。历史作者结果不代表 Lab。"
+      ]
+    },
+    {
+      "id": "semantic-addressing",
+      "title": "Choice 寻址与分类树",
+      "checked_at": "2026-10-22",
+      "source_ids": [
+        "TS-FIND",
+        "TS-HIERARCHY"
+      ],
+      "hypothesis": "相同证据在不同树组织下，召回损失发生在哪一层？",
+      "controls": [
+        "flat",
+        "per-paragraph predicate",
+        "greedy hierarchy",
+        "multi-path beam",
+        "semantic/random/unbalanced tree"
+      ],
+      "metrics": [
+        "evidence recall",
+        "no-answer false positive",
+        "first correct-path pruning",
+        "actual request/question count"
+      ],
+      "lab": {
+        "state": "research_design",
+        "experiment": null,
+        "routes": [
+          "jev",
+          "decisions"
+        ],
+        "reader": "docs/api-capabilities.md#semantic-addressing"
+      },
+      "provider_status": "NOT_RUN",
+      "provider_results": [],
+      "limits": [
+        "树路径几何平均是搜索分数；多段真值用证据集合。检索控制器未实现。"
+      ]
+    },
+    {
+      "id": "typed-distributions",
+      "title": "列表与预测的表示不变性",
+      "checked_at": "2026-10-22",
+      "source_ids": [
+        "CF-CLAIRIC",
+        "CF-RELEASE"
+      ],
+      "hypothesis": "列表语义、预测单位和输出网格改变时，哪些返回关系保持一致？",
+      "controls": [
+        "mention vs distinct vs active entity",
+        "scale/shift/unit transform",
+        "horizon",
+        "output grid"
+      ],
+      "metrics": [
+        "entity/list precision and recall",
+        "order/duplicates",
+        "affine quantile error",
+        "coverage/pinball loss"
+      ],
+      "lab": {
+        "state": "research_design",
+        "experiment": null,
+        "routes": [
+          "clairic"
+        ],
+        "reader": "docs/api-capabilities.md#typed-distributions"
+      },
+      "provider_status": "NOT_RUN",
+      "provider_results": [],
+      "limits": [
+        "既有 typed-values 覆盖 text/number/date/estimate；未扩充 list/forecast/time/datetime。"
+      ]
+    },
+    {
+      "id": "temporal-decisions",
+      "title": "增量判断与原生音视频时序",
+      "checked_at": "2026-10-22",
+      "source_ids": [
+        "OA-LIVE",
+        "CF-OMNI",
+        "CF-CARD"
+      ],
+      "hypothesis": "语言前缀、事件乱序与跨模态时序的错误能否分别定位？",
+      "controls": [
+        "prefix chunk sizes",
+        "ordered/coalesced/out-of-order events",
+        "full/video/audio/transcript",
+        "audio shift and duration"
+      ],
+      "metrics": [
+        "prefix sufficiency",
+        "correction delay",
+        "late-result overwrite",
+        "modality/timing accuracy"
+      ],
+      "lab": {
+        "state": "research_design",
+        "experiment": null,
+        "routes": [
+          "openai-live",
+          "cloudflare-clef-omni"
+        ],
+        "reader": "docs/api-capabilities.md#temporal-decisions"
+      },
+      "provider_status": "NOT_RUN",
+      "provider_results": [],
+      "limits": [
+        "无 Live session、媒体题本或自托管采样率实测；托管截断条件需保留。"
+      ]
+    }
+  ]
+}

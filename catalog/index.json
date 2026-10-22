@@ -123,11 +123,11 @@
     "Chinese/regional vendors beyond Alibaba/Tencent": "调查没有形成穷尽性否定结论；确认 Alibaba/Tencent 不证明其他中国、日本或俄罗斯生态没有产品。"
   },
   "latest_update": {
-    "date": "2026-10-20",
-    "path": "research/2026-10-20/updates.json",
-    "reader": "research/2026-10-20/README.md",
-    "title": "Clairic · 类型化取值与三组新实验题本",
-    "scope": "定向增量：Clairic 契约与 Cloudflare 标价；不刷新全量 census"
+    "date": "2026-10-22",
+    "path": "research/2026-10-22/updates.json",
+    "reader": "research/2026-10-22/README.md",
+    "title": "API 能力研究 · 规则编译、概率组合与视觉判据",
+    "scope": "定向增量：原生多问题、输入与判断标准能力；不刷新全量 census"
   },
   "update_history": [
     {
@@ -139,7 +139,13 @@
       "date": "2026-10-20",
       "path": "research/2026-10-20/updates.json",
       "reader": "research/2026-10-20/README.md"
+    },
+    {
+      "date": "2026-10-22",
+      "path": "research/2026-10-22/updates.json",
+      "reader": "research/2026-10-22/README.md"
     }
   ],
-  "recipes": "catalog/recipes.json"
+  "recipes": "catalog/recipes.json",
+  "capabilities": "catalog/capabilities.json"
 }

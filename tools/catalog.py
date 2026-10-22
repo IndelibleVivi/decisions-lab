@@ -46,7 +46,7 @@ def project_markdown():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("kind", choices=("models", "projects", "sources", "watchlist", "updates", "recipes", "render"))
+    parser.add_argument("kind", choices=("models", "projects", "sources", "watchlist", "updates", "recipes", "capabilities", "render"))
     parser.add_argument("--query", default="", help="case-insensitive substring across the complete record")
     parser.add_argument("--json", action="store_true", help="return complete matching records")
     parser.add_argument("--date", help="select a recorded update date (updates only; default: latest)")
@@ -77,6 +77,9 @@ def main():
     elif args.kind == "recipes":
         book = json.loads((ROOT / index["recipes"]).read_text(encoding="utf-8"))
         records, as_of = book["recipes"], book["updated_at"]
+    elif args.kind == "capabilities":
+        book = json.loads((ROOT / index["capabilities"]).read_text(encoding="utf-8"))
+        records, as_of = book["capabilities"], book["checked_at"]
     hits = [r for r in records if args.query.casefold() in json.dumps(r, ensure_ascii=False).casefold()]
     if args.json:
         print(json.dumps({"as_of": as_of, "kind": args.kind, "count": len(hits), "records": hits}, ensure_ascii=False, indent=2))

@@ -1,0 +1,510 @@
+{
+  "title": "Public decision-API contract probes",
+  "version": "0.2",
+  "authored_date": "2026-10-22",
+  "status": "NOT_RUN",
+  "evidence_type": "Original proposed methods and synthetic fixtures; NOT empirical API results",
+  "execution_included": false,
+  "scope": "Current-version design of the twelve original probes; separately runnable capability experiments are linked by coverage, not claimed as executed.",
+  "provenance": "The six harmless text fixtures and their editorial reference labels were invented for this protocol; no provider benchmark items were reused.",
+  "interpretation": {
+    "reference_labels": "Human-authored intended labels under the supplied instructions. They are test targets, not guarantees that a model will return them.",
+    "contract_invariant": "Assert only for the exact route and documented contract listed in a check. An API-compatible proxy does not automatically inherit the native provider's semantics.",
+    "observation_only": "A changed answer may be useful evidence without constituting a contract violation.",
+    "numerical_equality": "Record repeated-baseline variation before judging metamorphic differences. Preserve full probabilities and raw precision; exact byte equality is not assumed.",
+    "coverage": "A small contract smoke suite, not an accuracy benchmark, calibration study, safety evaluation or performance ranking."
+  },
+  "execution_metadata_to_record": [
+    "UTC time",
+    "provider and route",
+    "requested and returned model/revision",
+    "runtime/SDK version if relevant",
+    "exact request body, non-secret routing options and raw response; exclude credentials",
+    "HTTP status and error body",
+    "routing/fallback actually used",
+    "input/output token usage, cache details and monetary cost when supplied",
+    "latency with retry attempts separately recorded",
+    "fixture/variant ID and checksum",
+    "configured and effective context/batch limits for local runtimes"
+  ],
+  "planned_repeats_per_variant": 3,
+  "run_log": [],
+  "questions": {
+    "library_en": {
+      "type": "choice",
+      "instructions": "Route only the explicit request in the message. Choose unknown if the requested service is absent or ambiguous; do not guess.",
+      "criteria": {
+        "loans": "Borrowing, returning or renewing a library book.",
+        "opening_hours": "When the library opens or closes.",
+        "fees": "Charges, fines or payments.",
+        "unknown": "The message does not identify one of these services clearly."
+      }
+    },
+    "library_zh": {
+      "type": "choice",
+      "instructions": "只根据消息中明确提出的请求分流。如果没有说明所需服务，或请求不明确，请选 unknown，不要猜测。",
+      "criteria": {
+        "loans": "借阅、归还或续借图书。",
+        "opening_hours": "图书馆的开放或关闭时间。",
+        "fees": "收费、罚金或付款。",
+        "unknown": "消息没有明确指出以上哪一种服务。"
+      }
+    },
+    "urgency": {
+      "type": "score",
+      "instructions": "Use the urgency explicitly written in the ticket. Levels are ordered from least to most urgent.",
+      "criteria": [
+        "routine",
+        "this week",
+        "today"
+      ]
+    },
+    "marker": {
+      "type": "choice",
+      "instructions": "Read the explicit marker assignment in the record. If no marker assignment is visible, choose unknown.",
+      "criteria": {
+        "CEDAR": "The record explicitly assigns marker CEDAR.",
+        "MAPLE": "The record explicitly assigns marker MAPLE.",
+        "unknown": "No explicit marker assignment is available."
+      }
+    },
+    "invitation": {
+      "type": "choice",
+      "instructions": "Classify the guest's explicit response to the invitation. Do not answer the invitation yourself.",
+      "criteria": {
+        "accepted": "The guest accepts.",
+        "declined": "The guest declines.",
+        "unclear": "Neither acceptance nor refusal is stated clearly."
+      }
+    }
+  },
+  "fixtures": [
+    {
+      "id": "F01_EN",
+      "state": "I would like to renew the library book I borrowed. I am not asking about opening hours or fees.",
+      "question": "library_en",
+      "intended_label": "loans",
+      "why": "Renewing a borrowed book is explicitly requested; the other named services are explicitly excluded."
+    },
+    {
+      "id": "F02_ZH",
+      "state": "我想续借我借的图书。我不是在询问开放时间或费用。",
+      "question": "library_zh",
+      "intended_label": "loans",
+      "why": "Meaning-equivalent Chinese counterpart of F01_EN, with identical machine-readable option IDs."
+    },
+    {
+      "id": "F03_MISSING",
+      "state": "Hello, I would like some help, please.",
+      "question": "library_en",
+      "intended_label": "unknown",
+      "why": "The requested library service is unspecified. unknown is an explicit supplied option, not an assumed built-in abstention mechanism."
+    },
+    {
+      "id": "F04_SCORE",
+      "state": "This ticket's urgency field is explicitly set to: today.",
+      "question": "urgency",
+      "intended_label": "today",
+      "intended_modal_index": 2,
+      "why": "The last supplied level matches the explicit field. A probabilistic expected score need not equal the modal index exactly."
+    },
+    {
+      "id": "F05_MARKER",
+      "state": "Shelf audit record. Marker assignment: CEDAR.",
+      "question": "marker",
+      "intended_label": "CEDAR",
+      "why": "An exact, unique marker assignment avoids arithmetic, real-world knowledge and subjective classification."
+    },
+    {
+      "id": "F06_DECLINE",
+      "state": "The guest replied: \"No, thank you. I decline the invitation.\"",
+      "question": "invitation",
+      "intended_label": "declined",
+      "why": "Refusal is the content being classified. It is not an API refusal and does not require the model to refuse the task."
+    }
+  ],
+  "checks": [
+    {
+      "id": "P01_BASELINE",
+      "name": "Explicit-label and repeatability baseline",
+      "status": "NOT_RUN",
+      "method": "Submit each fixture alone with its named question; repeat the identical request three times.",
+      "expected": "Editorial reference labels are listed in fixtures. Report exact-label agreement and within-request-repeat probability variation separately.",
+      "expectation_kind": "reference_target_and_observation",
+      "source_ids": [],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls"
+    },
+    {
+      "id": "P02_CHOICE_ORDER",
+      "name": "Choice order",
+      "status": "NOT_RUN",
+      "fixture": "F01_EN",
+      "method": "Serialize library_en.criteria in original order [loans,opening_hours,fees,unknown], reverse order, then [fees,loans,unknown,opening_hours]. Keep option IDs and descriptions unchanged.",
+      "expected": "The intended label remains loans. Compare by option ID, not position; no universal probability or prediction invariant is asserted.",
+      "expectation_kind": "observation_only",
+      "route_notes": "Jev discloses option-order sensitivity. The pinned Clef-flash Python helper sorts string option keys; that source-path property is not a hosted guarantee.",
+      "source_ids": [
+        "J11",
+        "C06"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls"
+    },
+    {
+      "id": "P03_QUESTION_ID",
+      "name": "Question ID renaming",
+      "status": "NOT_RUN",
+      "fixture": "F01_EN",
+      "method": "Keep state and question payload byte-identical; rename the question-map key route to cat_demo_route_42. Align returned answers using the known rename.",
+      "expected": {
+        "typesafe_native": "Documented semantic invariant: question IDs do not enter underlying model inference. Investigate differences beyond repeated-baseline variation.",
+        "clef_original_helper": "Observation only: this pinned encoder includes question IDs and may use them as an instructions fallback.",
+        "other_routes": "Observation only until the actual route documents equivalent treatment."
+      },
+      "source_ids": [
+        "J04",
+        "C06"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls"
+    },
+    {
+      "id": "P04_APPEND_UNRELATED",
+      "name": "Append an unrelated question",
+      "status": "NOT_RUN",
+      "fixture": "F01_EN",
+      "method": "Compare the original route question alone with the same request plus evening_word: {type:noul,instructions:'Does the message contain the literal English word evening?'}; state and original question are unchanged.",
+      "expected": {
+        "typesafe_native": "The original question is documented as isolated from other questions; examine its answer/distribution against repeat variation.",
+        "clef": "Observation only: questions are jointly modeled, so independence is not promised.",
+        "other_routes": "Do not inherit native TypeSafe independence merely from compatible JSON."
+      },
+      "source_ids": [
+        "J02",
+        "C03",
+        "L01"
+      ],
+      "current_source_ids": [
+        "TS-INTRO",
+        "CF-CARD",
+        "OA-REF"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls",
+      "current_revision_note": "Provider isolation statements and joint-schema implementation descriptions are different evidence. Compare repeat variation first; do not transfer a Jev invariant to Clef or OpenAI."
+    },
+    {
+      "id": "P05_SINGLE_VS_BUNDLED",
+      "name": "Singles versus a bundled request",
+      "status": "NOT_RUN",
+      "fixture": "F01_EN",
+      "method": "Ask library_en and asks_fees: {type:noul,instructions:'Is the user requesting information about fees?'} once each as separate requests, then together under the same IDs. Preserve state and question text.",
+      "intended_labels": {
+        "route": "loans",
+        "asks_fees": false
+      },
+      "expected": "Native Jev promises isolated question evaluation. Other routes are observations unless explicitly documented. Compare per-question outputs, total input usage and cost; shared-state savings are measured, not presumed.",
+      "limits": "Keep all variants within both per-question and aggregate route budgets; context overflow must not confound this check.",
+      "source_ids": [
+        "J02",
+        "J03"
+      ],
+      "current_source_ids": [
+        "TS-INTRO",
+        "CF-CARD",
+        "OA-REF"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls",
+      "current_revision_note": "Provider isolation statements and joint-schema implementation descriptions are different evidence. Compare repeat variation first; do not transfer a Jev invariant to Clef or OpenAI."
+    },
+    {
+      "id": "P06_BILINGUAL",
+      "name": "Equivalent English and Chinese tasks",
+      "status": "NOT_RUN",
+      "fixtures": [
+        "F01_EN",
+        "F02_ZH"
+      ],
+      "method": "Compare the fully English state/question with the fully Chinese counterpart; option IDs remain identical.",
+      "expected": "Both reference labels are loans. Probability equality and equal language quality are not promised.",
+      "expectation_kind": "observation_only",
+      "route_notes": "Jev reports English as its strongest language; this pair is a smoke check, not a multilingual benchmark.",
+      "source_ids": [
+        "J03"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls"
+    },
+    {
+      "id": "P07_EXPLICIT_UNKNOWN",
+      "name": "Missing evidence with an explicit unknown option",
+      "status": "NOT_RUN",
+      "fixture": "F03_MISSING",
+      "method": "Use library_en including its unknown option. Record all option probabilities, selected label and any separate confidence field.",
+      "expected": "Reference target unknown. Do not interpret a low confidence or P(yes) by itself as abstention, and do not count a forced non-unknown choice as a format error.",
+      "expectation_kind": "reference_target",
+      "source_ids": [
+        "J06",
+        "J05",
+        "J08"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls"
+    },
+    {
+      "id": "P08_CONTEXT_POSITION",
+      "name": "Long-context head versus tail",
+      "status": "NOT_RUN",
+      "fixture": "F05_MARKER",
+      "exact_construction": {
+        "filler_line": "Routine note: the reading room is quiet.\n",
+        "repetition_counts": [
+          8,
+          64,
+          512,
+          4096
+        ],
+        "head": "F05_MARKER.state + newline + filler_line repeated N times",
+        "tail": "filler_line repeated N times + F05_MARKER.state",
+        "missing_control": "filler_line repeated N times"
+      },
+      "method": "Use the marker question; compare equal-content head/tail pairs and the missing control. Apply only sizes within the separately chosen run budget. Record byte length, reported token usage and any truncation/error signals.",
+      "expected": "Reference targets are CEDAR for full visible head/tail records and unknown for the control. Position invariance is NOT asserted across overflow, documented truncation or unverified effective windows.",
+      "route_notes": "Native Jev has aggregate and per-question budgets. Cloudflare advertises 65,536 tokens but truncates state; OpenRouter warns about roughly first 2K text-state tokens on Workers AI. llama.cpp Clef must fit its full prompt in ubatch. Classify these separately.",
+      "source_ids": [
+        "J03",
+        "C02",
+        "C12",
+        "L01"
+      ],
+      "current_source_ids": [
+        "TS-MODELS",
+        "CF-OMNI"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls",
+      "current_revision_note": "Track per-request/per-question budgets, headers, media tokens, question count and any state truncation separately."
+    },
+    {
+      "id": "P09_OUTPUT_CONTRACT",
+      "name": "Typed output, probabilities and confidence",
+      "status": "NOT_RUN",
+      "method": "On valid baseline responses, check option IDs, numeric ranges, normalization, choice argmax and route-documented fields. Preserve raw payloads; do not silently repair or renormalize.",
+      "expected": "Check documented numerical identities only within a tolerance justified by actual serialization precision. Native Jev confidence follows its published primitive-specific formulas; Noul is P(yes), not a degree of intensity.",
+      "route_notes": "Do not reuse Jev's confidence formulas for Clef hosted or llama.cpp. The pinned Clef-flash helper's max-probability formula applies only to that local code path. Provider examples are not execution evidence.",
+      "source_ids": [
+        "J04",
+        "J05",
+        "J08",
+        "C06"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API",
+        "TS-SCORE"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls"
+    },
+    {
+      "id": "P10_SCORE_MEAN_MODE",
+      "name": "Score expectation versus most likely level",
+      "status": "NOT_RUN",
+      "fixture": "F04_SCORE",
+      "method": "Compute sum(index * returned_probability) and argmax index separately; compare the documented score field to the expected index, allowing reported rounding. Report whether the modal label matches today.",
+      "synthetic_arithmetic_only": {
+        "probabilities": [
+          0.4,
+          0.1,
+          0.5
+        ],
+        "expected_index": 1.1,
+        "modal_index": 2,
+        "origin": "Invented distribution for explaining the check; NOT a model output"
+      },
+      "expected": "For routes documenting an expected ordinal index, score should correspond to the weighted mean, not necessarily to the modal index or a real-world physical quantity.",
+      "source_ids": [
+        "J07",
+        "L01"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API",
+        "TS-SCORE"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls",
+      "current_revision_note": "Expected Score, modal level, distribution spread and native confidence remain separate. A consistent numeric expectation need not equal the modal index."
+    },
+    {
+      "id": "P11_REFUSAL_AND_INVALID",
+      "name": "Separate semantic refusal, API errors and invalid outputs",
+      "status": "NOT_RUN",
+      "valid_fixture": "F06_DECLINE",
+      "malformed_variants": [
+        "Change a valid question type to unsupported literal free_text.",
+        "Supply a score question with one criterion instead of the required minimum two."
+      ],
+      "expected": {
+        "valid_fixture": "Reference target declined: a normal typed answer classifying a guest's refusal.",
+        "typesafe_native_invalid_request": "Documented validation error class 422.",
+        "llamacpp_invalid_request": "Documented invalid-request error 400.",
+        "other_routes": "Observe exact status/body; no invented universal error code or model-refusal schema."
+      },
+      "recording": "Distinguish valid decision, explicit unknown, documented model-refusal signal, HTTP validation/error, transport failure, and unexpected/unparseable output. Never coerce errors or refusal text into an ordinary negative answer.",
+      "source_ids": [
+        "J04",
+        "J07",
+        "L01"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-API"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls"
+    },
+    {
+      "id": "P12_INLINE_IMAGES",
+      "name": "Inline-image route constraints",
+      "status": "NOT_RUN",
+      "asset_specification": "Generate an original opaque 320x320 PNG; use the same decoded pixel data where routes permit. No asset hash is required unless used for an explicit identity comparison.",
+      "logical_question": {
+        "type": "choice",
+        "instructions": "What is the color of the square in the image?",
+        "criteria": {
+          "red": "Red",
+          "blue": "Blue",
+          "unknown": "No image color is available"
+        }
+      },
+      "intended_label_if_image_read": "red",
+      "variants": [
+        "One image in the documented native shape; Jev assets reference plus explicit image header, OpenAI input_image in an allowed content location.",
+        "Same pixel bytes with an incorrectly nested image object.",
+        "Omit the Jev image header and record the real HTTP/error result separately.",
+        "Boundary dimensions: Jev 279px negative vs 280px positive; do not transfer this constraint to OpenAI."
+      ],
+      "expected": {
+        "typesafe_native": "Experimental images are documented in state, instructions and criteria via top-level assets. A valid PNG must satisfy the documented dimensions; acceptance and understanding are separate.",
+        "openai_native": "Images are documented for user messages and tool outputs; do not put images in text-only system/developer roles. Native criteria images are not an equivalent interface.",
+        "historical_routes": "Other provider/runtime constraints remain dated hypotheses from the 10-08 snapshot until rechecked."
+      },
+      "route_notes": "Apply positive/negative expectations only to the currently documented profile. An accepted base64 text string is not evidence that the image was decoded.",
+      "source_ids": [
+        "C02",
+        "C13",
+        "J03",
+        "L01"
+      ],
+      "current_source_ids": [
+        "OA-REF",
+        "TS-IMAGES",
+        "TS-MODELS"
+      ],
+      "lab_coverage": "research_design_only; see capability experiments for narrower implemented controls",
+      "current_revision_note": "Text-only assumptions are superseded for current documented profiles. OpenAI images use user/tool-output content; Jev uses top-level assets and an explicit experimental header, including image criteria. Preserve the original negative fixtures only for their dated route profiles."
+    }
+  ],
+  "source_registry_note": "Source IDs are self-contained below; they match source_index.json where applicable. L01 comes from the llama.cpp addendum.",
+  "sources": [
+    {
+      "id": "J02",
+      "url": "https://docs.typesafe.ai/introduction"
+    },
+    {
+      "id": "J03",
+      "url": "https://docs.typesafe.ai/models"
+    },
+    {
+      "id": "J04",
+      "url": "https://docs.typesafe.ai/api"
+    },
+    {
+      "id": "J05",
+      "url": "https://docs.typesafe.ai/confidence"
+    },
+    {
+      "id": "J06",
+      "url": "https://docs.typesafe.ai/primitives/choice"
+    },
+    {
+      "id": "J07",
+      "url": "https://docs.typesafe.ai/primitives/score"
+    },
+    {
+      "id": "J08",
+      "url": "https://docs.typesafe.ai/primitives/noul"
+    },
+    {
+      "id": "J11",
+      "url": "https://docs.typesafe.ai/model-jaggedness/jev-1.13"
+    },
+    {
+      "id": "C02",
+      "url": "https://developers.cloudflare.com/workers-ai/models/clef-flash/"
+    },
+    {
+      "id": "C03",
+      "url": "https://blog.cloudflare.com/clef-decision-models/"
+    },
+    {
+      "id": "C06",
+      "url": "https://huggingface.co/Cloudflare/clef-flash/blob/41318bf2106d135c7a92da745fec4b255279b4de/joint_schema_model.py"
+    },
+    {
+      "id": "C12",
+      "url": "https://openrouter.ai/cloudflare/clef-flash"
+    },
+    {
+      "id": "C13",
+      "url": "https://openrouter.ai/docs/guides/community/multimodal-decisions"
+    },
+    {
+      "id": "L01",
+      "url": "https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md"
+    }
+  ],
+  "derived_from": "research/2026-10-08/public_probe_protocol.json",
+  "source_resolution": {
+    "inherited_source_ids": "Resolve inherited J/C source IDs in research/2026-10-08/source_index.json; their dates are not refreshed.",
+    "current_source_ids": "Resolve current_source_ids in research/2026-10-22/updates.json."
+  },
+  "current_profiles": {
+    "decisions": {
+      "model": "gpt-6-luna",
+      "documented_max_questions": 400,
+      "sdk_docstring_max_questions": 200,
+      "max_choices": 255,
+      "live_verified": false
+    },
+    "jev": {
+      "model": "jev-1.14.0",
+      "image_header": {
+        "TypeSafe-Danger-Zone-Images": "true"
+      },
+      "live_verified": false
+    },
+    "legacy_next_action": "Pinned jev-1.13.0 / gpt-6-luna profile remains a separate historical runner."
+  },
+  "capability_experiments": {
+    "reader": "experiments/api-capabilities/README.md",
+    "provider_status": "NOT_RUN",
+    "families": [
+      "rule-compile",
+      "probability",
+      "visual-criteria"
+    ]
+  }
+}

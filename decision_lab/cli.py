@@ -32,6 +32,7 @@ from .record import (
 )
 from .routes import ROUTE_KEYS, all_routes, build_request, get_route, protocol_profiles
 from . import typed_values as tv
+from . import api_lab as al
 
 DEFAULT_SUITE = "experiments/next-action/cases.json"
 
@@ -315,11 +316,69 @@ def _cmd_tv_replay(args) -> int:
     return 0
 
 
+def _api_select(args):
+    suite = al.load_suite(args.suite)
+    return suite, al.select_rows(suite, experiment=args.experiment,
+                                 case_ids=args.case_id, limit=args.limit)
+
+
+def _cmd_api_validate(args):
+    _print_json(al.validate_manifest(al.read_json(args.manifest)) if args.manifest
+                else al.validate_suite(al.load_suite(args.suite)))
+    return 0
+
+
+def _cmd_api_list(args):
+    suite = al.load_suite(args.suite)
+    rows = suite.selected(args.experiment)
+    _print_json({"provider_status": "NOT_RUN", "count": len(rows),
+                 "experiments": sorted({r["experiment"] for r in suite.rows}),
+                 "cases": [{"id": r["id"], "experiment": r["experiment"]} for r in rows]})
+    return 0
+
+
+def _cmd_api_prepare(args):
+    suite, rows = _api_select(args)
+    _print_json(al.prepare_payload(suite, rows, route=args.route, model=args.model))
+    return 0
+
+
+def _cmd_api_demo(args):
+    suite, rows = _api_select(args)
+    manifest = al.prepare_payload(suite, rows, route=args.route, model=args.model)
+    record = al.build_record(manifest, al.synthetic_entries(manifest), provenance="synthetic")
+    output = al.write_record(args.run_dir, record)
+    _print_json({"record": str(output), "synthetic": True, "live_verified": False,
+                 "coverage": al.replay_record(output)["coverage"]})
+    return 0
+
+
+def _cmd_api_import(args):
+    manifest = al.read_json(args.manifest)
+    document = al.load_responses(args.responses)
+    record = al.build_record(manifest, document["responses"], provenance="imported",
+                             allow_partial=args.allow_partial,
+                             imported_synthetic=document.get("synthetic"))
+    output = al.write_record(args.run_dir, record)
+    _print_json({"record": str(output), "provenance": "imported", "live_verified": False,
+                 "coverage": al.replay_record(output)["coverage"]})
+    return 0
+
+
+def _cmd_api_replay(args):
+    overrides = al.read_json(args.rubric) if args.rubric else None
+    result = al.replay_record(args.record, overrides=overrides)
+    if args.output:
+        al.write_evaluation(args.output, result)
+    _print_json(result)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="python3 -m decision_lab",
         description=(
-            "Decisions Lab: run next-action Choice and typed-values experiments. "
+            "Decisions Lab: run next-action, typed-values and API capability experiments. "
             "Default commands are offline; the lab never executes recommended actions."
         ),
         epilog=(
@@ -381,6 +440,48 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("suite", nargs="?", default=tv.DEFAULT_SUITE)
     sp.set_defaults(func=_cmd_tv_replay)
 
+    api_parser = sub.add_parser("api-lab", help="offline native multi-question capability experiments")
+    api_sub = api_parser.add_subparsers(dest="api_command", required=True)
+
+    def add_api_selection(parser):
+        parser.add_argument("suite", nargs="?", default=al.DEFAULT_SUITE)
+        parser.add_argument("--experiment")
+        parser.add_argument("--case-id", action="append")
+        parser.add_argument("--limit", type=int)
+
+    sp = api_sub.add_parser("validate")
+    sp.add_argument("suite", nargs="?", default=al.DEFAULT_SUITE)
+    sp.add_argument("--manifest")
+    sp.set_defaults(func=_cmd_api_validate)
+
+    sp = api_sub.add_parser("list")
+    sp.add_argument("suite", nargs="?", default=al.DEFAULT_SUITE)
+    sp.add_argument("--experiment")
+    sp.set_defaults(func=_cmd_api_list)
+
+    for name, func in (("prepare", _cmd_api_prepare), ("demo", _cmd_api_demo)):
+        sp = api_sub.add_parser(name)
+        add_api_selection(sp)
+        sp.add_argument("--route", required=True, choices=al.ROUTES)
+        sp.add_argument("--model")
+        if name == "demo":
+            sp.add_argument("--run-dir", required=True)
+        sp.set_defaults(func=func)
+
+    sp = api_sub.add_parser("import")
+    sp.add_argument("--manifest", required=True)
+    sp.add_argument("--responses", required=True)
+    sp.add_argument("--run-dir", required=True)
+    sp.add_argument("--allow-partial", action="store_true")
+    sp.set_defaults(func=_cmd_api_import)
+
+    for name in ("replay", "report"):
+        sp = api_sub.add_parser(name)
+        sp.add_argument("record")
+        sp.add_argument("--rubric")
+        sp.add_argument("--output", help="save a new evaluation without modifying inference evidence")
+        sp.set_defaults(func=_cmd_api_replay)
+
     sp = sub.add_parser("validate", help="validate a suite file")
     sp.add_argument("suite", nargs="?", default=DEFAULT_SUITE)
     sp.set_defaults(func=_cmd_validate)
@@ -440,7 +541,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
-    except (CaseError, RecordError, tv.TypedValuesError, KeyError) as exc:
+    except (CaseError, RecordError, tv.TypedValuesError, al.ApiLabError, KeyError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except AssertionError as exc:

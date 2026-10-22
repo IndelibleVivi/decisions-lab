@@ -1,0 +1,9 @@
+{
+  "schema": "decisions-lab.api-suite/1",
+  "generator": "decision_lab.api_tasks/1",
+  "authored_at": "2026-10-22",
+  "provider_status": "NOT_RUN",
+  "input_origin": "original_synthetic",
+  "provider_results": [],
+  "scope": "24 complete Boolean rules plus one underspecified rule, three known probability worlds, and 24 geometric targets under four criteria conditions."
+}

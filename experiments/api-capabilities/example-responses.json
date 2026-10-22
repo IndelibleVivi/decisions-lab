@@ -1,0 +1,67 @@
+{
+  "schema": "decisions-lab.api-responses/1",
+  "synthetic": true,
+  "responses": [
+    {
+      "request_id": "prob-correlated-single-a",
+      "http_status": 200,
+      "response": {
+        "model": "gpt-6-luna",
+        "answers": [
+          {
+            "type": "choice",
+            "name": "p_a",
+            "choice": "0.5",
+            "confidence": 0.9,
+            "probabilities": [
+              {
+                "value": "0.0",
+                "probability": 0.0
+              },
+              {
+                "value": "0.1",
+                "probability": 0.0
+              },
+              {
+                "value": "0.2",
+                "probability": 0.0
+              },
+              {
+                "value": "0.3",
+                "probability": 0.0
+              },
+              {
+                "value": "0.4",
+                "probability": 0.0
+              },
+              {
+                "value": "0.5",
+                "probability": 1.0
+              },
+              {
+                "value": "0.6",
+                "probability": 0.0
+              },
+              {
+                "value": "0.7",
+                "probability": 0.0
+              },
+              {
+                "value": "0.8",
+                "probability": 0.0
+              },
+              {
+                "value": "0.9",
+                "probability": 0.0
+              },
+              {
+                "value": "1.0",
+                "probability": 0.0
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

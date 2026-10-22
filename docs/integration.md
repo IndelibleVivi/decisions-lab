@@ -18,7 +18,7 @@
 
 模型返回一个 action ID 和原生概率/置信度；代码先校验 contract，再呈现建议、原文位置与上下文。操作者选择采纳、改选或补充上下文。只有执行端自己的权限与前置条件允许时，后续工具才执行动作。
 
-本仓库已实现 next-action 的合成输入到记录、重放、评估路径及需显式开启的 collector；typed-values 使用独立的离线导入与评分路径。上图右端的人类反馈和实际执行是**接入设计**，尚未接入任何生产系统。
+本仓库已实现 next-action 的合成输入到记录、重放、评估路径及需显式开启的 collector；typed-values 使用独立的离线导入与评分路径；[api-lab](../experiments/api-capabilities/README.md)另有规则编译、概率组合、视觉 criteria 的多问题离线请求／导入／重评，不自动进行网络采集。上图右端的人类反馈和实际执行是**接入设计**，尚未接入任何生产系统。
 
 ## 采用顺序
 
@@ -42,4 +42,4 @@
 
 [项目地图](projects.md)按接线、开放模型、运行时、工作流机制和评估证据分组。优先读官方客户端确定 transport/contract；从工作流项目学习一个具体机制；再拿本地任务验证。是否安装、自托管或依赖某个项目，应基于确切 revision、许可、硬件与维护成本另作判断。列入地图不等于采用推荐。
 
-我们暂不建立通用万能 router、统一 provider confidence 或自主记忆写入层。next-action 保留两个明确的原生 Choice profile；typed-values 通过独立记录解释字段、计算和预测错误，尚无网络 collector。进一步扩展由具体用例推动。
+我们暂不建立通用万能 router、统一 provider confidence 或自主记忆写入层。next-action 保留两个明确的原生 Choice profile；typed-values 通过独立记录解释字段、计算和预测错误，尚无网络 collector。api-lab 的 manifest 保留当时原生请求与本地 rubric，只有 body 和所需 header 属于模型请求；导入和重评不执行生成代码或外部动作。进一步扩展由具体用例推动。

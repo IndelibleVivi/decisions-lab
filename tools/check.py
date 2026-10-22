@@ -14,7 +14,8 @@ def main():
     args = parser.parse_args()
     commands = [[sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py'],
                 [sys.executable, '-m', 'decision_lab', 'validate', 'experiments/next-action/cases.json'],
-                [sys.executable, '-m', 'decision_lab', 'typed-values', 'validate']]
+                [sys.executable, '-m', 'decision_lab', 'typed-values', 'validate'],
+                [sys.executable, '-m', 'decision_lab', 'api-lab', 'validate']]
     if not args.core_only:
         node = shutil.which('node')
         if not node:

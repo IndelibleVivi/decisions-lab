@@ -18,11 +18,11 @@ LATEST_UPDATE_PAGE = LATEST_UPDATE['reader'].removesuffix('.md') + '.html'
 PAGES = (
     'README.md', 'README.en.md', 'LICENSING.md', 'LICENSE-DOCUMENTATION.md',
     'docs/projects.md', 'docs/playbook.md', 'docs/method.md', 'docs/integration.md',
-    'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md',
+    'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md', 'docs/api-capabilities.md',
     'experiments/next-action/README.md',
-    'experiments/typed-values/README.md',
+    'experiments/typed-values/README.md', 'experiments/api-capabilities/README.md',
     'research/2026-10-08/README.md', 'research/2026-10-08/report.md', 'research/2026-10-15/README.md',
-    'research/2026-10-20/README.md',
+    'research/2026-10-20/README.md', 'research/2026-10-22/README.md',
 )
 SNAPSHOT_FILES = (
     'calculations.json', 'calculations.py', 'census.json', 'llamacpp_route.json',
@@ -34,6 +34,8 @@ SNAPSHOT_FILES = (
     'reanalysis/sys1_reanalysis.json',
 )
 ASSETS = ('LICENSE', 'site/style.css', 'site/filter.js', 'site/reader.js', 'site/lab.js', 'site/field.js', 'site/evidence.js', 'site/sculpture.js', 'site/atlas.js', 'site/theme.js', 'site/flow.svg',
+          'experiments/api-capabilities/suite.json', 'experiments/api-capabilities/example-responses.json',
+          'catalog/capabilities.json', 'research/2026-10-22/updates.json', 'research/2026-10-22/public_probe_protocol.json',
           'catalog/index.json', 'catalog/recipes.json', 'research/2026-10-15/updates.json', 'research/2026-10-20/updates.json', 'experiments/typed-values/examples.json', 'site/recipes.js', 'site/pixels.js', 'site/lettering.js', 'site/motion.js', 'experiments/next-action/cases.json') + tuple(
               'site/fonts/' + f for f in ('OFL-1.1.txt', 'README.md',
                                           'space-grotesk-500-latin.woff2', 'space-grotesk-500-latin-ext.woff2',
@@ -91,6 +93,9 @@ PAGE_CONTEXT = {
     'docs/projects.html': ('02', '相关项目', 'Directory'),
     'docs/playbook.html': ('09', '妙妙玩法', 'Playbook'),
     'research/2026-10-15/README.html': ('01', '10 月增量核查', 'Research update'),
+    'research/2026-10-22/README.html': ('01', 'API 能力与实验', 'Research update'),
+    'docs/api-capabilities.html': ('12', 'API 能力研究', 'Capabilities'),
+    'experiments/api-capabilities/README.html': ('13', 'API 能力实验', 'Offline experiment'),
     'research/2026-10-20/README.html': ('01', 'Clairic 与类型化取值', 'Research update'),
     'experiments/next-action/README.html': ('03', 'Next-action 实验', 'Experiment'),
     'experiments/typed-values/README.html': ('11', '类型化取值实验', 'Offline experiment'),
@@ -114,7 +119,7 @@ def shell(title, body, current, toc=()):
     is_en = current == 'README.en.html'
     number, section, english = PAGE_CONTEXT.get(current, ('00', '研究索引', 'Index'))
     nav_items = (('index.html', '索引'), (LATEST_UPDATE_PAGE, '更新'), ('docs/playbook.html', '玩法'),
-                 ('docs/projects.html', '项目'), ('experiments/next-action/README.html', '实验'),
+                 ('docs/projects.html', '项目'), ('experiments/api-capabilities/README.html', '实验'),
                  ('docs/method.html', '方法'))
     nav = ''.join(f'<a href="{prefix}{path}"' +
                   (' aria-current="page"' if current == path or (path.startswith('research/') and current.startswith('research/')) else '') +
