@@ -26,11 +26,12 @@ class ApiLabTests(unittest.TestCase):
     def setUpClass(cls):
         cls.suite = lab.load_suite()
 
-    def manifest(self, experiment="probability", route="decisions", ids=None, limit=None):
+    def manifest(self, experiment="probability", route="decisions", ids=None, limit=None,
+                 account_id=None):
         rows = lab.select_rows(self.suite, experiment=experiment, case_ids=ids, limit=limit)
-        return lab.prepare_payload(self.suite, rows, route=route)
+        return lab.prepare_payload(self.suite, rows, route=route, account_id=account_id)
 
-    def mixed(self, route="decisions"):
+    def mixed(self, route="decisions", account_id=None):
         case = {"id": "mixed", "experiment": "custom", "input": "The flag is present; severity is moderate.",
                 "questions": [
                     {"id": "category", "type": "choice", "instructions": "Choose category.",
@@ -41,7 +42,8 @@ class ApiLabTests(unittest.TestCase):
                 "rubric": {"questions": {"category": {"kind": "choice", "acceptable": ["yes"]},
                                          "flag": {"kind": "boolean", "expected": True},
                                          "severity": {"kind": "number", "expected": 1.}}}}
-        return lab.prepare_payload(lab.Suite({}, [case]), [case], route=route)
+        return lab.prepare_payload(lab.Suite({}, [case]), [case], route=route,
+                                   account_id=account_id)
 
     def test_counts_and_complete_rule_space(self):
         result = lab.validate_suite(self.suite)
@@ -243,13 +245,150 @@ class ApiLabTests(unittest.TestCase):
 
     def test_mixed_primitives_both_routes(self):
         for route in lab.ROUTES:
-            manifest = self.mixed(route)
+            manifest = self.mixed(route, account_id="a" * 32 if route in lab.CLOUDFLARE_ROUTES else None)
             results = lab.evaluate(manifest, lab.synthetic_entries(manifest))
             self.assertEqual(results["coverage"]["ok"], 3)
             self.assertEqual(results["accuracy_on_valid_answers"], 1.)
             if route == "jev":
                 self.assertEqual(manifest["requests"][0]["body"]["questions"]["severity"]["criteria"],
                                  ["Low severity", "High severity"])
+
+    def test_native_clef_and_openrouter_route_contracts(self):
+        account = "a" * 32
+        for route, model, path_model in (
+            ("clef-flash", "clef-flash", "@cf/cloudflare/clef-flash"),
+            ("clef", "clef", "@cf/cloudflare/clef"),
+        ):
+            with self.subTest(route=route):
+                manifest = self.mixed(route, account_id=account)
+                body = manifest["requests"][0]["body"]
+                self.assertEqual(manifest["model"], model)
+                self.assertEqual(body["model"], model)
+                self.assertEqual(manifest["endpoint"],
+                                 f"https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{path_model}")
+                self.assertNotIn("name", body["questions"]["category"])
+                self.assertNotIn("choices", body["questions"]["category"])
+                self.assertEqual(body["questions"]["flag"]["type"], "noul")
+                with self.assertRaises(lab.ApiLabError):
+                    self.mixed(route)
+                with self.assertRaises(lab.ApiLabError):
+                    lab.prepare_payload(lab.Suite({}, [self.suite.rows[0]]),
+                                        [self.suite.rows[0]], route=route,
+                                        model=path_model, account_id=account)
+
+        manifest = self.mixed("openrouter-decisions")
+        self.assertEqual(manifest["model"], "baseten/mammoth-1:free")
+        self.assertEqual(manifest["endpoint"], "https://openrouter.ai/api/alpha/decisions")
+        for model in ("baseten/mammoth-1:free", "inception/mercury-decide:free",
+                      "typesafe/jev-1.14", "openai/gpt-6-luna-decisions"):
+            candidate = lab.prepare_payload(lab.Suite({}, [self.suite.rows[0]]),
+                                            [self.suite.rows[0]], route="openrouter-decisions",
+                                            model=model)
+            self.assertEqual(candidate["model"], model)
+            self.assertNotIn("cost_policy", candidate)
+        self.assertIn("state", manifest["requests"][0]["body"])
+        self.assertNotIn("input", manifest["requests"][0]["body"])
+        with self.assertRaises(lab.ApiLabError):
+            lab.prepare_payload(lab.Suite({}, [self.suite.rows[0]]),
+                                [self.suite.rows[0]], route="openrouter-decisions",
+                                model="unknown/route:free")
+        with self.assertRaises(lab.ApiLabError):
+            self.manifest("visual-criteria", "clef", account_id=account)
+        with self.assertRaises(lab.ApiLabError):
+            self.manifest("visual-criteria", "openrouter-decisions")
+
+    def test_cloudflare_wrapper_and_openrouter_identity_are_checked(self):
+        manifest = self.mixed("clef-flash", account_id="a" * 32)
+        entries = lab.synthetic_entries(manifest)
+        result = lab.evaluate(manifest, entries)
+        self.assertEqual(result["coverage"]["ok"], 3)
+        self.assertEqual(result["requests"][0]["returned_model"], "clef-flash")
+        answer = entries[0]["response"]["result"]
+        for broken in (
+            answer,
+            {"success": True, "result": {**answer, "answers": []}},
+            {"success": True, "result": {**answer, "model": "@cf/cloudflare/clef"}},
+            {"success": True, "errors": ["failed"], "result": answer},
+        ):
+            changed = copy.deepcopy(entries)
+            changed[0]["response"] = broken
+            self.assertEqual(lab.evaluate(manifest, changed)["coverage"]["ok"], 0)
+        for broken in (
+            {"success": True},
+            {"success": False, "result": answer},
+            {"success": True, "result": {"answers": answer["answers"]}},
+        ):
+            changed = copy.deepcopy(entries)
+            changed[0]["response"] = broken
+            self.assertEqual(lab.evaluate(manifest, changed)["coverage"]["ok"], 0)
+        metadata = copy.deepcopy(entries)
+        metadata[0]["response"]["request_id"] = "provider-metadata"
+        metadata[0]["response"]["result"]["model"] = "@cf/cloudflare/clef-flash"
+        self.assertEqual(lab.evaluate(manifest, metadata)["coverage"]["ok"], 3)
+        changed = copy.deepcopy(entries)
+        changed[0]["response"]["result"]["answers"]["category"]["type"] = "noul"
+        evaluated = lab.evaluate(manifest, changed)
+        self.assertEqual(evaluated["coverage"]["ok"], 2)
+        self.assertEqual(evaluated["coverage"]["error"], 1)
+
+        manifest = self.mixed("openrouter-decisions")
+        entries = lab.synthetic_entries(manifest)
+        entries[0]["provider"] = "Prime Intellect"
+        result = lab.evaluate(manifest, entries)
+        self.assertEqual(result["requests"][0]["returned_provider"], "Prime Intellect")
+        lists = copy.deepcopy(entries)
+        lists[0]["response"]["answers"] = list(lists[0]["response"]["answers"].values())
+        self.assertEqual(lab.evaluate(manifest, lists)["coverage"]["error"], 3)
+        error = copy.deepcopy(entries)
+        error[0]["response"] = {"error": {"message": "upstream failed"}}
+        self.assertEqual(lab.evaluate(manifest, error)["coverage"]["error"], 3)
+
+    def test_native_score_scalar_and_distribution_mean_remain_separate(self):
+        manifest = self.mixed("openrouter-decisions")
+        entries = lab.synthetic_entries(manifest)
+        score = entries[0]["response"]["answers"]["severity"]
+        self.assertEqual(lab.evaluate(manifest, entries)["coverage"]["ok"], 3)
+        score["score"] = .25
+        evaluated = lab.evaluate(manifest, entries)
+        severity = next(q for q in evaluated["requests"][0]["questions"]
+                        if q["question_id"] == "severity")
+        self.assertEqual(severity["outcome"], "ok")
+        self.assertEqual(severity["value"], .25)
+        self.assertEqual(severity["distribution_mean"], 1.)
+        self.assertFalse(severity["correct"])
+
+    def test_retained_manifest_does_not_require_new_billing_metadata(self):
+        manifest = self.manifest(limit=1)
+        self.assertNotIn("cost_policy", manifest)
+        self.assertEqual(lab.evaluate(manifest, lab.oracle_entries(manifest))["accuracy_on_valid_answers"], 1.)
+
+    def test_openrouter_rounding_preserves_raw_mass_and_other_routes_remain_strict(self):
+        criteria = {f"f{i:02d}": f"function {i}" for i in range(17)}
+        question = {"type": "choice", "criteria": criteria}
+        probabilities = dict.fromkeys(criteria, 0.)
+        probabilities.update(f01=.01, f02=.01, f04=.9400000000000001, f12=.02, f16=.01)
+        answer = {"type": "choice", "choice": "f04", "confidence": .94,
+                  "probabilities": probabilities}
+        normalized = lab.normalize_answer(question, answer, "openrouter-decisions")
+        self.assertEqual([p["probability"] for p in normalized["probabilities"]], list(probabilities.values()))
+        self.assertAlmostEqual(normalized["probability_precision"]["returned_sum"], .99)
+        self.assertFalse(normalized["probability_precision"]["renormalized"])
+        for route in ("jev", "clef", "clef-flash"):
+            with self.subTest(route=route), self.assertRaises(lab.ApiLabError):
+                lab.normalize_answer(question, answer, route)
+        for bad in (dict.fromkeys(criteria, 0.), {**probabilities, "f04": .7},
+                    {**probabilities, "f04": .941}, {**probabilities, "f04": float("nan")}):
+            with self.assertRaises(lab.ApiLabError):
+                lab.normalize_answer(question, {**answer, "probabilities": bad}, "openrouter-decisions")
+
+    def test_openrouter_rounded_score_keeps_native_scalar(self):
+        question = {"type": "score", "criteria": ["low", "medium", "high"]}
+        answer = {"type": "score", "score": .98, "confidence": .33,
+                  "probabilities": {"0": .33, "1": .33, "2": .33}}
+        result = lab.normalize_answer(question, answer, "openrouter-decisions")
+        self.assertEqual(result["value"], .98)
+        self.assertEqual(result["distribution_mean"], .99)
+        self.assertAlmostEqual(result["probability_precision"]["returned_sum"], .99)
 
     def test_refusal_and_malformed_question_preserve_siblings(self):
         manifest = self.mixed()
@@ -742,6 +881,47 @@ class ApiLabTests(unittest.TestCase):
             self.assertEqual(record["provenance"], "imported")
             self.assertIs(record["synthetic"], True)
             self.assertIs(record["live_verified"], False)
+
+    def test_native_cli_prepare_import_ledger_replay_loop(self):
+        account = "a" * 32
+        for route in ("clef-flash", "clef", "openrouter-decisions"):
+            with self.subTest(route=route), tempfile.TemporaryDirectory() as parent:
+                parent = Path(parent)
+                command = [sys.executable, "-m", "decision_lab", "api-lab", "prepare",
+                           "--experiment", "probability", "--route", route, "--limit", "1"]
+                if route in lab.CLOUDFLARE_ROUTES:
+                    command.extend(["--account-id", account])
+                prepared = subprocess.run(command, cwd=ROOT, check=True, capture_output=True, text=True)
+                manifest = json.loads(prepared.stdout)
+                self.assertEqual(manifest["route"], route)
+                self.assertEqual(manifest["requests"][0]["body"]["model"], manifest["model"])
+                mpath = parent / "manifest.json"
+                mpath.write_text(json.dumps(manifest))
+                rpath = parent / "responses.json"
+                rpath.write_text(json.dumps({
+                    "schema": lab.RESPONSE_VERSION,
+                    "synthetic": True,
+                    "responses": lab.synthetic_entries(manifest),
+                }))
+                run = parent / "imported"
+                import_output, ledger_output = io.StringIO(), io.StringIO()
+                with patch.object(socket, "create_connection",
+                                  side_effect=AssertionError("offline command used network")):
+                    with redirect_stdout(import_output):
+                        self.assertEqual(main(["api-lab", "import", "--manifest", str(mpath),
+                                               "--responses", str(rpath), "--run-dir", str(run)]), 0)
+                    with redirect_stdout(ledger_output):
+                        self.assertEqual(main(["research", "ledger", str(run)]), 0)
+                    ledger_view = json.loads(ledger_output.getvalue())
+                    output = io.StringIO()
+                    with redirect_stdout(output):
+                        self.assertEqual(main(["api-lab", "replay", str(run)]), 0)
+                    replay = json.loads(output.getvalue())
+                self.assertEqual(ledger_view["route"], route)
+                self.assertEqual(ledger_view["requested_model"], manifest["model"])
+                self.assertEqual(ledger_view["trials"][0]["outcome"], "ok")
+                self.assertEqual(replay["coverage"]["ok"], replay["coverage"]["expected_questions"])
+                self.assertFalse(replay["live_verified"])
 
 
 if __name__ == "__main__":

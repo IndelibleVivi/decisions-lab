@@ -10,13 +10,17 @@ Decisions Lab 研究 decision models 与类型化取值：从证据中选择动�
 
 ## 这轮学什么
 
-[10-22 核查](research/2026-10-22/README.md)把 API 能力接到可证伪的实验：一次 Choice 编译布尔规则、比较概率的粗细分类与联合关系、用参考图片重定义 Jev criteria。独立的 `api-lab` CLI 处理原生多问题请求、离线响应导入、分题评分与反例报告。题本真值来自穷举、已知世界和几何生成规则；synthetic demo 不代表模型表现，provider 状态仍为 `NOT_RUN`。[能力方法章](docs/api-capabilities.md)保留 7 个研究方向的对照与实现边界；[能力索引](catalog/capabilities.json)可以离线查询来源、假设、指标和请求覆盖。
+[10-22 核查](research/2026-10-22/README.md)把 API 能力接到可证伪的实验：一次 Choice 编译布尔规则、比较概率的粗细分类与联合关系、用参考图片重定义 Jev criteria。独立的 `api-lab` CLI 处理原生多问题请求、离线响应导入、分题评分与反例报告。题本真值来自穷举、已知世界和几何生成规则；synthetic demo 不代表模型表现，历史题本保留 `NOT_RUN` authoring 状态，新的真实运行独立留证。[能力方法章](docs/api-capabilities.md)保留 7 个研究方向的对照与实现边界；[能力索引](catalog/capabilities.json)可以离线查询来源、假设、指标和请求覆盖。
 
 [10-20 调查](research/2026-10-20/README.md)加入 Cloudflare Clairic，并把“结构合法”与“有证据、选对实体、判断正确”分开。[方法章](docs/typed-values.md)沿具体字段解释摘录、计算和预测的区别；[三组实验题本](experiments/typed-values/README.md)提供原创输入、原生请求、编辑答案、对照和评分办法，分别研究缺失值、提取后的上下文损失、预测区间。
 
-题本的 provider 状态仍是 `NOT_RUN`，尚无模型采集结果。现在可以用独立的 `typed-values` 子命令准备请求、运行明确标注的 synthetic baseline／demo、导入本地响应，再回放字段、金额与区间评分。它与下面的 next-action 实验各用自己的结果契约；Clairic 与 api-lab 已有显式开启的有界 collector，尚未进行真实模型采集。
+题本文件的 provider 状态保留 `NOT_RUN`，不因后续独立运行自动改写。`typed-values` 子命令可以准备请求、运行明确标注的 synthetic baseline／demo、导入本地响应，再回放字段、金额与区间评分。它与下面的 next-action 实验各用自己的结果契约；Clairic 与 api-lab 的真实采集走显式开启的有界 collector，日期协议与观察见[原生模型首轮实验](experiments/provider-pilot/README.md)。
 
 ## 研究升级
+
+[首轮原生模型实验协议](experiments/provider-pilot/README.md)预先固定 Clef／Clef Flash 的主比较，以及 OpenRouter 上 Jev、Luna 和两条免费路线的参照，分开检验概率答案与表示稳定性、完整规则函数、Clairic 字段与下游任务。题本、重复、失败分母和预算在真实采集前固定；契约预检不充当模型质量结果。
+
+[2026-10-23 实测](experiments/provider-pilot/README.md#实测结果)已完成 541 次有界原生调用。四个可用 Decisions 条件各完成 126 次正式尝试，Clairic 另完成 14 次；Luna／Mercury 被原隐私路由政策拦住，保留 missing。原始 16 函数两次重复：Clef 8/32、Flash 6/32、Jev 与 Mammoth 各 32/32 正确；Jev 在倒序与改写干预中仍有错误。三个世界的数值概率、菜单质量漂移、字段缺失和失败分别报告，不据这批固定合成案例声称普遍可靠。
 
 [研究基础设施](docs/research-infrastructure.md)把数值事件概率和答案菜单效应分开，加入 perfect/uniform/wrong oracle、显式重复身份、planned set 与只读公共账本。四类 seed 生成器提供精确真值、source family 和固定 split；规则链可以从编译贯通穷举验证、最小反例、修复与版本过期检查。跨 run 比较保留失败分母，按 unit 汇总并按来源族估计区间；少簇只做描述。它们都是离线方法与 synthetic 控制，不能当作模型质量结论。
 
@@ -26,7 +30,9 @@ python3 -m decision_lab research rule-workflow --dataset runs/rule-worlds.json -
 python3 -m decision_lab research rule-replay runs/rule-repair.json
 ```
 
-`research collect` 复用保留的 api-lab 或 Clairic 请求，显式网络开关、凭据和三项预算缺一不可；串行执行，保留 raw bytes、失败耗时、取消和不确定发送，支持 checkpoint/resume。输入 token 估算不是输出或账单硬上限。真实调用需另定模型、输入和预算；本轮没有执行。完整命令、恢复纪律、统计与后续方向见方法章。
+`research collect` 复用保留的 api-lab 或 Clairic 请求，显式网络开关、凭据和三项预算缺一不可；串行执行，保留 raw bytes、失败耗时、取消和不确定发送，支持 checkpoint/resume。输入 token 估算不是输出或账单硬上限。真实调用需固定模型、输入和预算；实际发生的调用与失败由日期实验报告，不能从源码或 mock 推断。完整命令、恢复纪律、统计与后续方向见方法章。
+
+`api-lab` 另支持 `clef`、`clef-flash` 与 `openrouter-decisions` 原生文本路线。CF 准备请求需要 `--account-id`，Body 短 selector 与 URL 模型 ID 分开；OpenRouter 使用原生 alpha Decisions endpoint，默认免费模型为 `baseten/mammoth-1:free`，可显式选其他免费或付费精确模型，不自动回退。原生 Score、分布均值与 confidence 分别保存。凭据环境变量和完整准备／采集命令见[API 实验说明](experiments/api-capabilities/README.md#新原生路线)与[采集方法](docs/research-infrastructure.md#有预算的采集与恢复)。
 
 ## 先做哪件事
 
@@ -93,7 +99,7 @@ python3 tools/catalog.py capabilities --query criteria --json
 python3 tools/catalog.py recipes --query NPC --json
 ```
 
-live collector 支持 TypeSafe Jev 与 OpenAI Decisions 的原生 HTTP 形状；需要操作者主动选择网络调用、配置环境变量凭据并给出调用上限。具体命令与限制见[实验说明](experiments/next-action/README.md)。本项目目前没有 live 推理或生产接入证据，不能据此声称某个账号、区域或模型可用。
+这套 next-action 的旧 live collector 支持 TypeSafe Jev 与 OpenAI Decisions 原生 HTTP 形状；需要操作者主动选择网络调用、配置环境变量凭据并给出调用上限。具体命令与限制见[实验说明](experiments/next-action/README.md)。next-action 尚无独立 live 结果，不能用另一套 [api-lab／Clairic 的日期实验](experiments/provider-pilot/README.md)冒充它的证据；没有生产接入。
 
 ## 阅读站与验证
 

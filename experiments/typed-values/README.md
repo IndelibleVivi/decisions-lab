@@ -2,9 +2,9 @@
 
 [字段方法](../../docs/typed-values.md) · [原创请求与编辑答案](examples.json) · [10-20 契约核查](../../research/2026-10-20/README.md)
 
-**Provider 状态：NOT_RUN。** 本目录提供实验设计与原创合成材料：3 组实验、7 个请求案例，尚无模型响应。`examples.json` 中的 `editorial_oracle` 是编辑依据输入写出的预期答案，第三组另有原创的事后观测；`provider_results` 为空。下面的确定性计算只验证这些教学材料，没有测得模型质量。
+**题本 authoring 状态：NOT_RUN。** 本目录提供实验设计与原创合成材料：3 组实验、7 个请求案例，不在题本中附真实模型响应。`examples.json` 中的 `editorial_oracle` 是编辑依据输入写出的预期答案，第三组另有原创的事后观测；`provider_results` 为空。下面的确定性计算只验证这些教学材料；后续真实调用与带条件的观察由[日期实验](../provider-pilot/README.md)独立报告，不改写编辑答案。
 
-请求草案采用 Clairic 的原生 `model`、`state`、`fields` 形状，字段依据 [2026-10-20 核查](../../research/2026-10-20/README.md)及[固定版本的官方 schema](https://github.com/cloudflare/cloudflare-docs/blob/39cb53c8e8aa663096c589831bcecd1e5d657641/src/content/workers-ai-models/clairic.json)。`python3 -m decision_lab typed-values` 提供完全离线的请求准备、synthetic baseline／demo、外部 JSON 响应导入与评分回放；不提供 Clairic 网络 collector，也不复用 [next-action Choice 契约](../next-action/README.md)的 action/probabilities 记录。
+请求草案采用 Clairic 的原生 `model`、`state`、`fields` 形状，字段依据 [2026-10-20 核查](../../research/2026-10-20/README.md)及[固定版本的官方 schema](https://github.com/cloudflare/cloudflare-docs/blob/39cb53c8e8aa663096c589831bcecd1e5d657641/src/content/workers-ai-models/clairic.json)。`python3 -m decision_lab typed-values` 子命令提供完全离线的请求准备、synthetic baseline／demo、外部 JSON 响应导入与评分回放；网络采集另走 [research collect](../../docs/research-infrastructure.md#有预算的采集与恢复)，不复用 [next-action Choice 契约](../next-action/README.md)的 action/probabilities 记录。
 
 ## 离线 CLI
 
@@ -310,7 +310,7 @@ assert total == Decimal('1100.00')
 
 时间截点显式写入 `state`。这里不用 `reference_date` 代替时钟：该字段在官方契约中用于为缺少年份的日期提供参照，不能据此假定模型掌握当前时间。[日期契约](../../research/2026-10-20/README.md)
 
-编辑在请求之外安排的原创后续结果是：工单于 2026-09-13 同时刻完成，耗时 12 天。它仅用于教学评分，绝不进入模型输入。这不是实际客户数据，也不是模型测量；尚无 `p10`、`p90` 或任何模型预测概率可报告。
+编辑在请求之外安排的原创后续结果是：工单于 2026-09-13 同时刻完成，耗时 12 天。它仅用于教学评分，绝不进入模型输入。这不是实际客户数据或模型测量；本题本不填入 provider 的 `p10`、`p90` 或预测概率，真实预测保留在独立日期运行中。
 
 ### 确定性 baseline
 

@@ -44,8 +44,13 @@ def from_api(manifest, entries, *, metadata=None):
         {"id": r["id"], "trial": r.get("trial"), "rubric": r["rubric"],
          "body": {k: v for k, v in r["body"].items() if k != "model"},
          "required_headers": r["required_headers"]} for r in sorted(manifest["requests"], key=lambda r: r["id"])]}
+    if manifest["route"] in al.CLOUDFLARE_ROUTES:
+        dataset["endpoint"] = manifest["endpoint"]
+    model_id = (manifest["endpoint"].split("/ai/run/", 1)[-1]
+                if manifest["route"] in al.CLOUDFLARE_ROUTES else manifest["model"])
     return {"schema": SCHEMA, "dataset_id": al.digest(dataset), "manifest_digest": manifest["manifest_digest"],
-            "route": manifest["route"], "requested_model": manifest["model"],
+            "route": manifest["route"], "endpoint": manifest.get("endpoint"),
+            "requested_model": manifest["model"], "model_id": model_id,
             **(metadata or {}), "trials": trials, "requests": report["reported_request_usage"]}
 
 
@@ -77,13 +82,25 @@ def from_collection(data):
     metrics = []
     for attempt in data["attempts"]:
         latest[attempt["request_id"]] = attempt
+        raw = attempt.get("parsed")
+        identity_raw = raw.get("result", raw) if isinstance(raw, dict) else raw
+        identities = al.model_identities(identity_raw)
         metrics.append({"request_id": attempt["request_id"], "attempt": attempt["attempt"],
                         "latency_ms": attempt["elapsed_ms"], "cost": attempt["cost"],
-                        "usage": attempt["usage"], "delivery": attempt["delivery"], "state": attempt["state"]})
+                        "usage": attempt["usage"], "delivery": attempt["delivery"], "state": attempt["state"],
+                        "returned_model": identities["model"], "returned_provider": identities["provider"]})
     entries = []
     for ident, attempt in latest.items():
+        raw = attempt["parsed"]
+        provider = None
+        if isinstance(raw, dict):
+            provider = raw.get("provider") or raw.get("provider_name")
+            result = raw.get("result")
+            if isinstance(result, dict):
+                provider = result.get("provider") or result.get("provider_name") or provider
         entries.append({"request_id": ident, "response": attempt["parsed"],
                         "http_status": attempt["http_status"], "latency_ms": attempt["elapsed_ms"],
+                        **({"provider": provider} if isinstance(provider, str) and provider else {}),
                         **({"error": attempt["state"]} if attempt["state"] != "ok" else {})})
     metadata = {"provenance": data["provenance"], "synthetic": data["synthetic"], "live_verified": False}
     if plan["kind"] == "api-lab":

@@ -4,7 +4,7 @@
 
 想换一个入口，可以从[20 种玩法](playbook.md)选择 NPC 行为、互动叙事、阅读路径、素材整理或工具路由；每项都有现成项目和可检查的第一步。具体请求请结合[10-15 API 增量与原生示例](../research/2026-10-15/README.md)，不要把首页复制的通用任务 JSON 直接当成 provider 的请求体。
 
-如果问题需要编号、日期或数值，先读[类型化输出](typed-values.md)与[10-20 Clairic 核查](../research/2026-10-20/README.md)。新的[实验题本与离线 CLI](../experiments/typed-values/README.md)可以准备请求、导入本地响应并回放字段／计算／预测评分。它没有 Clairic 网络采集或生产接线。
+如果问题需要编号、日期或数值，先读[类型化输出](typed-values.md)与[10-20 Clairic 核查](../research/2026-10-20/README.md)。[实验题本与离线 CLI](../experiments/typed-values/README.md)可以准备请求、导入本地响应并回放字段／计算／预测评分；Clairic 的真实采集另走[显式开启的有界 collector](research-infrastructure.md)，没有生产执行接线。
 
 ![建议与执行的边界](../site/flow.svg)
 
@@ -36,10 +36,10 @@
 2. **旁路建议**：经授权后，真实工作流继续原样运行，模型只给建议；记录人为何改选。私人上下文和记录留在接入方自己的边界内。
 3. **有限采用**：仅对已验证、低代价、可撤回的动作考虑自动化。错误代价、回退、责任人和取消方式先明确。
 
-目前处于第一阶段，真实推理尚未执行。不要跳过旁路观察，直接把公共 benchmark 分数换成后台行动权限。
+目前处于第一阶段，有限公开合成推理的协议与观察见[原生 provider 实验](../experiments/provider-pilot/README.md)。没有进入私人工作流旁路或生产采用；不要直接把公共 benchmark 分数换成后台行动权限。
 
 ## 相关项目怎样用
 
 [项目地图](projects.md)按接线、开放模型、运行时、工作流机制和评估证据分组。优先读官方客户端确定 transport/contract；从工作流项目学习一个具体机制；再拿本地任务验证。是否安装、自托管或依赖某个项目，应基于确切 revision、许可、硬件与维护成本另作判断。列入地图不等于采用推荐。
 
-我们暂不建立通用万能 router、统一 provider confidence 或自主记忆写入层。next-action 保留两个明确的原生 Choice profile；typed-values 通过独立记录解释字段、计算和预测错误，网络采集另走[有界 collector](research-infrastructure.md)，默认不调用。api-lab 的 manifest 保留当时原生请求与本地 rubric，只有 body 和所需 header 属于模型请求；导入和重评不执行生成代码或外部动作。进一步扩展由具体用例推动。
+我们暂不建立通用万能 router、统一 provider confidence 或自主记忆写入层。next-action 保留两个明确的原生 Choice profile；typed-values 通过独立记录解释字段、计算和预测错误，网络采集另走[有界 collector](research-infrastructure.md)，默认不调用。api-lab 的 manifest 保留当时原生请求与本地 rubric，只有 body 和所需 header 属于模型请求；导入和重评不执行生成代码或外部动作。api-lab 另支持 Cloudflare Clef／Clef Flash 的账号固定 URL 加 Body 短 selector，以及 OpenRouter 原生 `/api/alpha/decisions`；后者默认锁定目录中的零价免费精确 route，不自动回退到付费模型。Cloudflare 外层成功与 `result` 内的 typed answer 分开校验，路径 model ID、Body selector、实际 provider 与返回 model 分别进入证据或账本。视觉题仍只走 Jev，不能把 OpenRouter 的图像传输能力当作同构 criteria 契约。进一步扩展由具体用例推动。

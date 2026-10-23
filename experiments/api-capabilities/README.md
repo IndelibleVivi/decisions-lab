@@ -1,8 +1,8 @@
 # API 能力实验 · 规则、概率与视觉判据
 
-独立的离线实验族：研究原生 Decisions API 能表示什么、返回对象怎样解释、干预会改变什么。依据见 [10-22 核查](../../research/2026-10-22/README.md)，完整七方向见[能力方法章](../../docs/api-capabilities.md)。
+独立且默认离线的实验族：研究原生 Decisions API 能表示什么、返回对象怎样解释、干预会改变什么。依据见 [10-22 核查](../../research/2026-10-22/README.md)，完整七方向见[能力方法章](../../docs/api-capabilities.md)。
 
-**状态：题本、请求准备、synthetic demo、本地响应导入、版本化评分与 replay 已实现；provider NOT_RUN。** 默认离线命令不读取凭据、不发送模型请求；显式开启的 collector 见[研究基础设施](../../docs/research-infrastructure.md)，不执行生成代码或外部动作；有界函数由本地代码查表评分。每条新请求携带 `trial.unit_id/source_family/condition/replicate/split/seed`；原生 body 不含这些编辑身份。重复先逐次评分再聚合，未标明的逻辑重复拒绝，不能覆盖。旧 manifest 只读兼容，历史 model 不受当前默认值改变影响。旧 [next-action](../next-action/README.md) 和 [typed-values](../typed-values/README.md) 契约独立。
+**状态：题本、请求准备、synthetic demo、本地响应导入、版本化评分与 replay 已实现。** 题本文件保留 `provider_status=NOT_RUN` 的 authoring 状态；[首轮 provider 实验](../provider-pilot/README.md)独立记录后续真实采集、失败和固定 subset，不自动改写旧题本。默认离线命令不读取凭据、不发送模型请求；显式开启的 collector 见[研究基础设施](../../docs/research-infrastructure.md)，不执行生成代码或外部动作；有界函数由本地代码查表评分。每条新请求携带 `trial.unit_id/source_family/condition/replicate/split/seed`；原生 body 不含这些编辑身份。重复先逐次评分再聚合，未标明的逻辑重复拒绝，不能覆盖。旧 manifest 只读兼容，历史 model 不受当前默认值改变影响。旧 [next-action](../next-action/README.md) 和 [typed-values](../typed-values/README.md) 契约独立。
 
 ## 题本与预算
 
@@ -12,7 +12,7 @@
 | `probability` | 两个边缘相同而联合相反的世界，加一个质量拆分世界；每个世界有 5 道数值题的单问与打包、joint Choice、粗／细菜单 | 27 请求／39 题 |
 | `visual-criteria` | 24 个目标，contains／touching／disjoint 各 8，分别使用文字、图片、文字加图片、交换图片定义 4 条件 | 96 请求／96 题；仅 Jev |
 
-完整 OpenAI 题本为 124 请求／208 题，Jev 为 220 请求／304 题。**这是预算，没有发生这些调用。** 同一 run 可用 `prepare/demo --replicates N` 保留显式重复，独立采集仍使用新 run；token、缓存、费用与延迟等待真实观测，不从问题数推算。
+完整 OpenAI 题本为 124 请求／208 题，Jev 为 220 请求／304 题。**完整题本预算不表示已发生完整采集；日期实验可能只选择明确的 subset。** 同一 run 可用 `prepare/demo --replicates N` 保留显式重复，独立采集仍使用新 run；token、缓存、费用与延迟按具体运行观测，不从问题数推算。
 
 `api_tasks.py` 拥有生成规则，`suite.json` 拥有版本入口，`api_lab.py` 拥有协议与记录。相同 suite schema 也接受自定义 `cases` 数组，每例包含 `id/experiment/input/questions/rubric`，无需改 next-action 动作常量。支持 Choice、Predicate／Noul、Score，不宣称覆盖供应商全部输入 schema。
 
@@ -31,6 +31,22 @@ python3 -m decision_lab api-lab demo --experiment visual-criteria --route jev --
 ```
 
 `--case-id` 可重复，`--limit` 限制请求 case 数，不自动补齐干预。视觉前 4 例是同一目标的 4 条件。默认模型是 `gpt-6-luna`／`jev-1.14.0`；`--model` 保留明确指定值，returned model 另列。名称存在不证明服务端接受。
+
+### 新原生路线
+
+| `--route` | 模型选择与传输 | 当前输入范围 |
+| --- | --- | --- |
+| `clef` / `clef-flash` | Body 固定为 `clef` / `clef-flash`，URL 使用对应 `@cf/cloudflare/…`；准备时显式传 `--account-id` | 文本、多题 Choice／Noul／Score |
+| `openrouter-decisions` | 原生 `/api/alpha/decisions`；默认 `baseten/mammoth-1:free`，`--model` 可明确选付费模型或已识别的免费 ID | 文本、多题 Choice／Noul／Score |
+
+当前识别的免费 ID 为 `inception/mercury-decide:free`、`baseten/mammoth-1:free`、`baseten/elephant-1:free`、`respan/span-01-lite:free`。首轮采集后，默认免费模型选择本轮实际可调用的 Mammoth；Mercury 保留为显式候选，本轮被原隐私政策阻断。免费标记、当日目录和实际可调用分开；账户 ZDR／训练政策、provider 限制或额度可能使请求失败。未知免费 ID 先拒绝，更新支持时核对官方目录；不把不存在的免费名称改成付费模型。显式付费模型仍需独立的调用与预算授权，collector 的输入估算不是金额上限。
+
+```bash
+python3 -m decision_lab api-lab prepare --experiment probability --route clef --account-id "$CLOUDFLARE_ACCOUNT_ID" --limit 1
+python3 -m decision_lab api-lab prepare --experiment probability --route openrouter-decisions --model baseten/mammoth-1:free --limit 1
+```
+
+这些命令只准备请求。CF 账号被保留在本地 manifest 的 endpoint 中，不把真实 manifest 发到公共仓库。CF REST 外层成功、模型身份与逐题答案分别校验；Score 的原生 scalar 与分布均值分别保存，不强制用均值替换答案。新路线没有接通图片 criteria；视觉题仍只走 Jev 原生 assets 契约。
 
 prepare 输出 **本地 manifest**，其中 `requests[].body` 与 `required_headers` 是原生请求部分，其余包含本地 rubric、身份与摘要。**不能把整个 manifest 发给模型。** 编辑答案、真值与运营 ID 留在 body 外。OpenAI 当前实验 profile 只准备文本；Jev 图片 criteria 使用自己的 assets 契约。
 
@@ -84,7 +100,7 @@ synthetic 是输入来源声明，可为 true、false、或省略表示未知，
 
 replay 从 raw response 重算，不信任 evaluation 缓存，不调用当前生成器或默认模型重造请求。修改保留的请求、响应或来源会触发摘要不匹配；摘要保留 JSON 对象顺序，覆盖 Jev criteria 排列变化。摘要仅核对本地完整性，不是 provider 签名或 live 采集证明。
 
-当前 evaluator 为 `api-capabilities/2`：先组装每个 replicate 的显式事件答案，再计算误差与 coherence；菜单质量仅作描述。manifest/record 的 `/1` 仍只读兼容，历史已保存评价不被覆写。新评价标出自己的 evaluator/rubric 版本，不冒充当时已产生的分析。
+当前 evaluator 为 `api-capabilities/3`：沿用 `/2` 的逐 replicate 事件装配、误差与 coherence；菜单质量仅作描述。`/3` 只对 OpenRouter 应用其[官方 SDK 声明的两位小数舍入](https://github.com/OpenRouterTeam/ai-sdk-provider#evaluation)：完整、有限、范围合法的菜单若总和偏离 1，必须落在 0.01 网格，且每项舍入区间相加可包含 1。保留返回概率、总和和精度区间，**不重新归一化**；CF、直连 Jev 与 OpenAI 的总和检查保持严格。原生 Score 与返回菜单的加权均值分别保存，不强迫相等。manifest/record 的 `/1` 仍只读兼容，历史已保存评价不被覆写；从同一 raw 重算时保留旧评价，并标明新 evaluator/rubric 版本，不冒充当时已产生的分析。
 
 ```bash
 python3 -m decision_lab api-lab report runs/api-import-001 --rubric runs/api-inputs/rubric-v2.json --output runs/api-import-001/evaluation-v2.json

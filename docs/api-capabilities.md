@@ -2,7 +2,7 @@
 
 研究对象是 Decisions API 及相邻原生接口：它们能接收什么、怎样组织问题、返回什么对象，以及这些对象允许怎样被代码使用。每个方向都从一条具体的能力依据出发，给出能区分解释的对照。网站的卡带和画面不承担能力证据。
 
-[2026-10-22 核查](../research/2026-10-22/README.md)拥有本轮来源与版本；[能力索引](../catalog/capabilities.json)把依据、假设、请求覆盖和结果状态连起来；[实验说明](../experiments/api-capabilities/README.md)拥有可运行命令和记录格式。前 3 组是本轮离线实现范围，后 4 组是有具体对照的后续研究设计。所有 provider 结果均为 `NOT_RUN`。后续增加的重复身份、有界 collector、四类生成器、配对统计和规则修复见[研究基础设施](research-infrastructure.md)；这些基础设施没有把后四方向变成已完成的模型实验。
+[2026-10-22 核查](../research/2026-10-22/README.md)拥有该轮来源与版本；[能力索引](../catalog/capabilities.json)把依据、假设、请求覆盖和结果状态连起来；[实验说明](../experiments/api-capabilities/README.md)拥有可运行命令和记录格式。前 3 组已实现默认离线路径，后 4 组是有具体对照的后续研究设计。历史题本保留 `NOT_RUN` authoring 状态，后续真实采集及失败由[有日期的 provider 实验](../experiments/provider-pilot/README.md)独立报告。重复身份、有界 collector、四类生成器、配对统计和规则修复见[研究基础设施](research-infrastructure.md)；这些基础设施没有把后四方向变成已完成的模型实验。
 
 ## 证据怎样走到结果
 

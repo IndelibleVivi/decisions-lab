@@ -2,7 +2,7 @@
 from . import api_lab as al
 
 
-def prepare_probes(route, model=None):
+def prepare_probes(route, model=None, *, account_id=None):
     questions = [
         {"id": "label", "type": "choice", "instructions": "Choose the label literally present in the input.",
          "choices": [{"value": "red", "description": "The word red"}, {"value": "blue", "description": "The word blue"}]},
@@ -17,4 +17,5 @@ def prepare_probes(route, model=None):
              "questions": [q], "rubric": {"questions": {q["id"]: grades[q["id"]]}}} for q in questions]
     rows.append({"id": "probe-mixed", "experiment": "contract-probe", "input": "red; strength=high",
                  "questions": questions, "rubric": {"questions": grades}})
-    return al.prepare_payload(al.Suite({"schema": "decisions-lab.api-suite/1"}, rows), rows, route=route, model=model)
+    return al.prepare_payload(al.Suite({"schema": "decisions-lab.api-suite/1"}, rows), rows,
+                              route=route, model=model, account_id=account_id)

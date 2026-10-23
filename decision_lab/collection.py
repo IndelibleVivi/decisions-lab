@@ -105,6 +105,8 @@ def question_count(plan, row):
 
 def endpoint_for(route, account_id=None):
     if route in al.ENDPOINTS:
+        if route in al.CLOUDFLARE_ROUTES:
+            return al.route_endpoint(route, account_id=account_id)
         return al.ENDPOINTS[route]
     al.require(route == "clairic" and isinstance(account_id, str) and re.fullmatch(r"[a-fA-F0-9]{32}", account_id),
                "Clairic requires CLOUDFLARE_ACCOUNT_ID (32 hexadecimal characters)")
@@ -160,7 +162,22 @@ def collect(plan, run_dir, *, allow_network=False, max_calls, max_questions,
                and sum(v["estimated_tokens"] for v in costs.values()) <= max_estimated_tokens,
                "planned set exceeds budget")
     route = plan["route"]
-    env_name = {"decisions": "OPENAI_API_KEY", "jev": "TYPESAFE_API_KEY", "clairic": "CLOUDFLARE_API_TOKEN"}[route]
+    env_name = {
+        "decisions": "OPENAI_API_KEY",
+        "jev": "TYPESAFE_API_KEY",
+        "clef-flash": "CLOUDFLARE_API_TOKEN",
+        "clef": "CLOUDFLARE_API_TOKEN",
+        "openrouter-decisions": "OPENROUTER_API_KEY",
+        "clairic": "CLOUDFLARE_API_TOKEN",
+    }[route]
+    if route in ("clef-flash", "clef"):
+        al.require("/accounts/" in plan["manifest"]["endpoint"],
+                   "retained Cloudflare endpoint lacks an account ID")
+        plan_account = plan["manifest"]["endpoint"].split("/accounts/", 1)[1].split("/", 1)[0]
+        supplied_account = account_id or os.environ.get("CLOUDFLARE_ACCOUNT_ID")
+        al.require(not supplied_account or supplied_account == plan_account,
+                   "collector account differs from retained Cloudflare endpoint")
+        account_id = plan_account
     endpoint = endpoint_for(route, account_id or os.environ.get("CLOUDFLARE_ACCOUNT_ID"))
     directory = Path(run_dir)
     al._safe_output(directory, directory=True) if not resume else _check_resume_dir(directory)

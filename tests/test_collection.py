@@ -206,6 +206,56 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(captured, [self.plan["requests"][0]["body"]])
         self.assertNotIn("rubric", captured[0])
 
+    def test_cloudflare_and_openrouter_native_plans_collect_and_replay(self):
+        account = "a" * 32
+        suite = al.load_suite()
+        for route in ("clef-flash", "clef", "openrouter-decisions"):
+            with self.subTest(route=route):
+                manifest = al.prepare_payload(
+                    suite, suite.rows[:1], route=route,
+                    account_id=account if route in al.CLOUDFLARE_ROUTES else None)
+                self.plan = c.api_plan(manifest)
+                entries = al.synthetic_entries(manifest)
+                raw = entries[0]["response"]
+                raw_bytes = json.dumps(raw).encode()
+                options = dict(self.options)
+                if route == "openrouter-decisions":
+                    options["credential"] = "synthetic-openrouter-key"
+                data = c.collect(self.plan, self.directory, client=FakeClient([(200, raw_bytes)]),
+                                 **options)
+                view = ledger.from_collection(data)
+                self.assertEqual(view["route"], route)
+                self.assertEqual(view["requested_model"], manifest["model"])
+                self.assertEqual(view["model_id"],
+                                 f"@cf/cloudflare/{manifest['model']}" if route in al.CLOUDFLARE_ROUTES else manifest["model"])
+                self.assertEqual(view["attempts"][0]["returned_model"], manifest["model"])
+                self.assertEqual(view["trials"][0]["outcome"], "ok")
+                self.assertEqual(view["requests"][0]["attempts"][0]["state"], "ok")
+                self.assertFalse(view["live_verified"])
+                self.assertEqual(data["endpoint"], c.endpoint_for(route, account))
+                self.directory = Path(self.temp.name) / f"run-{route}"
+
+        self.directory = Path(self.temp.name) / "wrong-model"
+        manifest = al.prepare_payload(
+            suite, suite.rows[:1], route="clef-flash", account_id=account)
+        self.plan = c.api_plan(manifest)
+        entry = al.synthetic_entries(manifest)[0]
+        entry["response"]["result"]["model"] = "@cf/cloudflare/clef"
+        data = self.collect([(200, json.dumps(entry["response"]).encode())])
+        view = ledger.from_collection(data)
+        self.assertEqual(view["trials"][0]["outcome"], "error")
+        self.assertEqual(view["trials"][0]["value"], None)
+
+    def test_cloudflare_account_mismatch_is_rejected_before_send(self):
+        suite = al.load_suite()
+        self.manifest = al.prepare_payload(
+            suite, suite.rows[:1], route="clef-flash", account_id="a" * 32)
+        self.plan = c.api_plan(self.manifest)
+        with self.assertRaisesRegex(al.ApiLabError, "account differs"):
+            self.collect([], account_id="b" * 32)
+        with self.assertRaisesRegex(al.ApiLabError, "32 hexadecimal"):
+            c.endpoint_for("clef-flash", "not-an-account")
+
 
 if __name__ == "__main__":
     unittest.main()

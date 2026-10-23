@@ -18,14 +18,42 @@ from . import api_tasks as tasks
 
 EXPERIMENTS = tasks.EXPERIMENTS
 DEFAULT_SUITE = "experiments/api-capabilities/suite.json"
-DEFAULT_MODELS = {"decisions": "gpt-6-luna", "jev": "jev-1.14.0"}
-ENDPOINTS = {"decisions": "https://api.openai.com/v1/decisions",
-             "jev": "https://api.typesafe.ai/v1/systemone"}
+CF_CLEF_FLASH_MODEL = "clef-flash"
+CF_CLEF_MODEL = "clef"
+CF_CLEF_FLASH_MODEL_ID = "@cf/cloudflare/clef-flash"
+CF_CLEF_MODEL_ID = "@cf/cloudflare/clef"
+OPENROUTER_FREE_DECISION_MODEL = "baseten/mammoth-1:free"
+CLOUDFLARE_ENDPOINT_TEMPLATE = (
+    "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/"
+)
+OPENROUTER_DECISIONS_ENDPOINT = "https://openrouter.ai/api/alpha/decisions"
+DEFAULT_MODELS = {
+    "decisions": "gpt-6-luna",
+    "jev": "jev-1.14.0",
+    "clef-flash": CF_CLEF_FLASH_MODEL,
+    "clef": CF_CLEF_MODEL,
+    "openrouter-decisions": OPENROUTER_FREE_DECISION_MODEL,
+}
+ENDPOINTS = {
+    "decisions": "https://api.openai.com/v1/decisions",
+    "jev": "https://api.typesafe.ai/v1/systemone",
+    "clef-flash": CLOUDFLARE_ENDPOINT_TEMPLATE + CF_CLEF_FLASH_MODEL_ID,
+    "clef": CLOUDFLARE_ENDPOINT_TEMPLATE + CF_CLEF_MODEL_ID,
+    "openrouter-decisions": OPENROUTER_DECISIONS_ENDPOINT,
+}
 ROUTES = tuple(DEFAULT_MODELS)
+SYSTEM_ONE_ROUTES = frozenset({"jev", "clef-flash", "clef", "openrouter-decisions"})
+OPENROUTER_ROUTES = frozenset({"openrouter-decisions"})
+CLOUDFLARE_ROUTES = frozenset({"clef-flash", "clef"})
+VISUAL_ROUTES = frozenset({"jev"})
+OPENROUTER_FREE_ROUTE_MODELS = frozenset({
+    OPENROUTER_FREE_DECISION_MODEL, "inception/mercury-decide:free",
+    "baseten/elephant-1:free", "respan/span-01-lite:free",
+})
 MANIFEST_VERSION = "decisions-lab.api-manifest/1"
 RECORD_VERSION = "decisions-lab.api-record/1"
 RESPONSE_VERSION = "decisions-lab.api-responses/1"
-EVALUATOR_VERSION = "api-capabilities/2"
+EVALUATOR_VERSION = "api-capabilities/3"
 
 
 class ApiLabError(ValueError):
@@ -180,6 +208,75 @@ def _native_question(question, route):
     return common
 
 
+def route_model(route, model=None):
+    """Return a validated requested model for a native route."""
+    require(route in ROUTES, "unknown route")
+    if model is None:
+        return DEFAULT_MODELS[route]
+    require(isinstance(model, str) and model == model.strip() and model,
+            "request model must be a nonempty string")
+    if route == "clef-flash":
+        require(model == CF_CLEF_FLASH_MODEL,
+                f"clef-flash supports only {CF_CLEF_FLASH_MODEL!r}")
+    elif route == "clef":
+        require(model == CF_CLEF_MODEL,
+                f"clef supports only {CF_CLEF_MODEL!r}")
+    elif route == "openrouter-decisions":
+        require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+/-]*(?::free)?", model),
+                "invalid OpenRouter decision model ID")
+        require(not model.endswith(":free") or model in OPENROUTER_FREE_ROUTE_MODELS,
+                f"unknown free OpenRouter decision route {model!r}")
+    return model
+
+def model_identities(raw):
+    """Return declared model/provider identities from a native response."""
+    if not isinstance(raw, dict):
+        return {"model": None, "provider": None}
+    model = raw.get("model")
+    provider = raw.get("provider")
+    if not isinstance(provider, str) or not provider:
+        provider = raw.get("provider_name")
+    return {
+        "model": model if isinstance(model, str) and model else None,
+        "provider": provider if isinstance(provider, str) and provider else None,
+    }
+
+def answer_envelope(raw, route, *, requested_model=None):
+    """Unwrap only the documented Cloudflare REST answer wrapper.
+
+    A generic HTTP/JSON success is not a Clef answer. Cloudflare may return a
+    successful outer envelope whose ``result`` is absent or carries a
+    different model; callers must validate the answer body separately.
+    """
+    require(isinstance(raw, dict), "response must be a JSON object")
+    if route not in CLOUDFLARE_ROUTES:
+        return raw
+    require(raw.get("success") is True, "Cloudflare response.success must be true")
+    errors = raw.get("errors")
+    require(errors in (None, []), "Cloudflare response reports errors")
+    result = raw.get("result")
+    require(isinstance(result, dict), "Cloudflare response.result must be an object")
+    identities = model_identities(result)
+    require(identities["model"] is not None,
+            "Cloudflare response.result requires model")
+    if requested_model is not None:
+        model_id = CF_CLEF_FLASH_MODEL_ID if route == "clef-flash" else CF_CLEF_MODEL_ID
+        require(identities["model"] in {requested_model, model_id},
+                f"Cloudflare response model {identities['model']!r} differs from requested {requested_model!r}")
+    require("answers" in result, "Cloudflare response.result requires answers")
+    return result
+
+def route_endpoint(route, *, account_id=None):
+    require(route in ROUTES, "unknown route")
+    if route in CLOUDFLARE_ROUTES:
+        require(isinstance(account_id, str) and re.fullmatch(r"[a-fA-F0-9]{32}", account_id),
+                "Cloudflare Clef requires CLOUDFLARE_ACCOUNT_ID (32 hexadecimal characters)")
+        return ENDPOINTS[route].replace("{account_id}", account_id)
+    return ENDPOINTS[route]
+
+def route_is_visual(route):
+    return route in VISUAL_ROUTES
+
 def native_questions(body, route):
     questions = body.get("questions")
     if route == "decisions":
@@ -190,9 +287,13 @@ def native_questions(body, route):
         require(all(isinstance(value, str) and value for value in ids), "named questions required")
         require(len(ids) == len(set(ids)), "duplicate question names")
         return dict(zip(ids, questions))
-    require(isinstance(questions, dict) and questions, "Jev questions must be a nonempty map")
+    require(isinstance(questions, dict) and questions, "System One questions must be a nonempty map")
     require(all(isinstance(key, str) and key and isinstance(q, dict) for key, q in questions.items()),
-            "invalid Jev question map")
+            "invalid System One question map")
+    if route in CLOUDFLARE_ROUTES:
+        require(1 <= len(questions) <= 64
+                and all(re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", key) for key in questions),
+                "Cloudflare Clef supports 1..64 documented question IDs")
     return questions
 
 
@@ -226,7 +327,7 @@ def _check_native(body, headers, route):
                         and "value" in c and ("description" not in c or isinstance(c["description"], str))
                         for c in q["choices"]), "invalid Choice entries")
             else:
-                require(isinstance(q.get("criteria"), dict), "Jev Choice requires criteria")
+                require(isinstance(q.get("criteria"), dict), "System One Choice requires criteria")
             values = _values(q, route)
             require(len(values) >= 2 and (route != "decisions" or len(values) <= 255), "invalid option count")
             require(all(isinstance(v, (str, bool)) for v in values), "Choice values must be string or Boolean")
@@ -234,8 +335,11 @@ def _check_native(body, headers, route):
         if kind == "score":
             levels = q.get("levels" if route == "decisions" else "criteria")
             require(isinstance(levels, list) and len(levels) >= 2, "Score requires at least two levels")
-            if route == "jev":
-                require(len(levels) <= 10 and all(isinstance(level, str) for level in levels), "Jev Score requires 2..10 descriptions")
+            if route in SYSTEM_ONE_ROUTES:
+                require(all(isinstance(level, str) for level in levels),
+                        "System One Score requires ordered descriptions")
+                if route == "jev":
+                    require(len(levels) <= 10, "Jev Score requires 2..10 descriptions")
             if route == "decisions":
                 require(all(isinstance(level, dict) and isinstance(level.get("label"), str)
                             and set(level) <= {"label", "description"} for level in levels), "invalid Score levels")
@@ -243,7 +347,8 @@ def _check_native(body, headers, route):
     assets = body.get("assets", {})
     require(isinstance(assets, dict), "assets must be a map")
     if assets:
-        require(route == "jev" and headers.get("TypeSafe-Danger-Zone-Images") == "true", "image header required")
+        require(route in VISUAL_ROUTES and headers.get("TypeSafe-Danger-Zone-Images") == "true",
+                "image assets are supported only by the Jev native criteria route")
         def strings(value):
             if isinstance(value, str):
                 yield value
@@ -274,14 +379,17 @@ def _check_native(body, headers, route):
     return questions
 
 
-def prepare_payload(suite, rows, *, route, model=None, replicates=1):
+def prepare_payload(suite, rows, *, route, model=None, replicates=1, account_id=None):
     require(route in ROUTES, "unknown route")
     require(type(replicates) is int and replicates > 0, "replicates must be a positive integer")
-    model = model or DEFAULT_MODELS[route]
+    model = route_model(route, model)
+    if route in CLOUDFLARE_ROUTES:
+        require(isinstance(account_id, str) and re.fullmatch(r"[a-fA-F0-9]{32}", account_id),
+                "prepare for Cloudflare Clef requires --account-id (32 hexadecimal characters)")
     requests = []
     for case in rows:
-        require(case["experiment"] != "visual-criteria" or route == "jev",
-                "visual-criteria requires Jev native criteria assets")
+        require(case["experiment"] != "visual-criteria" or route_is_visual(route),
+                "visual-criteria requires the Jev native criteria assets route")
         rubric = copy.deepcopy(case["rubric"])
         base_trial = _trial_identity(case.get("trial"), case_id=case["id"], rubric=rubric,
                                      where=f"case {case['id']!r}")
@@ -307,8 +415,10 @@ def prepare_payload(suite, rows, *, route, model=None, replicates=1):
             item["request_digest"] = digest({"body": body, "required_headers": headers})
             item["rubric_digest"] = digest(copied_rubric)
             requests.append(item)
-    manifest = {"schema": MANIFEST_VERSION, "route": route, "model": model, "endpoint": ENDPOINTS[route],
-                "docs_verified_at": "2026-10-22", "live_verified": False, "requests": requests}
+    manifest = {"schema": MANIFEST_VERSION, "route": route, "model": model,
+                "endpoint": route_endpoint(route, account_id=account_id),
+                "docs_verified_at": "2026-10-23" if route in CLOUDFLARE_ROUTES | OPENROUTER_ROUTES else "2026-10-22",
+                "live_verified": False, "requests": requests}
     manifest["manifest_digest"] = digest(manifest)
     validate_manifest(manifest)
     return manifest
@@ -329,6 +439,19 @@ def validate_manifest(manifest):
     slots = set()
     unit_families = {}
     family_splits = {}
+    require(manifest.get("model") == route_model(route, manifest.get("model")),
+            "manifest model is not valid for its route")
+    if route in CLOUDFLARE_ROUTES:
+        endpoint = manifest.get("endpoint")
+        if endpoint != ENDPOINTS[route]:
+            require(re.fullmatch(
+                r"https://api\.cloudflare\.com/client/v4/accounts/([a-fA-F0-9]{32})/ai/run/"
+                + re.escape(CF_CLEF_FLASH_MODEL_ID if route == "clef-flash" else CF_CLEF_MODEL_ID),
+                endpoint if isinstance(endpoint, str) else "",
+            ) is not None, "Cloudflare manifest endpoint/model mismatch")
+    else:
+        require(manifest.get("endpoint") == ENDPOINTS[route],
+                "manifest endpoint differs from route")
     for request in requests:
         body, headers, rubric = request.get("body"), request.get("required_headers"), request.get("rubric")
         require(request.get("request_digest") == digest({"body": body, "required_headers": headers}), "request digest mismatch")
@@ -397,11 +520,32 @@ def _check_rubric(rubric, questions, route):
             require(grade.get("kind") == "number" and finite(grade.get("expected")), "numeric truth required")
 
 
-def _distribution(values, probabilities):
+def _distribution(values, probabilities, *, rounding_decimals=None):
     require(len(values) == len(probabilities), "incomplete probability distribution")
     require(all(finite(p) and 0 <= p <= 1 for p in probabilities), "invalid probability")
-    require(abs(sum(probabilities) - 1) <= 1e-6, "probabilities do not sum to one")
+    if abs(sum(probabilities) - 1) > 1e-6:
+        require(rounding_decimals is not None, "probabilities do not sum to one")
+        # OpenRouter declares two-decimal rounding. Check whether a normalized
+        # latent distribution could round to these values; never renormalize.
+        require(all(abs(p - round(p, rounding_decimals)) <= 1e-9 for p in probabilities),
+                "probabilities are not on the declared rounding grid")
+        half_step = .5 * 10 ** -rounding_decimals
+        lower = sum(max(0., p - half_step) for p in probabilities)
+        upper = sum(min(1., p + half_step) for p in probabilities)
+        require(lower <= 1 + 1e-9 and upper >= 1 - 1e-9,
+                "probability mass is incompatible with declared rounding")
     return [{"value": v, "probability": float(p)} for v, p in zip(values, probabilities)]
+
+
+def _precision(probabilities, route):
+    if route not in OPENROUTER_ROUTES:
+        return {}
+    half_step = .005
+    return {"probability_precision": {
+        "rounding_decimals": 2, "returned_sum": sum(probabilities),
+        "latent_sum_interval": [sum(max(0., p - half_step) for p in probabilities),
+                                sum(min(1., p + half_step) for p in probabilities)],
+        "renormalized": False}}
 
 
 def _confidence(answer):
@@ -435,11 +579,13 @@ def normalize_answer(question, answer, route):
         else:
             require(isinstance(raw, dict) and set(raw) == set(values), "probability keys do not match criteria")
             probabilities = [raw[v] for v in values]
-        distribution = _distribution(values, probabilities)
+        distribution = _distribution(values, probabilities,
+                                     rounding_decimals=2 if route in OPENROUTER_ROUTES else None)
         chosen = next(p["probability"] for p in distribution if token(p["value"]) == token(answer["choice"]))
         require(chosen >= max(probabilities) - 1e-9, "selected Choice is not an argmax")
         return {"outcome": "ok", "type": kind, "value": answer["choice"],
-                "probabilities": distribution, "confidence": confidence}
+                "probabilities": distribution, "confidence": confidence,
+                **_precision(probabilities, route)}
     levels = question["levels"] if route == "decisions" else question["criteria"]
     raw = answer.get("probabilities")
     if route == "decisions":
@@ -459,12 +605,14 @@ def normalize_answer(question, answer, route):
         probabilities = [raw[str(i)] for i in range(len(levels))]
         if "legend" in answer:
             require(answer["legend"] == {str(i): label for i, label in enumerate(levels)}, "Score legend mismatch")
-    distribution = _distribution(list(range(len(levels))), probabilities)
+    distribution = _distribution(list(range(len(levels))), probabilities,
+                                 rounding_decimals=2 if route in OPENROUTER_ROUTES else None)
     value = answer.get("score")
     require(finite(value) and 0 <= value <= len(levels) - 1, "invalid Score")
+    expected_value = sum(item["value"] * item["probability"] for item in distribution)
     return {"outcome": "ok", "type": kind, "value": float(value), "confidence": confidence,
             "probabilities": distribution,
-            "distribution_mean": sum(p["value"] * p["probability"] for p in distribution)}
+            "distribution_mean": expected_value, **_precision(probabilities, route)}
 
 
 def normalize_request(request, entry, route):
@@ -476,11 +624,27 @@ def normalize_request(request, entry, route):
         global_error = f"transport: {entry['error']}"
     elif status is not None and not 200 <= status < 300:
         global_error = f"http_{status}"
-    elif not isinstance(raw, dict) or not isinstance(raw.get("model"), str) or not raw["model"]:
-        global_error = "response requires model and native answers"
+    elif not isinstance(raw, dict):
+        global_error = "response must be a JSON object"
+    elif route == "openrouter-decisions" and "error" in raw:
+        global_error = f"provider_error: {raw.get('error')}"
     else:
-        answers = raw.get("answers")
-        if route == "decisions" and isinstance(answers, list):
+        try:
+            raw = answer_envelope(raw, route, requested_model=request["body"]["model"])
+            require(isinstance(raw.get("model"), str) and raw["model"],
+                    "response requires model and native answers")
+        except ApiLabError as exc:
+            global_error = str(exc)
+        if not global_error:
+            answers = raw.get("answers")
+            if route in SYSTEM_ONE_ROUTES and isinstance(answers, dict):
+                for answer in answers.values():
+                    if isinstance(answer, dict) and "name" in answer \
+                            and answer.get("name") not in questions:
+                        issues.append("foreign answer name")
+            elif route in CLOUDFLARE_ROUTES and isinstance(answers, list):
+                issues.append("Cloudflare Clef answers must be keyed by question ID")
+        if not global_error and route == "decisions" and isinstance(answers, list):
             expected_ids = list(questions)
             for index, answer in enumerate(answers):
                 if not isinstance(answer, dict) or not isinstance(answer.get("name"), str) or answer["name"] not in questions:
@@ -493,11 +657,11 @@ def normalize_request(request, entry, route):
                     aligned[name] = {"alignment_error": "answer order differs from request"}
                 else:
                     aligned[name] = answer
-        elif route == "jev" and isinstance(answers, dict):
+        elif not global_error and route in SYSTEM_ONE_ROUTES and isinstance(answers, dict):
             aligned = {key: value for key, value in answers.items() if key in questions}
             if set(answers) - set(questions):
                 issues.append("foreign answer keys")
-        else:
+        elif not global_error:
             global_error = "answers do not match the native route shape"
     results = []
     for qid, question in questions.items():
@@ -507,7 +671,7 @@ def normalize_request(request, entry, route):
             error = "missing answer"
         if not error and isinstance(answer, dict) and "alignment_error" in answer:
             error = answer["alignment_error"]
-        if route == "jev" and isinstance(answer, dict) and answer.get("name") is not None and answer["name"] != qid:
+        if route in SYSTEM_ONE_ROUTES and isinstance(answer, dict) and answer.get("name") is not None and answer["name"] != qid:
             error = "answer name mismatch"
         if not error:
             try:
@@ -520,7 +684,9 @@ def normalize_request(request, entry, route):
     return {"request_id": request["id"], "experiment": request["experiment"],
             "trial": _request_trial(request), "questions": results, "contract_issues": issues,
             "requested_model": request["body"]["model"],
-            "returned_model": raw.get("model") if isinstance(raw, dict) else None}
+            "returned_model": raw.get("model") if isinstance(raw, dict) else None,
+            "returned_provider": (model_identities(raw)["provider"]
+                                  or entry.get("provider") or entry.get("provider_name"))}
 
 
 def validate_responses(entries, manifest, *, allow_partial=False):
@@ -530,7 +696,8 @@ def validate_responses(entries, manifest, *, allow_partial=False):
     for entry in entries:
         require(isinstance(entry, dict) and isinstance(entry.get("request_id"), str), "request_id required")
         ids.append(entry["request_id"])
-        require(set(entry) <= {"request_id", "response", "http_status", "error", "latency_ms", "usage", "cost"},
+        require(set(entry) <= {"request_id", "response", "http_status", "error", "latency_ms", "usage", "cost",
+                               "provider", "provider_name"},
                 "unknown response envelope fields")
         status = entry.get("http_status")
         require(status is None or (type(status) is int and 100 <= status <= 599), "invalid HTTP status")
@@ -576,13 +743,16 @@ def synthetic_entries(manifest):
             if route == "decisions":
                 answer["name"] = qid
             answers[qid] = answer
+        response = {"model": manifest["model"],
+                    "answers": list(answers.values()) if route == "decisions" else answers}
+        if route in CLOUDFLARE_ROUTES:
+            response = {"success": True, "errors": [], "result": response}
         entries.append({"request_id": request["id"], "http_status": 200,
-                        "response": {"model": manifest["model"],
-                                     "answers": list(answers.values()) if route == "decisions" else answers}})
+                        "response": response})
     # Deliberate, intelligible negative controls; separate from the editorial fixture generator.
     for request, entry in zip(manifest["requests"], entries):
         qs = native_questions(request["body"], route)
-        answers = entry["response"]["answers"]
+        answers = answer_envelope(entry["response"], route)["answers"]
         by_id = dict(zip(qs, answers)) if route == "decisions" else answers
         condition = request["rubric"].get("condition")
         if request["experiment"] == "rule-compile" and condition == "reversed":
@@ -609,14 +779,16 @@ def synthetic_entries(manifest):
         request, entry = multi[0]
         first = next(iter(native_questions(request["body"], route)))
         if route == "decisions":
-            entry["response"]["answers"][0] = {"type": "refusal", "name": first}
+            answer_envelope(entry["response"], route)["answers"][0] = {"type": "refusal", "name": first}
         else:
-            entry["response"]["answers"][first] = {"type": "noul", "noul": 2.}
+            answer_envelope(entry["response"], route)["answers"][first] = {"type": "noul", "noul": 2.}
     if len(multi) > 1:
         request, entry = multi[1]
         first = next(iter(native_questions(request["body"], route)))
         question = native_questions(request["body"], route)[first]
-        answer = entry["response"]["answers"][0] if route == "decisions" else entry["response"]["answers"][first]
+        answer = (answer_envelope(entry["response"], route)["answers"][0]
+                  if route == "decisions"
+                  else answer_envelope(entry["response"], route)["answers"][first])
         answer["confidence" if question["type"] in ("choice", "score") else
                ("probability" if route == "decisions" else "noul")] = -1.
     return entries
@@ -704,10 +876,14 @@ def oracle_entries(manifest, mode="perfect"):
         entries.append({
             "request_id": request["id"],
             "http_status": 200,
-            "response": {
+            "response": ({
+                "success": True, "errors": [], "result": {
                 "model": manifest["model"],
                 "answers": list(answers.values()) if route == "decisions" else answers,
-            },
+                }} if route in CLOUDFLARE_ROUTES else {
+                    "model": manifest["model"],
+                    "answers": list(answers.values()) if route == "decisions" else answers,
+                }),
         })
     return entries
 
@@ -1142,10 +1318,17 @@ def evaluate(manifest, entries, *, overrides=None):
     usage = []
     for entry in entries:
         raw = entry.get("response")
+        identity_raw = raw
+        if manifest["route"] in CLOUDFLARE_ROUTES and isinstance(raw, dict) \
+                and isinstance(raw.get("result"), dict):
+            identity_raw = raw["result"]
+        identities = model_identities(identity_raw)
         usage.append({"request_id": entry["request_id"], "http_status": entry.get("http_status"),
-                      "usage": entry.get("usage", raw.get("usage") if isinstance(raw, dict) else None),
+                      "usage": entry.get("usage", identity_raw.get("usage") if isinstance(identity_raw, dict) else None),
                       "latency_ms": entry.get("latency_ms"), "cost": entry.get("cost"),
-                      "returned_model": raw.get("model") if isinstance(raw, dict) else None})
+                      "returned_model": identities["model"],
+                      "returned_provider": identities["provider"] or entry.get("provider")
+                      or entry.get("provider_name")})
     report["reported_request_usage"] = usage
     return report
 
@@ -1233,7 +1416,10 @@ def validate_suite(suite):
     counts = Counter(row["experiment"] for row in suite.rows)
     requests_by_route = {}
     for route in ROUTES:
-        supported = [row for row in suite.rows if route == "jev" or row["experiment"] != "visual-criteria"]
+        if route in CLOUDFLARE_ROUTES:
+            continue
+        supported = [row for row in suite.rows
+                     if route_is_visual(route) or row["experiment"] != "visual-criteria"]
         if supported:
             manifest = prepare_payload(suite, supported, route=route)
             requests_by_route[route] = validate_manifest(manifest)

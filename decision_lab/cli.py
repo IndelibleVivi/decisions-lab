@@ -339,13 +339,17 @@ def _cmd_api_list(args):
 
 def _cmd_api_prepare(args):
     suite, rows = _api_select(args)
-    _print_json(al.prepare_payload(suite, rows, route=args.route, model=args.model, replicates=args.replicates))
+    _print_json(al.prepare_payload(suite, rows, route=args.route, model=args.model,
+                                   replicates=args.replicates,
+                                   account_id=getattr(args, "account_id", None)))
     return 0
 
 
 def _cmd_api_demo(args):
     suite, rows = _api_select(args)
-    manifest = al.prepare_payload(suite, rows, route=args.route, model=args.model, replicates=args.replicates)
+    manifest = al.prepare_payload(suite, rows, route=args.route, model=args.model,
+                                  replicates=args.replicates,
+                                  account_id=getattr(args, "account_id", None))
     record = al.build_record(manifest, al.synthetic_entries(manifest), provenance="synthetic")
     output = al.write_record(args.run_dir, record)
     _print_json({"record": str(output), "synthetic": True, "live_verified": False,
@@ -381,12 +385,13 @@ def _cmd_research(args):
         result = generators.generate_dataset(args.kind, seed=args.seed, units=args.units)
     elif command == "probes":
         from .conformance import prepare_probes
-        result = prepare_probes(args.route, args.model)
+        result = prepare_probes(args.route, args.model, account_id=args.account_id)
     elif command == "partition-events":
         from .api_tasks import partition_event_cases
         rows = partition_event_cases()
         result = al.prepare_payload(al.Suite({}, rows), rows, route=args.route,
-                                    model=args.model, replicates=args.replicates)
+                                    model=args.model, replicates=args.replicates,
+                                    account_id=args.account_id)
     elif command == "oracle":
         manifest = al.read_json(args.manifest)
         record = al.build_record(manifest, al.oracle_entries(manifest, mode=args.mode), provenance="synthetic")
@@ -530,6 +535,7 @@ def build_parser() -> argparse.ArgumentParser:
         add_api_selection(sp)
         sp.add_argument("--route", required=True, choices=al.ROUTES)
         sp.add_argument("--model")
+        sp.add_argument("--account-id", help="Cloudflare account ID; required for Clef routes")
         sp.add_argument("--replicates", type=int, default=1)
         if name == "demo":
             sp.add_argument("--run-dir", required=True)
@@ -559,9 +565,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp = research_parser("probes")
     sp.add_argument("--route", required=True, choices=al.ROUTES)
     sp.add_argument("--model")
+    sp.add_argument("--account-id")
     sp = research_parser("partition-events")
     sp.add_argument("--route", required=True, choices=al.ROUTES)
     sp.add_argument("--model")
+    sp.add_argument("--account-id")
     sp.add_argument("--replicates", type=int, default=1)
     sp = research_parser("oracle")
     sp.add_argument("--manifest", required=True)

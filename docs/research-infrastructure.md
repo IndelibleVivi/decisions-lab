@@ -1,6 +1,6 @@
 # 可追溯的研究实验
 
-本轮研究基础设施把测量、重复试验、失败与最终损失接起来。默认操作全部离线；只有 `research collect` 和旧 `collect-live` 是显式开启的网络入口。源码和本地假服务验证不证明 provider 可用或模型效果，题本状态仍为 **NOT_RUN**。
+本轮研究基础设施把测量、重复试验、失败与最终损失接起来。默认操作全部离线；只有 `research collect` 和旧 `collect-live` 是显式开启的网络入口。源码和本地假服务验证不证明 provider 可用或模型效果。历史题本保留其 **NOT_RUN** authoring 状态；有日期的真实采集和失败另见[首轮原生实验](../experiments/provider-pilot/README.md)，不写回旧快照。
 
 ## 从一个反例开始
 
@@ -23,14 +23,14 @@ python3 -m decision_lab research compare runs/perfect-001 runs/wrong-001
 
 | 对象 | 真源与意义 |
 | --- | --- |
-| dataset | API 的 model-neutral 身份包含题面、问题顺序、rubric、headers、route 与 trial，排除 model；改输入不能继续冒充同一题本。不同原生 route 暂不自动宣称同构。 |
+| dataset | API 的 model-neutral 身份包含题面、问题顺序、rubric、headers、route 与 trial，排除 Body model；Cloudflare 新路线另保留账号／模型绑定 endpoint。旧路线的身份算法保留。改输入不能继续冒充同一题本，不同原生 route 不自动宣称同构。 |
 | trial | `unit_id/source_family/condition/replicate/split/seed`，以及 request/question ID。变体与独立世界分开。 |
 | planned set | api manifest 的全部 requests；typed record 的 selected IDs；新 next-action record 的 `planned_case_ids`。未计划不进入分母，计划但无结果为 missing。 |
 | legacy | 没有 planned set 的旧 next-action 文件保守按全题本显示 missing，并明确无法恢复当时 subset 意图。新旧 reader 不回填未知运行事实。 |
 | attempt | 开始/结束时间、单调计时、HTTP 状态、原始 bytes 的 base64、独立 JSON parse 状态、delivery、retry reason、usage/cost。 |
 | evaluation | raw 与评价分离；api replay 保留当次 manifest。typed 字段值和 null/guess 保留；estimate 不伪造二元 correctness，其原生值和区间评价单列。 |
 
-`research compare` 需要预先定义的 loss 或 boolean correctness；不能把 forecast/estimate 或任意 score 自动变成正确率。没有可比较的 loss 时会明确拒绝。next-action 的旧 `replay` 仍检查当前 adapter；跨默认模型历史读取使用 `research ledger` 的只读兼容器，检查支持的旧请求结构与保留的 requested model，不改变历史文件。
+`research compare` 需要预先定义的 loss 或 boolean correctness；不能把 forecast/estimate 或任意 score 自动变成正确率。没有可比较的 loss 时会明确拒绝。next-action 的旧 `replay` 仍检查当前 adapter；跨默认模型历史读取使用 `research ledger` 的只读兼容器，检查支持的旧请求结构与保留的 requested model，不改变历史文件。api-lab 的 Cloudflare route 同时记录 URL 中的 `@cf/cloudflare/clef[-flash]` 与 Body selector；账本保留 `requested_model`、`model_id`，OpenRouter 的实际 upstream/返回模型另列。成功 HTTP wrapper、`result` 是否存在、`result.model` 是否匹配以及逐题 typed answer 是四层独立检查。
 
 ## 有预算的采集与恢复
 
@@ -42,12 +42,12 @@ python3 -m decision_lab research plan --kind api-lab --manifest runs/contract-pr
 python3 -m decision_lab research plan --kind typed-values --case-id source-missing --output runs/clairic-plan.json
 ```
 
-最小 API probes 包括 Choice、Predicate/Noul、Score 的单题和混合题，共 4 requests/6 questions。它检查基本 wire contract；Jev 图片沿原视觉题本准备，不把图片 criteria 当作 OpenAI 图像输入。高题数边界、cache 和区域支持仍需另定 probe 和预算。Clairic 直接保留题本字段与官方 REST envelope；[官方模型页](https://developers.cloudflare.com/workers-ai/models/clairic/)与[OpenAI create reference](https://developers.openai.com/api/reference/resources/decisions/methods/create)是接口依据，不是服务端实测证明。
+最小 API probes 包括 Choice、Predicate/Noul、Score 的单题和混合题，共 4 requests/6 questions。它检查基本 wire contract；Jev 图片沿原视觉题本准备，不把图片 criteria 当作 OpenAI 图像输入。高题数边界、cache 和区域支持仍需另定 probe 和预算。Cloudflare Clef 准备请求时显式传 `--account-id`，请求保留账号绑定 endpoint 与短 selector；采集时可从环境取账号，但不能与 retained plan 不同。OpenRouter 原生 decisions 默认使用本轮实际可调用的 `baseten/mammoth-1:free`，可用 `--model` 明确选择受支持的免费 ID 或付费精确模型 ID；不暗中换模型或回退到付费路线。默认值不覆盖 retained manifest，也不保证其他账户或未来仍可用。Clairic 直接保留题本字段与官方 REST envelope；[Cloudflare Clef 模型页](https://developers.cloudflare.com/workers-ai/models/clef-flash/)、[OpenRouter decisions reference](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request)与[OpenAI create reference](https://developers.openai.com/api/reference/resources/decisions/methods/create)是接口依据。
 
-真实调用必须另行明确模型、公开/合成输入与上限。将凭据放到运行环境：OpenAI 为 `OPENAI_API_KEY`，Jev 为 `TYPESAFE_API_KEY`，Clairic 为 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`。不加载 env 文件，不把认证 header 写入结果，固定官方 HTTPS endpoint，不跟随 redirect。账号标识和真实运行目录保持本地，不进入 Git 或站点。
+真实调用必须另行明确模型、公开/合成输入与上限。将凭据放到运行环境：OpenAI 为 `OPENAI_API_KEY`，Jev 为 `TYPESAFE_API_KEY`，Cloudflare Clef 与 Clairic 为 `CLOUDFLARE_API_TOKEN`，Clairic 另需 `CLOUDFLARE_ACCOUNT_ID`；Clef 的账号取自 retained endpoint，可用同名环境变量核对。OpenRouter decisions 为 `OPENROUTER_API_KEY`。不加载 env 文件，不把认证 header 写入结果，固定官方 HTTPS endpoint，不跟随 redirect。账号标识和真实运行目录保持本地，不进入 Git 或站点。
 
 ```bash
-# 仅供已获本次真实调用授权的操作者使用；本项目尚未执行此步骤
+# 仅供已获本次真实调用授权的操作者使用；命令示例不代表本次实测参数
 python3 -m decision_lab research collect runs/probe-plan.json --run-dir runs/probe-live-001 --allow-network --max-calls 4 --max-questions 6 --max-estimated-tokens 20000 --timeout 30
 ```
 
@@ -96,4 +96,4 @@ python3 -m decision_lab research compare <left-record> <right-record> --analysis
 | E6 图像规则 | 既有定义交换题本；新几何关系不变性资产 | 跨形状/旋转/边界/文字冲突、像素相似与颜色基线；Box 先判断存在再评定位，尚无新增视觉 provider runner。 |
 | 特征、分布、实时与 HCI | [既有七方向设计](api-capabilities.md) | 特征仅在训练/开发提出并冻结；分布保留成熟/删失、覆盖与宽度；Live先做状态版本/乱序回放；HCI固定AI输出并保存独立/最终判断，测纠错、错误跟随与验证成本。均未开展实际实验。 |
 
-公开真实材料迁移、真实调用、有限样本风险保证、Learn then Test、多重比较及停止规则的自动执行仍未实现。下一次采集先冻结主要比较、最小有意义效应、数据 split、预算与停止依据，再执行授权范围；不能因新 API 或价格变化重写旧结论。
+公开真实材料迁移、有限样本风险保证、Learn then Test 和多重比较的自动执行仍未实现。通用 collector 不提供账单或每日免费额度硬限额；具体采集还需独立的预算观察与停止安排。下一次采集先冻结主要比较、最小有意义效应、数据 split、预算与停止依据，再执行授权范围；不能因新 API 或价格变化重写旧结论。

@@ -22,6 +22,7 @@ PAGES = (
     'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md', 'docs/api-capabilities.md',
     'experiments/next-action/README.md',
     'experiments/typed-values/README.md', 'experiments/api-capabilities/README.md',
+    'experiments/provider-pilot/README.md',
     'research/2026-10-08/README.md', 'research/2026-10-08/report.md', 'research/2026-10-15/README.md',
     'research/2026-10-20/README.md', 'research/2026-10-22/README.md',
 )
@@ -98,6 +99,7 @@ PAGE_CONTEXT = {
     'docs/research-infrastructure.html': ('14', '研究基础设施', 'Research tools'),
     'experiments/generated/README.html': ('15', '有限世界与规则修复', 'Synthetic workflow'),
     'experiments/comparison/README.html': ('16', '配对比较与统计', 'Analysis'),
+    'experiments/provider-pilot/README.html': ('17', '原生模型首轮实验', 'Provider experiment'),
     'docs/api-capabilities.html': ('12', 'API 能力研究', 'Capabilities'),
     'experiments/api-capabilities/README.html': ('13', 'API 能力实验', 'Offline experiment'),
     'research/2026-10-20/README.html': ('01', 'Clairic 与类型化取值', 'Research update'),
