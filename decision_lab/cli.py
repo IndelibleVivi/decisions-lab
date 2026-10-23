@@ -392,6 +392,22 @@ def _cmd_research(args):
         result = al.prepare_payload(al.Suite({}, rows), rows, route=args.route,
                                     model=args.model, replicates=args.replicates,
                                     account_id=args.account_id)
+    elif command == "role-scenarios":
+        from . import role_tasks
+        result = role_tasks.prepare(args.route, model=args.model, account_id=args.account_id,
+                                    replicates=args.replicates, seed=args.seed)
+    elif command == "role-report":
+        from . import role_tasks
+        data = collection.load_collection(args.record)
+        al.require(data["plan"]["kind"] == "api-lab", "role-report requires an api-lab collection")
+        latest = {attempt["request_id"]: attempt for attempt in data["attempts"]}
+        entries = [{"request_id": ident, "response": attempt["parsed"],
+                    "http_status": attempt["http_status"], "latency_ms": attempt["elapsed_ms"],
+                    **({"error": attempt["state"]} if attempt["state"] != "ok" else {})}
+                   for ident, attempt in latest.items()]
+        result = role_tasks.evaluate(data["plan"]["manifest"], entries)
+        result.update(collection_provenance=data["provenance"],
+                      synthetic=data["synthetic"], actual_attempts=len(data["attempts"]))
     elif command == "oracle":
         manifest = al.read_json(args.manifest)
         record = al.build_record(manifest, al.oracle_entries(manifest, mode=args.mode), provenance="synthetic")
@@ -571,6 +587,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--model")
     sp.add_argument("--account-id")
     sp.add_argument("--replicates", type=int, default=1)
+    sp = research_parser("role-scenarios")
+    sp.add_argument("--route", required=True, choices=al.ROUTES)
+    sp.add_argument("--model")
+    sp.add_argument("--account-id")
+    sp.add_argument("--replicates", type=int, default=2)
+    sp.add_argument("--seed", type=int, default=20261024)
+    sp = research_parser("role-report")
+    sp.add_argument("record")
     sp = research_parser("oracle")
     sp.add_argument("--manifest", required=True)
     sp.add_argument("--mode", choices=("perfect", "uniform", "wrong"), default="perfect")

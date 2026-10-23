@@ -84,6 +84,8 @@ python3 -m decision_lab research compare <left-record> <right-record> --analysis
 
 ## 研究方向与后续门槛
 
+[决策角色实验](../experiments/decision-roles/README.md)使用同一原生准备与采集路径，另由 `role_tasks` 解释证据、完整 context 包、候选 freshness 和控制权的有限世界。`research role-scenarios --route decisions --replicates 2 --output runs/roles-manifest.json` 只准备；由该 manifest 生成 api-lab plan 后，`research role-report <retained collection>` 按最后 attempt 回放，保留 missing 和失败分母，并读取 retained loss matrix。它的 unsafe、guard 拒绝、同语义动作与多个正确答案不由通用正确率替代。policy / first / abstain 均为 synthetic 对照，不能冒充模型采集；完整命令、冻结条件和日期结果由题本说明拥有。
+
 本次优先建立 W0 测量、W1 身份账本、W2 有界采集基础、W3 生成与 W4 比较，并贯通 E4 离线路径。有限 oracle 不提供真实模型、外部迁移或生产结论。历史研究日期和原始结果保留。
 
 | 方向 | 现在可用 | 尚待检验及下一门槛 |
