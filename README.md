@@ -37,6 +37,8 @@ python3 -m decision_lab research evidence-report runs/evidence-native-demo.json
 
 [研究基础设施](docs/research-infrastructure.md)把数值事件概率和答案菜单效应分开，加入 perfect/uniform/wrong oracle、显式重复身份、planned set 与只读公共账本。四类 seed 生成器提供精确真值、source family 和固定 split；规则链可以从编译贯通穷举验证、最小反例、修复与版本过期检查。跨 run 比较保留失败分母，按 unit 汇总并按来源族估计区间；少簇只做描述。它们都是离线方法与 synthetic 控制，不能当作模型质量结论。
 
+角色题本的专用 loss／guard 也保留到公共 ledger 与比较，不把合法语义错误和非法建议压成同一二元 loss。比较结果直接显示两侧来源，synthetic、imported、collector 和未知标记分别保留；自定义角色失败代价须与冻结矩阵一致。
+
 [决策角色题本](experiments/decision-roles/README.md)新增证据选择、完整材料包、候选版本、控制权与 unknown effect 四类有限世界：16 个 world、三种等价表示、默认两次重复，共 96 requests。`research role-scenarios` 离线准备原生请求，`research role-report` 回放 retained collection，分别报告全分母正确率、固定 loss、非法建议和 guard 拒绝；确定性 policy 与模型看相同 body。首页 Samples 仍来自旧 next-action 题本，两个实验的标签和结果不混用。[Luna 补测](experiments/provider-pilot/luna-followup-2026-10-24.md)独立记录新采集，不改写首轮隐私失败。
 
 2026-10-24 补测已完成 Luna 130 次请求：原始函数 2/32 完整正确，数值 MAE 0.0333333。独立角色实验目前完成 384/480 次：Jev 94/96、Luna 92/96、Mammoth 96/96 正确；Clef 42/48、Flash 33/48，另各有 48 planned missing，因采集环境凭据读取失败而未发送。角色题中的确定性 policy 为 96/96；模型没有优于该有限规则 baseline 的证据，guard 拒绝与正确建议分列。完整覆盖、反例及少量世界的解释边界见题本结果，不把部分采集当成同等覆盖的排名。

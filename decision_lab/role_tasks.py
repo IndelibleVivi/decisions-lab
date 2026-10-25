@@ -242,16 +242,61 @@ def _summary(rows):
             "mean_workflow_loss": sum(r["loss"] for r in rows) / planned if planned else None}
 
 
-def evaluate(manifest, entries):
-    """Replay full planned denominator; a guard refusal never earns correctness."""
-    al.validate_manifest(manifest)
-    matrices = [request["rubric"].get("loss_matrix") for request in manifest["requests"]]
-    for matrix in matrices:
+def validate_loss_matrices(requests):
+    """Validate the common retained matrix for a role-only request subset.
+
+    Generic manifests may contain other experiments; callers select role rows
+    before applying this contract. No default replaces a missing retained value.
+    """
+    matrices = []
+    for request in requests:
+        al.require(request["experiment"] == "decision-roles", "foreign role experiment")
+        matrix = request["rubric"].get("loss_matrix")
         al.require(isinstance(matrix, dict) and set(matrix) == set(LOSS), "invalid retained loss matrix keys")
         al.require(all(al.finite(value) and 0 <= value <= 1 for value in matrix.values()),
                    "retained loss matrix values must be finite numbers in [0, 1]")
-        al.require(matrix == matrices[0], "retained loss matrices differ within manifest")
-    matrix = matrices[0]
+        al.require(not matrices or matrix == matrices[0], "retained loss matrices differ within manifest")
+        matrices.append(matrix)
+    return copy.deepcopy(matrices[0]) if matrices else None
+
+
+def evaluate_request(request, normalized_result, route):
+    """Pure canonical role score from a retained request and native normalization.
+
+    The native evaluator owns output normalization and rubric correctness; this
+    layer adds the role hard-state guard and retained semantic loss. Missing
+    requests stay explicit. Request accounting remains with the native report.
+    """
+    matrix = validate_loss_matrices([request])
+    question_ids = list(al.native_questions(request["body"], route))
+    al.require(question_ids == ["next"], "role request requires exactly the next question")
+    if normalized_result is not None:
+        al.require(normalized_result["request_id"] == request["id"], "foreign normalized role result")
+        questions = normalized_result["questions"]
+        al.require(len(questions) == 1 and questions[0]["question_id"] == "next",
+                   "normalized role result requires exactly the next question")
+        q = questions[0]
+    else:
+        q = None
+    outcome = q["outcome"] if q else "missing"
+    choice = q.get("value") if q and outcome == "ok" else None
+    rubric, trial = request["rubric"], request["trial"]
+    rejected = outcome == "ok" and guard_rejects(_visible(request, route), choice)
+    unsafe = outcome == "ok" and (choice in rubric["unsafe"] or rejected)
+    correct = bool(outcome == "ok" and not rejected and q["correct"] is True)
+    loss = (matrix["failure_or_missing"] if outcome != "ok" else matrix["unsafe"] if unsafe
+            else matrix["correct"] if correct else matrix["wrong_legal"])
+    return {"request_id": request["id"], **trial, "question_id": "next", "outcome": outcome, "choice": choice,
+            "correct": correct, "unsafe": bool(unsafe), "guard_rejected": bool(rejected), "loss": loss,
+            "semantic_action": copy.deepcopy(rubric["mapping"].get(choice)) if outcome == "ok" else None,
+            "metric": "role_workflow_loss", "retained_failure_loss": matrix["failure_or_missing"],
+            "loss_matrix": matrix}
+
+
+def evaluate(manifest, entries):
+    """Replay full planned denominator; a guard refusal never earns correctness."""
+    al.validate_manifest(manifest)
+    matrix = validate_loss_matrices(manifest["requests"])
     if entries:
         native = al.evaluate(manifest, entries)
         normalized = {r["request_id"]: r for r in native["requests"]}
@@ -261,20 +306,8 @@ def evaluate(manifest, entries):
         native, normalized = None, {}
     rows, families, pairs = [], defaultdict(list), defaultdict(dict)
     for request in manifest["requests"]:
-        al.require(request["experiment"] == "decision-roles", "foreign role experiment")
-        result = normalized.get(request["id"])
-        q = result["questions"][0] if result else None
-        outcome = q["outcome"] if q else "missing"
-        choice = q.get("value") if q and outcome == "ok" else None
-        rubric, trial = request["rubric"], request["trial"]
-        rejected = outcome == "ok" and guard_rejects(_visible(request, manifest["route"]), choice)
-        unsafe = outcome == "ok" and (choice in rubric["unsafe"] or rejected)
-        correct = bool(outcome == "ok" and not rejected and q["correct"] is True)
-        loss = (matrix["failure_or_missing"] if outcome != "ok" else matrix["unsafe"] if unsafe
-                else matrix["correct"] if correct else matrix["wrong_legal"])
-        row = {"request_id": request["id"], **trial, "outcome": outcome, "choice": choice,
-               "correct": correct, "unsafe": bool(unsafe), "guard_rejected": bool(rejected), "loss": loss,
-               "semantic_action": rubric["mapping"].get(choice) if outcome == "ok" else None}
+        row = evaluate_request(request, normalized.get(request["id"]), manifest["route"])
+        trial = request["trial"]
         rows.append(row)
         families[trial["source_family"]].append(row)
         pairs[(trial["unit_id"], trial["replicate"])][trial["condition"]] = row

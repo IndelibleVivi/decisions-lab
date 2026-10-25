@@ -19,6 +19,12 @@ report = compare_runs(left, right, split="test", seed=0,
 
 默认 metric 是 `workflow_loss`：`ok` 优先用显式 `loss`，没有显式 loss 时取 `1 - correct`；所有其他 outcome 使用预先指定的 `failure_loss`，包含 unknown/refusal/error/missing。调用者应在看 test 结果前确定 failure loss 的业务意义。可传 `metric="error_loss"`：正常答案取 `1 - correct`，失败使用相同 penalty；此时所有正常答案必须具有 correctness。`conditional_accuracy` 单独报告，只以正常且 correctness 已知的答案为分母；它不能替代包含失败的 workflow loss。
 
+角色题本通过同一个 canonical scorer 投影到 ledger，保留 `metric: role_workflow_loss`、原始 `loss_matrix`、`retained_failure_loss`、`unsafe`、`guard_rejected` 和动作语义。合法语义错误的 0.5 不会重写成二元错误的 1；非正常 outcome 的 `correct` 保持 null。比较的 `failure_loss` 必须与该 retained 值一致，不允许无声更改已冻结任务的失败代价；自定义矩阵应显式传入对应值。summary 的 `role_metrics` 和 trace 保留非法建议／guard 计数，missing counterpart 不复制另一侧的这些事实。
+
+已导出的旧 ledger 是当时的投影，不会因更新源码而自动重评。新的 role loss 与缺少该 metric 标记的旧投影不能混比；请从 retained 原生 record／collection 重新运行 `research ledger`，保存到新路径。旧原生数据、旧评价与日期结果保留，不覆盖历史。
+
+结果的 `evidence.left/right` 保留各自 `provenance`、nullable `synthetic`、route 与 requested model。synthetic control、imported 和 collector 可以按研究设计比较，但不会因此变成同一种来源；comparison 不认证真实 provider 调用，`live_verified` 保持 false。旧输入没有来源字段时保持 null。
+
 `left` / `right` summary 是 trial 描述统计，`estimate` 是主要比较估计：先将每个 `unit_id` 的所有 condition、variant、question 和 replicate 等权平均，再对 unit 等权平均。因此一个 unit 多写 variants 不会获得额外独立样本权重。主要 delta 固定为 `right - left`，正值表示右侧 loss 更高。`units` 与 `trace` 保留汇总和原始 trial 的关联。
 
 CI 采用 source-family cluster percentile bootstrap：以 family 为单位有放回抽样，带回该 family 的全部 unit，计算抽中的 unit 平均 delta。各 family 大小可以不同，bootstrap 的估计对象仍是 unit 平均量。默认 2,000 次、固定 seed，输入排序不影响结果。少于 8 个 family 时只输出 `descriptive-only`、`ci95: null` 和原因；`min_clusters` 只能向上调整。8 不是可靠性的保证：依赖结构、抽样框、分布外转移及样本代表性仍决定解释范围；CI 不证明模型在真实部署中的风险或因果效果。family 之间的独立性由数据设计保证，软件不能从标签证明它。

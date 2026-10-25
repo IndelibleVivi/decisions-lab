@@ -21,6 +21,8 @@ python3 -m decision_lab research compare runs/perfect-001 runs/wrong-001
 
 `api-lab` 的 manifest/record、typed-values 的字段记录、next-action 的 action 记录各自拥有原生语义。`research ledger` 只读这些文件并重算已有评分，产生 `decisions-lab.run-ledger/1` 视图。它列出每个 planned question 的 trial、结果和引用，以及独立的 request metrics，不改写旧文件。collector 在同一外层保留 attempt，仍由原评分器解释答案。
 
+角色题本另由共享 scorer 保留 retained loss matrix、合法语义错误／unsafe／guard 区别，通用 ledger 不用二元 loss 覆盖它；比较必须沿用 retained failure loss。通用 compare 和主动取证 compare 的结果均直接列出两侧来源标记；合成控制、外部导入与 collector 轨迹可以比较，但不能丢掉证据等级。详细字段和失败代价约束见[比较说明](../experiments/comparison/README.md)。
+
 | 对象 | 真源与意义 |
 | --- | --- |
 | dataset | API 的 model-neutral 身份包含题面、问题顺序、rubric、headers、route 与 trial，排除 Body model；Cloudflare 新路线另保留账号／模型绑定 endpoint。旧路线的身份算法保留。改输入不能继续冒充同一题本，不同原生 route 不自动宣称同构。 |

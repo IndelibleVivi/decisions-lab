@@ -311,6 +311,16 @@ class EvidenceWorkflowTests(unittest.TestCase):
                     self.assertEqual(result["summary"]["decision_coverage"], 1)
                     self.assertTrue(all(r["expected_regret"] is None for r in result["episodes"]))
 
+    def test_comparison_preserves_round_source_claims(self):
+        workflow = ew.demo(self.suite(["key-evidence"]), route="jev")
+        result = ew.compare(evidence.run_suite(workflow["suite"]), workflow)
+        origin = result["evidence"]["right"]
+        self.assertEqual(origin["route"], "jev")
+        self.assertTrue(origin["synthetic"])
+        self.assertEqual(len(origin["source_records"]), 2)
+        self.assertTrue(all(row["provenance"] == "synthetic" for row in origin["source_records"]))
+        self.assertFalse(origin["live_verified"])
+
     def test_full_suite_terminates_and_supported_native_configuration_only(self):
         workflow = ew.start(self.suite(), route="decisions", replicates=2)
         turns = 0

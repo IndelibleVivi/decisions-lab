@@ -62,7 +62,7 @@ def _validate(rows):
             raise ComparisonError("correct must be boolean or null")
         if row["outcome"] != "ok" and row.get("correct") is not None:
             raise ComparisonError("non-ok trial cannot claim correctness")
-        for field in ("loss", "confidence", "latency_ms"):
+        for field in ("loss", "confidence", "latency_ms", "retained_failure_loss"):
             value = row.get(field)
             if value is not None and (not _number(value) or value < 0):
                 raise ComparisonError(f"invalid {field}")
@@ -78,6 +78,9 @@ def _filtered(rows, split=None, condition=None):
 
 def _loss(row, failure_loss):
     if row["outcome"] != "ok":
+        retained = row.get("retained_failure_loss")
+        if retained is not None and not math.isclose(retained, failure_loss, rel_tol=0, abs_tol=1e-12):
+            raise ComparisonError("failure_loss differs from retained task loss; use the frozen retained_failure_loss")
         return failure_loss
     if row.get("loss") is not None:
         return float(row["loss"])
@@ -86,12 +89,26 @@ def _loss(row, failure_loss):
     raise ComparisonError("ok trial needs loss or correct for workflow loss")
 
 
+def evidence_origin(run):
+    """Keep source claims visible; a comparison cannot authenticate live calls."""
+    synthetic = run.get("synthetic")
+    if synthetic is not None and type(synthetic) is not bool:
+        raise ComparisonError("synthetic provenance must be boolean or null")
+    return {"provenance": run.get("provenance"), "synthetic": synthetic,
+            "route": run.get("route"), "requested_model": run.get("requested_model"),
+            "source_records": copy.deepcopy(run.get("source_records")), "live_verified": False}
+
+
 def _summary(rows, failure_loss):
     counts = Counter(r["outcome"] for r in rows)
     answered = [r for r in rows if r["outcome"] == "ok" and r.get("correct") is not None]
     # Error is a distinct metric; unknown correctness never becomes an error label.
     error_known = all(r["outcome"] != "ok" or r.get("correct") is not None for r in rows)
+    role_rows = [r for r in rows if r.get("metric") == "role_workflow_loss"]
     return {"planned": len(rows), "outcomes": {k: counts[k] for k in sorted(OUTCOMES)},
+            "role_metrics": {"planned": len(role_rows),
+                             "unsafe": sum(r.get("unsafe") is True for r in role_rows),
+                             "guard_rejected": sum(r.get("guard_rejected") is True for r in role_rows)} if role_rows else None,
             "workflow_loss": mean(_loss(r, failure_loss) for r in rows) if rows else None,
             "error_loss": mean(float(not r["correct"]) if r["outcome"] == "ok" else failure_loss
                                for r in rows) if rows and error_known else None,
@@ -234,6 +251,10 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
     metric = metric or "workflow_loss"
     a = _filtered(left["trials"], split, condition)
     b = _filtered(right["trials"], split, condition)
+    for row in a + b:
+        retained = row.get("retained_failure_loss")
+        if retained is not None and not math.isclose(retained, failure_loss, rel_tol=0, abs_tol=1e-12):
+            raise ComparisonError("failure_loss differs from retained task loss; use the frozen retained_failure_loss")
     if plan is not None and plan.get("threshold") is not None:
         def apply_threshold(row):
             if row["outcome"] == "ok" and (row.get("confidence") is None or row["confidence"] < plan["threshold"]):
@@ -248,8 +269,11 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
         ar, br = ai.get(key), bi.get(key)
         template = ar if ar is not None else br
         missing = {**template, "request_id": None, "outcome": "missing", "correct": None,
-                   "loss": None, "confidence": None, "latency_ms": None, "cost": None}
+                   "loss": None, "confidence": None, "latency_ms": None, "cost": None,
+                   "unsafe": None, "guard_rejected": None, "semantic_action": None, "choice": None}
         ar, br = ar if ar is not None else missing, br if br is not None else missing
+        if (ar.get("metric") == "role_workflow_loss" or br.get("metric") == "role_workflow_loss") and ar.get("metric") != br.get("metric"):
+            raise ComparisonError("role loss metric differs; regenerate old ledgers from retained native records")
         al, bl = _loss(ar, failure_loss), _loss(br, failure_loss)
         if metric == "error_loss":
             for row in (ar, br):
@@ -267,6 +291,8 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
                       "right_original_outcome": br.get("original_outcome", br["outcome"]),
                       "left_correct": ar.get("correct"), "right_correct": br.get("correct"),
                       "left_confidence": ar.get("confidence"), "right_confidence": br.get("confidence"),
+                      "left_unsafe": ar.get("unsafe"), "right_unsafe": br.get("unsafe"),
+                      "left_guard_rejected": ar.get("guard_rejected"), "right_guard_rejected": br.get("guard_rejected"),
                       "left_loss": al, "right_loss": bl,
                       "delta": bl - al, "paired": key in ai and key in bi})
     unit_rows = [{"unit_id": u, "source_family": rows[0][0], "trials": len(rows),
@@ -293,6 +319,8 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
         ci = [percentile(.025), percentile(.975)]
         reason = None
     return {"schema": "decisions-lab.comparison/1", "metric": metric, "delta_direction": "right-left",
+            "evidence": {"left": evidence_origin(left), "right": evidence_origin(right),
+                         "note": "Source markers are retained claims; comparison does not authenticate provider calls."},
             "failure_loss": failure_loss, "split": split, "condition": condition,
             "planned": len(keys), "paired": len(ai.keys() & bi.keys()),
             "left_only": len(ai.keys() - bi.keys()), "right_only": len(bi.keys() - ai.keys()),

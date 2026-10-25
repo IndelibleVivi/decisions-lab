@@ -9,6 +9,7 @@ import json
 from . import api_lab as al
 from . import typed_values as tv
 from . import collection
+from . import role_tasks
 
 SCHEMA = "decisions-lab.run-ledger/1"
 
@@ -32,14 +33,24 @@ def _trial(request, question_id, result=None):
 
 def from_api(manifest, entries, *, metadata=None):
     al.validate_manifest(manifest)
+    role_requests = [r for r in manifest["requests"] if r["experiment"] == "decision-roles"]
+    role_tasks.validate_loss_matrices(role_requests)
     # Missing responses are actual planned missing slots, not synthetic failures.
     report = al.evaluate(manifest, entries) if entries else {"requests": [], "reported_request_usage": []}
     results = {r["request_id"]: r for r in report["requests"]}
     trials = []
     for request in manifest["requests"]:
         answers = {q["question_id"]: q for q in results.get(request["id"], {}).get("questions", [])}
+        role = (role_tasks.evaluate_request(request, results.get(request["id"]), manifest["route"])
+                if request["experiment"] == "decision-roles" else None)
         for qid in al.native_questions(request["body"], manifest["route"]):
-            trials.append(_trial(request, qid, answers.get(qid)))
+            row = _trial(request, qid, answers.get(qid))
+            if role is not None:
+                row.update({key: copy.deepcopy(role[key]) for key in
+                            ("outcome", "choice", "semantic_action", "unsafe", "guard_rejected", "loss",
+                             "metric", "retained_failure_loss", "loss_matrix")})
+                row["correct"] = role["correct"] if role["outcome"] == "ok" else None
+            trials.append(row)
     dataset = {"route": manifest["route"], "requests": [
         {"id": r["id"], "trial": r.get("trial"), "rubric": r["rubric"],
          "body": {k: v for k, v in r["body"].items() if k != "model"},

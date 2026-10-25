@@ -22,6 +22,39 @@ def ledger(rows, run_id="left", **updates):
 
 
 class ComparisonTests(unittest.TestCase):
+    def test_source_provenance_survives_comparison_without_live_claim(self):
+        left = ledger([trial()], provenance="synthetic", synthetic=True)
+        right = ledger([trial()], "right", provenance="collector", synthetic=False)
+        result = compare_runs(left, right)
+        self.assertEqual(result["evidence"]["left"]["provenance"], "synthetic")
+        self.assertTrue(result["evidence"]["left"]["synthetic"])
+        self.assertEqual(result["evidence"]["right"]["provenance"], "collector")
+        self.assertFalse(result["evidence"]["right"]["live_verified"])
+        unknown = compare_runs(ledger([trial()], provenance="imported"), right)
+        self.assertIsNone(unknown["evidence"]["left"]["synthetic"])
+
+    def test_retained_task_failure_loss_cannot_be_silently_repriced(self):
+        rows = [trial(0, loss=.5, retained_failure_loss=.75, metric="role_workflow_loss", unsafe=False, guard_rejected=False),
+                trial(1, outcome="missing", correct=None, loss=.75, retained_failure_loss=.75, metric="role_workflow_loss")]
+        with self.assertRaisesRegex(ComparisonError, "retained task loss"):
+            compare_runs(ledger(rows), ledger(rows), failure_loss=1)
+        result = compare_runs(ledger(rows), ledger(rows), failure_loss=.75)
+        self.assertEqual(result["left"]["workflow_loss"], .625)
+        self.assertEqual(result["estimate"]["delta"], 0)
+        self.assertEqual(risk_coverage(rows[:1])[0]["loss"], .5)
+        self.assertEqual(result["left"]["role_metrics"], {"planned": 2, "unsafe": 0, "guard_rejected": 0})
+        self.assertFalse(result["trace"][0]["left_guard_rejected"])
+        unsafe = trial(0, loss=1, retained_failure_loss=.75, metric="role_workflow_loss", unsafe=True, guard_rejected=True)
+        unpaired = compare_runs(ledger([unsafe]), ledger([]), failure_loss=.75)
+        self.assertEqual(unpaired["left"]["role_metrics"]["unsafe"], 1)
+        self.assertEqual(unpaired["right"]["role_metrics"]["unsafe"], 0)
+        self.assertIsNone(unpaired["trace"][0]["right_guard_rejected"])
+        old_projection = dict(rows[0])
+        old_projection.pop("metric")
+        old_projection["loss"] = 1
+        with self.assertRaisesRegex(ComparisonError, "regenerate old ledgers"):
+            compare_runs(ledger(rows[:1]), ledger([old_projection]), failure_loss=.75)
+
     def test_malformed_trial_identity_and_nonanswer_label_rejected(self):
         for update in ({"replicate": True}, {"replicate": -1}, {"replicate": "1"},
                        {"unit_id": ""}, {"source_family": 3}, {"outcome": "error", "correct": True}):

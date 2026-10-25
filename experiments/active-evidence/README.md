@@ -98,6 +98,6 @@ python3 -m decision_lab research evidence-report runs/evidence/state-1.json
 - 等 world 行均值和按先验加权结果分开。枚举所有世界不是按先验抽样；非均匀先验不能被行数隐式改写。repeats 不增加独立来源数。
 - 标准 policy 的完整 tree 可以计算 expected regret。任意模型轨迹只观察了部分分支，完整 policy expected regret 保持 `null`；实际路径上的 conditional action regret 另列，不用 realized loss 减 expected optimum 冒充它。
 - 原生 request、attempt、usage、latency 与 cost 按请求归属，不能复制到每个查询或题目再累加。缺失费用保持 `null`，只有同货币且全部已知才汇总。synthetic 不提供真实调用用量。
-- `evidence-compare` 要求完全相同的冻结 suite 与 planned 身份，逐 episode 配对、保留全分母，并给出 family 分组；这批有限机制不输出总体置信区间。
+- `evidence-compare` 要求完全相同的冻结 suite 与 planned 身份，逐 episode 配对、保留全分母，并给出 family 分组。`evidence.left/right` 同时保留 synthetic/imported/collector 来源、原生 route/model 与逐轮 source records；来源未知仍是 null，比较不证明 live 调用。这批有限机制不输出总体置信区间。
 
 本实验走出了静态 next-action 的一步答案，但还没有真实模型多步收益、开放语义取证、typed DAG、外部资料迁移、人类实验或生产采用证据。后续先固定主要比较、等调用／等成本安排和未见机制，再考虑真实采集；不能在看到结果后更改成本或真值。

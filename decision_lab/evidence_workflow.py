@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 from . import api_lab as al
-from . import collection, evidence
+from . import collection, comparison, evidence
 
 SCHEMA = "decisions-lab.evidence-workflow/1"
 COMPARE_SCHEMA = "decisions-lab.evidence-comparison/1"
@@ -290,6 +290,10 @@ def _run(workflow, states, metrics):
     markers = [m["synthetic"] for m in metrics]
     synthetic = True if markers and all(m is True for m in markers) else False if markers and all(m is False for m in markers) else None
     return {"schema": evidence.RUN_SCHEMA, "suite": copy.deepcopy(workflow["suite"]), "policy": POLICY,
+            "route": workflow["route"], "requested_model": workflow["model"],
+            "source_records": [{"round": turn, "provenance": source.get("provenance"),
+                                "synthetic": source.get("synthetic")}
+                               for turn, source in enumerate(workflow["rounds"])],
             "replicates": workflow["replicates"], "planned": copy.deepcopy(workflow["planned"]),
             "episodes": [{"id": ident, "history": copy.deepcopy(state["history"])} for ident, state in states.items()],
             "synthetic": synthetic, "provenance": "native-workflow", "live_verified": False}
@@ -374,6 +378,8 @@ def compare(left, right):
                                                        for side in sides} for key in keys}}
 
     return {"schema": COMPARE_SCHEMA, "left_policy": left_run["policy"], "right_policy": right_run["policy"],
+            "evidence": {"left": comparison.evidence_origin(left_run), "right": comparison.evidence_origin(right_run),
+                         "note": "Synthetic, imported and collector records retain distinct source claims; no live authentication."},
             "summary": summary(rows), "families": {family: summary([r for r in rows if r["source_family"] == family])
                 for family in sorted({r["source_family"] for r in rows})},
             "scenarios": {sid: summary([r for r in rows if r["scenario_id"] == sid]) for sid in sorted(scenarios)},

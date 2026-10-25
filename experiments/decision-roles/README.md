@@ -4,6 +4,8 @@
 
 `decision_lab/role_tasks.py` 是题本、policy baseline、guard 和报告的真源；本文解释方法。它复用 `api_lab.Suite`、`prepare_payload`、原生响应规范化／评分及 `collection.api_plan`，没有新 transport。历史实验题本保持原样。
 
+`research ledger` 与专用 role-report 现在共用逐 request scorer，保留合法语义错误、unsafe、guard 拒绝和 retained loss matrix；`research compare` 可在相同原生题本身份下继续比较，不把所有错误压成二元 loss。默认失败代价为 1；自定义矩阵的比较须显式使用 retained 值。不同 route 的原生 dataset 身份仍不自动视作同构。这个投影修复不更改下文冻结题本、既有请求或日期实测结果。
+
 ## 题本与可判错边界
 
 固定 seed `20261024`，四类各四个逻辑 world；每个 world 有 baseline、候选倒序 reversed、动作 ID 全量重映射 opaque 三个等价表示，共 48 cases。默认两次 repeats 形成 96 个 planned request。seed 控制不带语义的 opaque ID；不随机改变世界规则。`trial.unit_id` 固定逻辑 world，`source_family` 是四类之一，`condition` 表示变体，`split` 固定 test，同一 world 的表示与 repeats 不跨组。本轮没有校准集，也不拟合阈值。
