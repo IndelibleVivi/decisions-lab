@@ -381,7 +381,34 @@ def _cmd_api_replay(args):
 def _cmd_research(args):
     from . import collection, comparison, generators, ledger, rule_workflow
     command = args.research_command
-    if command == "generate":
+    if command.startswith("evidence-"):
+        from . import evidence, evidence_workflow
+        if command == "evidence-suite":
+            result = evidence.build_suite(seed=args.seed)
+        elif command in ("evidence-run", "evidence-start", "evidence-demo"):
+            suite = al.read_json(args.suite) if args.suite else evidence.build_suite(seed=args.seed)
+            if command == "evidence-run":
+                result = evidence.run_suite(suite, policy=args.policy, replicates=args.replicates)
+            elif command == "evidence-start":
+                result = evidence_workflow.start(suite, route=args.route, model=args.model,
+                                                 account_id=args.account_id, replicates=args.replicates)
+            else:
+                result = evidence_workflow.demo(suite, route=args.route, model=args.model,
+                                                account_id=args.account_id, replicates=args.replicates,
+                                                policy=args.policy)
+        elif command == "evidence-prepare":
+            result = evidence_workflow.prepare_round(al.read_json(args.record))
+        elif command == "evidence-apply":
+            result = evidence_workflow.apply_round(al.read_json(args.record), args.source)
+        elif command == "evidence-report":
+            record = al.read_json(args.record)
+            result = (evidence.replay(record) if record.get("schema") == evidence.RUN_SCHEMA
+                      else evidence_workflow.report(record))
+        elif command == "evidence-compare":
+            result = evidence_workflow.compare(al.read_json(args.left), al.read_json(args.right))
+        else:
+            raise al.ApiLabError("unknown evidence command")
+    elif command == "generate":
         result = generators.generate_dataset(args.kind, seed=args.seed, units=args.units)
     elif command == "probes":
         from .conformance import prepare_probes
@@ -578,6 +605,27 @@ def build_parser() -> argparse.ArgumentParser:
         parser.add_argument("--output", help="new local JSON file; source tree restricted to runs/")
         parser.set_defaults(func=_cmd_research)
         return parser
+    sp = research_parser("evidence-suite")
+    sp.add_argument("--seed", type=int, default=0)
+    for name in ("evidence-run", "evidence-start", "evidence-demo"):
+        sp = research_parser(name)
+        sp.add_argument("--suite", help="finite evidence suite; otherwise use the original synthetic design")
+        sp.add_argument("--seed", type=int, default=0)
+        sp.add_argument("--replicates", type=int, default=1)
+        if name in ("evidence-run", "evidence-demo"):
+            sp.add_argument("--policy", choices=("checklist", "stop", "myopic", "optimal"), default="optimal")
+        if name != "evidence-run":
+            sp.add_argument("--route", required=name == "evidence-start", default="decisions", choices=al.ROUTES)
+            sp.add_argument("--model")
+            sp.add_argument("--account-id")
+    for name in ("evidence-prepare", "evidence-apply", "evidence-report"):
+        sp = research_parser(name)
+        sp.add_argument("record", help="retained evidence workflow or synthetic run JSON")
+        if name == "evidence-apply":
+            sp.add_argument("source", help="api-lab record or collection from this exact round")
+    sp = research_parser("evidence-compare")
+    sp.add_argument("left")
+    sp.add_argument("right")
     sp = research_parser("probes")
     sp.add_argument("--route", required=True, choices=al.ROUTES)
     sp.add_argument("--model")

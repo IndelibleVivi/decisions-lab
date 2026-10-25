@@ -82,16 +82,28 @@ python3 -m decision_lab research freeze-plan --dataset-id <dataset-id> --left <l
 python3 -m decision_lab research compare <left-record> <right-record> --analysis-plan runs/analysis-plan.json --failure-loss 1
 ```
 
+## 连续主动取证
+
+[主动取证实验](../experiments/active-evidence/README.md)已把 E2 从版本文档资产推进到完整 query/reveal/下一轮/terminal 路径。有限环境公开假设、先验、观察模型和损失，隐藏本次 actual world；一步 VOI、完整多步 oracle、检查表和立即停止使用同一可见契约。原生回合继续复用 api-lab 与 collector，模型只看 body；回合缺失或 uncertain 时原子 apply 拒绝，业务 abstain 和 API failure 分开。
+
+```bash
+python3 -m decision_lab research evidence-run --policy myopic --output runs/evidence-myopic.json
+python3 -m decision_lab research evidence-demo --route decisions --policy optimal --output runs/evidence-native.json
+python3 -m decision_lab research evidence-compare runs/evidence-myopic.json runs/evidence-native.json
+```
+
+这些命令全部离线。报告连接每次查询的条件风险、查询成本、最终损失和完整 planned 分母；原生调用 accounting 不与查询效用混算。具体 suite、start/prepare/apply/report、导入与采集边界由实验说明拥有。持续目标和后续 typed DAG／外部迁移门槛见[研究主线](research-programme.md)。
+
 ## 研究方向与后续门槛
 
 [决策角色实验](../experiments/decision-roles/README.md)使用同一原生准备与采集路径，另由 `role_tasks` 解释证据、完整 context 包、候选 freshness 和控制权的有限世界。`research role-scenarios --route decisions --replicates 2 --output runs/roles-manifest.json` 只准备；由该 manifest 生成 api-lab plan 后，`research role-report <retained collection>` 按最后 attempt 回放，保留 missing 和失败分母，并读取 retained loss matrix。它的 unsafe、guard 拒绝、同语义动作与多个正确答案不由通用正确率替代。policy / first / abstain 均为 synthetic 对照，不能冒充模型采集；完整命令、冻结条件和日期结果由题本说明拥有。
 
-本次优先建立 W0 测量、W1 身份账本、W2 有界采集基础、W3 生成与 W4 比较，并贯通 E4 离线路径。有限 oracle 不提供真实模型、外部迁移或生产结论。历史研究日期和原始结果保留。
+W0 测量、W1 身份账本、W2 有界采集基础、W3 生成与 W4 比较已建立；E4 有限规则和 E2 主动取证已有贯通的离线路径。有限 oracle 不提供真实模型、外部迁移或生产结论。历史研究日期和原始结果保留。
 
 | 方向 | 现在可用 | 尚待检验及下一门槛 |
 | --- | --- | --- |
 | E1 表示与决策 | 数值/菜单语义分离、oracle、重复、有限概率损失世界 | 全面 clone/无关选项/正控制与通用模型等预算对比；效应需超过原样重复底噪，且不能以一致性提高代替 regret 降低。 |
-| E2 主动取证 | 版本文档与证据集作为输入资产 | 查询环境、错误承诺/有效追问/恢复成本、检查表对照；一步 VOI 与 XOR 信息互补的有限预算多步 oracle 分开，尚无 runner。 |
+| E2 主动取证 | 7 机制 family 的有限查询环境、逐轮原生准备／应用、四种对照、终局损失与全分母配对 | 一步 VOI 与 XOR 多步最优已区分；尚无本题本 provider 结果、开放语义取证、失败后恢复策略或跨轮账单硬上限。 |
 | E3 信息保留与组合 | 既有 direct/extracted-only/source-linked；新 schema 不充分配对反例 | 完整串行 DAG、gold 抽取/计算/检索逐层干预、等 token 普通摘要对照，避免将下游失败都归因抽取。尚未实现此 DAG。 |
 | E4 可验证规则 | 2/3 变量生成、穷举、反例修复、版本探针、导入/replay | 自然语言必要/充分/例外/量词、分层Choice/8 bits/DSL 的真实模型比较；有限正状态语法不代表一般规则编译。 |
 | E5 寻址与上下文 | [既有研究设计](api-capabilities.md#semantic-addressing) | flat/逐段/树/beam/BM25/embedding 的等访问预算，完整证据 recall、首错剪枝、无答案误命中和最终损失；尚无控制器。路径分数乘积不是联合正确率。 |

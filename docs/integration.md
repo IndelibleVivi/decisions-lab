@@ -18,7 +18,7 @@
 
 模型返回一个 action ID 和原生概率/置信度；代码先校验 contract，再呈现建议、原文位置与上下文。操作者选择采纳、改选或补充上下文。只有执行端自己的权限与前置条件允许时，后续工具才执行动作。
 
-本仓库已实现 next-action 的合成输入到记录、重放、评估路径及需显式开启的 collector；typed-values 使用独立的离线导入与评分路径；[api-lab](../experiments/api-capabilities/README.md)另有规则编译、概率组合、视觉 criteria 的多问题离线请求／导入／重评，不自动进行网络采集。`research collect` 复用这些 retained requests，`research ledger/compare` 提供外层失败/重复/损失视图；规则 repair 是已实现的离线有限流程，主动取证与完整 typed DAG 尚未实现。上图右端的人类反馈和实际执行是**接入设计**，尚未接入任何生产系统。
+本仓库已实现 next-action 的合成输入到记录、重放、评估路径及需显式开启的 collector；typed-values 使用独立的离线导入与评分路径；[api-lab](../experiments/api-capabilities/README.md)另有规则编译、概率组合、视觉 criteria 的多问题离线请求／导入／重评，不自动进行网络采集。`research collect` 复用这些 retained requests，`research ledger/compare` 提供外层失败/重复/损失视图；规则 repair 是已实现的离线有限流程。[主动取证](../experiments/active-evidence/README.md)另已贯通本地有限环境的 query/reveal、后续原生回合和终局评分；完整 typed DAG、开放资料查询、人类反馈与上图右端的实际执行仍是**接入设计**，尚未接入任何生产系统。
 
 ## 采用顺序
 

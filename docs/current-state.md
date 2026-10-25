@@ -2,6 +2,9 @@
 
 更新时间：2026-10-25。
 
+- **研究方向已重新对齐**：[研究主线](research-programme.md)将项目目标明确为可持续研究模型输出意义、证据与下游决定的实验工作台。保留日期来源、原生类型与完整失败分母的优势；下一阶段从静态答案推进连续取证，再连接 typed DAG、公开资料迁移和采用研究。
+- **主动取证源码与离线路径已完成**：[E2 实验](../experiments/active-evidence/README.md)新增 7 机制 family／16 hidden worlds、四种同输入对照、有限预算 myopic／多步 oracle、原生逐轮 prepare/apply、完整 replay 和配对报告。XOR 控制中 myopic 暂缓损失 3，多步 oracle 两问后总损失 2；这是 synthetic 控制结果。新 CLI 复用 api-lab／collector，整回合原子应用，失败／missing／业务暂缓分别报告；等 world、prior 和 family 汇总分开。未运行本题本 provider 实验，未新增真实调用、账户操作或生产接线。
+
 - **Luna 原生补测已完成**：[独立日期报告](../experiments/provider-pilot/luna-followup-2026-10-24.md)保留新设计、130 次 HTTP200／174 问、三世界 MAE 0.0333333 与原始函数 2/32；首轮隐私失败不改写。全部 Luna 请求已停止。2026-10-25 操作者决定保留 OpenAI 分组强制 ZDR 关闭，以便后续使用 Luna，撤销原定采集后恢复的要求；其他分组和禁止训练／公开 prompt 的设置保持。此次是采用决定更新，没有重新核查账户 UI 或新增调用。没有调用 ChatGPT 订阅或 Nous。
 - **角色题本与部分实测已完成**：[独立说明](../experiments/decision-roles/README.md)拥有四类 16 worlds、三表示、两重复及同输入 policy；新 `research role-scenarios/role-report` 复用 api-lab/collector，分别计算 retained loss、完整 planned 分母、unsafe 与 guard 拒绝。五条件计划 480 attempts，已采集 384 次且全 HTTP200；Jev/Luna/Mammoth 各 96 次完成，Clef/Flash 各 48 次，剩余 96 因本机 Keychain 凭据读取失败未发送，保留 checkpoint，不是日免费限额。原设计及原始响应保留，下一步只恢复这两个未尝试 block；私人项目 mapping 与真实输入不进入公开题本。
 

@@ -18,7 +18,8 @@ LATEST_UPDATE_PAGE = LATEST_UPDATE['reader'].removesuffix('.md') + '.html'
 PAGES = (
     'README.md', 'README.en.md', 'LICENSING.md', 'LICENSE-DOCUMENTATION.md',
     'docs/projects.md', 'docs/playbook.md', 'docs/method.md', 'docs/integration.md',
-    'docs/research-infrastructure.md', 'experiments/generated/README.md', 'experiments/comparison/README.md',
+    'docs/research-infrastructure.md', 'docs/research-programme.md', 'experiments/active-evidence/README.md',
+    'experiments/generated/README.md', 'experiments/comparison/README.md',
     'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md', 'docs/api-capabilities.md',
     'experiments/next-action/README.md',
     'experiments/typed-values/README.md', 'experiments/api-capabilities/README.md',
@@ -99,6 +100,8 @@ PAGE_CONTEXT = {
     'research/2026-10-15/README.html': ('01', '10 月增量核查', 'Research update'),
     'research/2026-10-22/README.html': ('01', 'API 能力与实验', 'Research update'),
     'docs/research-infrastructure.html': ('14', '研究基础设施', 'Research tools'),
+    'docs/research-programme.html': ('20', '研究主线', 'Research programme'),
+    'experiments/active-evidence/README.html': ('21', '主动取证实验', 'Active evidence'),
     'experiments/generated/README.html': ('15', '有限世界与规则修复', 'Synthetic workflow'),
     'experiments/comparison/README.html': ('16', '配对比较与统计', 'Analysis'),
     'experiments/provider-pilot/README.html': ('17', '原生模型首轮实验', 'Provider experiment'),

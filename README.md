@@ -2,13 +2,26 @@
 
 **把判断与取值，变成可以检查的实验。**
 
-[English](README.en.md) · [10-22 能力核查](research/2026-10-22/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [研究主线](docs/research-programme.md) · [主动取证](experiments/active-evidence/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
 
 Decisions Lab 研究 decision models 与类型化取值：从证据中选择动作、提取字段、计算数值，或估计尚未确定的结果。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
 这里有三种不同寿命的内容：可持续使用的方法、带日期的调查、可以重新运行的实验。版本和价格会变；当时的来源、请求和结论不应跟着消失。
 
-## 这轮学什么
+## 从接口能力走向完整决定
+
+我们持续研究：结构化输出保留了什么意义，它能否改善后续决定？日期调查提供来源，有限世界和干预使主张可判错，原生请求与完整失败分母使结果可回看。[研究主线](docs/research-programme.md)连接这些能力、当前证据和下一阶段门槛。
+
+[主动取证实验](experiments/active-evidence/README.md)已将“下一步问什么”贯通为 query → 揭示观察 → 后续原生请求 → 最终决定。7 个机制 family、16 个隐藏世界分别研究关键证据、XOR 信息互补、无关查询、稳健停止、不可得证据、非对称代价和旧版本干扰。检查表、立即停止、一步 VOI 和完整多步 oracle 使用同一可见契约；回放保留查询成本、终局损失、暂缓、API failure 和 planned missing。原生逐轮接线复用 api-lab 与有界 collector，默认完全离线；本题本尚无 provider 质量结果。
+
+```bash
+python3 -m decision_lab research evidence-demo --route decisions --policy optimal --output runs/evidence-native-demo.json
+python3 -m decision_lab research evidence-report runs/evidence-native-demo.json
+```
+
+这里的响应由确定性控制合成，演示完整多轮数据流，不调用模型。真实采集须另行固定模型、输入和全程预算；query 仅揭示本地合成观察，不执行外部动作。
+
+## 能力研究与日期依据
 
 [10-22 核查](research/2026-10-22/README.md)把 API 能力接到可证伪的实验：一次 Choice 编译布尔规则、比较概率的粗细分类与联合关系、用参考图片重定义 Jev criteria。独立的 `api-lab` CLI 处理原生多问题请求、离线响应导入、分题评分与反例报告。题本真值来自穷举、已知世界和几何生成规则；synthetic demo 不代表模型表现，历史题本保留 `NOT_RUN` authoring 状态，新的真实运行独立留证。[能力方法章](docs/api-capabilities.md)保留 7 个研究方向的对照与实现边界；[能力索引](catalog/capabilities.json)可以离线查询来源、假设、指标和请求覆盖。
 
@@ -42,6 +55,8 @@ python3 -m decision_lab research rule-replay runs/rule-repair.json
 
 | 你想做什么 | 从这里开始 |
 | --- | --- |
+| 理解整体目标与下一阶段研究 | [研究主线与能力边界](docs/research-programme.md) |
+| 比较何时追问、问什么和最终损失 | [主动取证：完整多轮实验](experiments/active-evidence/README.md) |
 | 研究 API 能力、准备原生多问题实验 | [能力方法](docs/api-capabilities.md) → [规则编译、概率组合、视觉判据](experiments/api-capabilities/README.md) |
 | 查看最近 API、模型与价格变化 | [2026-10-20 Clairic 增量](research/2026-10-20/README.md)；[10-15 原生契约调查](research/2026-10-15/README.md) |
 | 学会设计字段提取与预测实验 | [类型化输出](docs/typed-values.md) → [三组实验题本](experiments/typed-values/README.md) |
