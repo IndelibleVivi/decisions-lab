@@ -122,4 +122,4 @@ Luna 有多个合法答案的 world 中会在表示之间改选等价正确材�
 
 返回 label 分别为 `clef`、`clef-flash`、`typesafe/jev-1.14-20261014`、`openai/gpt-6-luna-decisions-20261006`、`baseten/mammoth-1-20261021`。精确请求模型保持协议中的 ID，返回 label 不冒充不可变权重证明。
 
-当前角色实验 OR provider-reported cost 合计 **$0.007202036**（Mammoth free 为 0）；CF 本机含 margin 核销约 **754.51 Neurons**，不是官方账单。发送前 Dashboard 当日共享读数为 4.25k；采集后账户读数尚未重新核定，不由 token 估算宣称收费为零。Luna 共 96 次完成后已停止派发；OpenAI 分组 ZDR 的恢复因浏览器控制故障尚待操作者完成／刷新读回，不声称已恢复。
+当前角色实验 OR provider-reported cost 合计 **$0.007202036**（Mammoth free 为 0）；CF 本机含 margin 核销约 **754.51 Neurons**，不是官方账单。发送前 Dashboard 当日共享读数为 4.25k；采集后账户读数尚未重新核定，不由 token 估算宣称收费为零。Luna 共 96 次完成后已停止派发。**2026-10-25 后续决定**：操作者选择保留 OpenAI 分组强制 ZDR 关闭以供后续 Luna 使用，撤销原定恢复要求；其他分组和禁止训练／公开 prompt 的设置保持。上文冻结协议仍保留当时的临时恢复安排；本次仅更新后续采用决定，没有新增请求或账户 UI 观察。

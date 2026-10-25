@@ -1,8 +1,8 @@
 # 当前状态
 
-更新时间：2026-10-24。
+更新时间：2026-10-25。
 
-- **Luna 原生补测已完成**：[独立日期报告](../experiments/provider-pilot/luna-followup-2026-10-24.md)保留新设计、130 次 HTTP200／174 问、三世界 MAE 0.0333333 与原始函数 2/32；首轮隐私失败不改写。OpenAI 分组 ZDR 临时例外已获操作者精确授权，全部 Luna 请求已停止；浏览器控制故障使恢复尚待操作／读回，不能声称已恢复。没有调用 ChatGPT 订阅或 Nous。
+- **Luna 原生补测已完成**：[独立日期报告](../experiments/provider-pilot/luna-followup-2026-10-24.md)保留新设计、130 次 HTTP200／174 问、三世界 MAE 0.0333333 与原始函数 2/32；首轮隐私失败不改写。全部 Luna 请求已停止。2026-10-25 操作者决定保留 OpenAI 分组强制 ZDR 关闭，以便后续使用 Luna，撤销原定采集后恢复的要求；其他分组和禁止训练／公开 prompt 的设置保持。此次是采用决定更新，没有重新核查账户 UI 或新增调用。没有调用 ChatGPT 订阅或 Nous。
 - **角色题本与部分实测已完成**：[独立说明](../experiments/decision-roles/README.md)拥有四类 16 worlds、三表示、两重复及同输入 policy；新 `research role-scenarios/role-report` 复用 api-lab/collector，分别计算 retained loss、完整 planned 分母、unsafe 与 guard 拒绝。五条件计划 480 attempts，已采集 384 次且全 HTTP200；Jev/Luna/Mammoth 各 96 次完成，Clef/Flash 各 48 次，剩余 96 因本机 Keychain 凭据读取失败未发送，保留 checkpoint，不是日免费限额。原设计及原始响应保留，下一步只恢复这两个未尝试 block；私人项目 mapping 与真实输入不进入公开题本。
 
 - **首轮原生实验已完成有界采集**：[协议与实测](../experiments/provider-pilot/README.md#实测结果)记录 541 attempts、533 HTTP 200、6 个隐私路由 404、2 个保留且未重发的 uncertain。Clef／Flash／OR Jev／OR Mammoth 各 126 次正式尝试；Clairic 14 次正式请求。Luna／Mercury 没有正式结果，保留 planned missing。三世界数值题、16 原始函数及变体、7 个 typed cases 都按冻结设计逐次评分；不是排行榜、生产验收或总体校准证据。两项执行修订和中断恢复均如实记录；原始响应、manifest 和账户观察不进入 Git 或站点。
@@ -19,6 +19,6 @@
 - **离线实验已实现**：25 个原创合成 next-action 用例、确定性 baseline、含错误和 unknown 的 demo、记录与完整性校验 replay。
 - **next-action API adapter 候选**：TypeSafe Jev 与 OpenAI Decisions 原生 contract；继续固定 `jev-1.13.0` / `gpt-6-luna` 的现有文本 Choice profile。增量文档不自动启用 Box、图像、cache 或新版模型。文档核对与 mock 测试不等于真实 API 可用，live 推理未运行。
 - **阅读站源码已更新**：27 页从 Markdown/catalog 构建；首轮、Luna 补测与角色实验页进入显式 allowlist，运行记录保持排除。首屏粒子作品和标题直接操控保留；下方由像素卡带、稀疏信号场、PLAY 招牌轮播和自托管字体构成。unknown 从编号动作中独立出来，ok／unknown／refusal／error 的文字、画面与结果读数同步；后两类为明确标注的离线示例，没有选中动作或实际请求，不产生概率与 confidence。分类、搜索、fragment、任务 JSON 复制、项目入口、概率示意、历史矩阵与三例练习均保留。下方共享暂停联动招牌、图标、信号场和实验动态；减少动态、后台、离屏停止，静态选路与读数仍可操作。无 Canvas／JavaScript 保留各自可用的静态阅读路径。仍为本地构建产物，未部署；客观验证与 owner 视觉接受分别报告。
-- **生产接入未开始**：有界合成实验已有真实结果；新角色题本已冻结且部分采集，当前关口是恢复未尝试的两个 CF block，并核定临时隐私例外恢复；表示敏感性与缺失值错误继续分别研究。私人上下文旁路需要单独确定输入边界，没有自动执行、日续跑、充值或部署。
+- **生产接入未开始**：有界合成实验已有真实结果；新角色题本已冻结且部分采集，当前关口是恢复未尝试的两个 CF block；表示敏感性与缺失值错误继续分别研究。私人上下文旁路需要单独确定输入边界，没有自动执行、日续跑、充值或部署。
 
 命令以 [README](../README.md)、[next-action 说明](../experiments/next-action/README.md)、[typed-values 说明](../experiments/typed-values/README.md)和 [API 能力实验说明](../experiments/api-capabilities/README.md)为准。不要将 source、测试、真实推理或生产状态混为一谈。
