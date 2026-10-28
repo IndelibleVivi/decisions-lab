@@ -381,7 +381,28 @@ def _cmd_api_replay(args):
 def _cmd_research(args):
     from . import collection, comparison, generators, ledger, rule_workflow
     command = args.research_command
-    if command.startswith("evidence-"):
+    if command.startswith("typed-dag-"):
+        from . import typed_dag
+        if command == "typed-dag-suite":
+            result = typed_dag.build_suite(seed=args.seed)
+        elif command in ("typed-dag-start", "typed-dag-demo"):
+            suite = al.read_json(args.suite) if args.suite else typed_dag.build_suite(seed=args.seed)
+            operation = typed_dag.start if command == "typed-dag-start" else typed_dag.demo
+            extra = {"policy": args.policy} if command == "typed-dag-demo" else {}
+            result = operation(suite, route=args.route, model=args.model,
+                               account_id=args.account_id, replicates=args.replicates,
+                               condition=args.condition, intervention=args.intervention, **extra)
+        elif command == "typed-dag-prepare":
+            result = typed_dag.prepare_stage(al.read_json(args.record))
+        elif command == "typed-dag-apply":
+            result = typed_dag.apply_stage(al.read_json(args.record), args.source)
+        elif command == "typed-dag-report":
+            result = typed_dag.report(al.read_json(args.record))
+        elif command == "typed-dag-compare":
+            result = typed_dag.compare(al.read_json(args.left), al.read_json(args.right))
+        else:
+            raise al.ApiLabError("unknown typed DAG command")
+    elif command.startswith("evidence-"):
         from . import evidence, evidence_workflow
         if command == "evidence-suite":
             result = evidence.build_suite(seed=args.seed)
@@ -605,6 +626,28 @@ def build_parser() -> argparse.ArgumentParser:
         parser.add_argument("--output", help="new local JSON file; source tree restricted to runs/")
         parser.set_defaults(func=_cmd_research)
         return parser
+    sp = research_parser("typed-dag-suite")
+    sp.add_argument("--seed", type=int, default=0)
+    for name in ("typed-dag-start", "typed-dag-demo"):
+        sp = research_parser(name)
+        sp.add_argument("--suite", help="retained typed DAG task design")
+        sp.add_argument("--seed", type=int, default=0)
+        sp.add_argument("--replicates", type=int, default=1)
+        sp.add_argument("--condition", choices=("direct", "fields-only", "source-linked"), default="fields-only")
+        sp.add_argument("--intervention", choices=("extraction", "calculation", "retrieval"))
+        if name == "typed-dag-demo":
+            sp.add_argument("--policy", choices=("oracle", "wrong-field", "wrong-evidence", "wrong-version", "wrong-decision"), default="oracle")
+        sp.add_argument("--route", choices=al.ROUTES, default="decisions")
+        sp.add_argument("--model")
+        sp.add_argument("--account-id")
+    for name in ("typed-dag-prepare", "typed-dag-apply", "typed-dag-report"):
+        sp = research_parser(name)
+        sp.add_argument("record", help="retained typed DAG workflow JSON")
+        if name == "typed-dag-apply":
+            sp.add_argument("source", help="retained native record or collection from this stage")
+    sp = research_parser("typed-dag-compare")
+    sp.add_argument("left")
+    sp.add_argument("right")
     sp = research_parser("evidence-suite")
     sp.add_argument("--seed", type=int, default=0)
     for name in ("evidence-run", "evidence-start", "evidence-demo"):

@@ -1,8 +1,10 @@
 # 主动取证：从下一步建议到完整决策
 
-本实验研究：缺少信息时，选择一个具体问题是否改善最终决定，收益是否足以抵偿查询成本？状态、可获得证据、先验、损失和预算都来自原创有限世界。环境已实现，原生逐轮接线已可离线验证；**本题本的 provider 实验尚未运行**。
+本实验研究：缺少信息时，选择一个具体问题是否改善最终决定，收益是否足以抵偿查询成本？状态、可获得证据、先验、损失和预算都来自原创有限世界。环境与原生逐轮接线已实现；[10-28 首次 provider 实验](pilot-2026-10-28.md)完成三模型、184 次请求和 96/96 episodes。它给定完整假设表和精确后验，结论限于已知有限模型中的 planning fidelity。
 
 `decision_lab/evidence.py` 拥有有限环境、oracle 与评分；`evidence_workflow.py` 将每轮接到既有 api-lab manifest、原生记录和 collector。query 只揭示本地合成世界的一条观察，commit 只结束实验，不操作外部系统。没有新 transport 或自动网络循环。
+
+[首次原生实测协议](pilot-2026-10-28.md)固定已知有限世界中的 planning fidelity 问题、完整分母、对照与消费上限；事前设计与采集结果分别报告。
 
 ## 为什么需要多轮
 
@@ -100,4 +102,4 @@ python3 -m decision_lab research evidence-report runs/evidence/state-1.json
 - 原生 request、attempt、usage、latency 与 cost 按请求归属，不能复制到每个查询或题目再累加。缺失费用保持 `null`，只有同货币且全部已知才汇总。synthetic 不提供真实调用用量。
 - `evidence-compare` 要求完全相同的冻结 suite 与 planned 身份，逐 episode 配对、保留全分母，并给出 family 分组。`evidence.left/right` 同时保留 synthetic/imported/collector 来源、原生 route/model 与逐轮 source records；来源未知仍是 null，比较不证明 live 调用。这批有限机制不输出总体置信区间。
 
-本实验走出了静态 next-action 的一步答案，但还没有真实模型多步收益、开放语义取证、typed DAG、外部资料迁移、人类实验或生产采用证据。后续先固定主要比较、等调用／等成本安排和未见机制，再考虑真实采集；不能在看到结果后更改成本或真值。
+本实验走出了静态 next-action 的一步答案，首次实采已经显示有限已知模型中的规划差异；开放语义取证、等 provider calls 因果比较、外部资料迁移、人类实验与生产采用仍无证据。独立 [Typed DAG](../typed-dag/README.md)接续研究抽取、计算与下游信息保留，其 provider 研究尚未运行。后续先固定主要比较、等调用／等成本安排和未见机制；不能在看到结果后更改成本或真值。

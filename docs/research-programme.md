@@ -14,7 +14,8 @@
 | 可重放测量 | retained manifest、原始响应与独立评价、planned missing、重复身份 | 合法输出就是正确答案，或缺失可以删出分母 |
 | 机制干预 | 概率对象分离、等义表示、有限规则验证与修复、角色 guard | 一致性提高就是任务损失降低 |
 | 有界真实采集 | [首轮实验](../experiments/provider-pilot/README.md)、[Luna 补测](../experiments/provider-pilot/luna-followup-2026-10-24.md)、[部分角色实验](../experiments/decision-roles/README.md) | 固定合成题本表现可以直接外推生产 |
-| 连续取证 | [主动取证实验](../experiments/active-evidence/README.md)的局部环境、查询反馈、原生逐轮接线与终局报告 | 已经测得模型的多步收益，或可以在外部系统执行建议 |
+| 连续取证 | [主动取证实验](../experiments/active-evidence/README.md)的环境、反馈与逐轮原生接线；[10-28 实采](../experiments/active-evidence/pilot-2026-10-28.md)三模型 96 episodes | 完整有限模型中的规划差异可以外推开放调查，或可以在外部系统执行建议 |
+| 类型化依赖链 | [Typed DAG](../experiments/typed-dag/README.md)连接原生抽取、Decimal、下游决定和阶段干预 | synthetic stage controls 证明模型收益或真实资料迁移 |
 
 方法、日期快照、每次运行有不同寿命。更新代码或来源不改写旧请求与旧结论。详细运行状态由[当前状态](current-state.md)拥有，原生测量与采集方法由[研究基础设施](research-infrastructure.md)拥有。
 
@@ -36,6 +37,12 @@
 4. **最后研究采用。** 在完整轨迹可回看后，再做固定 AI 输出下的人类纠正、错误跟随和验证成本；私人工作流旁路与生产执行各有自己的输入、权限和接受条件。
 
 这些层次保持同一个终点：说明模型在哪一环提供了什么、比简单规则多带来什么，以及在哪些条件下应该不用它。负结果、暂缓和“确定性代码已经足够”都是有价值的研究结论。
+
+## 10-28 的阶段推进
+
+E2 首次模型实验完成 184 次原生请求、96/96 episodes。Clef/Mammoth 在这份已知有限模型上达到 oracle 同损失；Flash 完成 XOR 两问，却在不可得和无信息条件上多付成本或过度暂缓。这说明下一步不能只扩充“会不会问”的静态题数，需要定位证据如何进入并约束后续决定。
+
+E3 将实际导入的上一阶段响应接入下游 body，以三路径和 gold-stage 干预分开字段错误、schema 盲点、计算和最终判断。源码与离线控制的贯通先于 provider 研究；等 token 普通摘要对照、公开真实材料、时间/来源混乱和跨机制新题仍是后续效度门槛，不能从当前有限控制推断完成。
 
 ## 如何决定下一次开发是否值得
 

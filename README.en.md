@@ -2,7 +2,7 @@
 
 **Make decisions and typed values inspectable.**
 
-[中文](README.md) · [Research programme](docs/research-programme.md) · [Active evidence](experiments/active-evidence/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
+[中文](README.md) · [Research programme](docs/research-programme.md) · [Active evidence](experiments/active-evidence/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
 
 Decisions Lab studies decision models and typed value extraction: selecting actions, extracting fields, computing values, and estimating unknown outcomes. It examines their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
 
@@ -12,7 +12,7 @@ Stable methods, dated research, and replayable experiments have different lifeti
 
 The continuing question is what structured outputs preserve, and whether they improve downstream decisions. Dated sources, controlled interventions, retained native evidence and complete failure denominators connect that question to reproducible results. The [research programme](docs/research-programme.md) describes the capability map and the gates for further work.
 
-The [active-evidence experiment](experiments/active-evidence/README.md) connects query selection, revealed observations, subsequent native requests and terminal decisions. Seven mechanism families enumerate 16 hidden worlds: key evidence, XOR complementarity, irrelevant queries, robust stopping, unavailable evidence, asymmetric loss and stale-entity distractions. Checklist, immediate-stop, myopic VOI and finite-budget optimal controls share the same visible contract. Replay retains query costs, terminal loss, business abstention, API failures and planned missing episodes. Native rounds reuse api-lab records and the bounded collector; this suite has no provider-quality results yet.
+The [active-evidence experiment](experiments/active-evidence/README.md) connects query selection, revealed observations, subsequent native requests and terminal decisions. Seven mechanism families enumerate 16 hidden worlds: key evidence, XOR complementarity, irrelevant queries, robust stopping, unavailable evidence, asymmetric loss and stale-entity distractions. Checklist, immediate-stop, myopic VOI and finite-budget optimal controls share the same visible contract. Replay retains query costs, terminal loss, business abstention, API failures and planned missing episodes. Native rounds reuse api-lab records and the bounded collector. The separate [October 28 study](experiments/active-evidence/pilot-2026-10-28.md) completed 184 native requests and all 96 episodes across three models. Prior/family-weighted total loss was 1.257143 for Clef and Mammoth, 1.571429 for Flash, and 1.4 for the myopic control. The full finite model and exact posterior were supplied; this measures planning fidelity rather than open-ended investigation.
 
 ```bash
 python3 -m decision_lab research evidence-demo --route decisions --policy optimal --output runs/evidence-native-demo.json
@@ -20,6 +20,13 @@ python3 -m decision_lab research evidence-report runs/evidence-native-demo.json
 ```
 
 The demo uses deterministic synthetic native responses to exercise the full dependent-round path without calling a model. Live collection requires a separately fixed model, input boundary and whole-study budget. Queries reveal local synthetic observations and perform no external action.
+
+The [typed-DAG experiment](experiments/typed-dag/README.md) connects original source text, native Clairic extraction, Decimal arithmetic and a subsequent native decision. Direct, fields-only and source-linked paths share task rules. Gold extraction, calculation and retrieval interventions help localize errors, including cases whose identical gold fields cannot distinguish opposite optimal actions. Stage preparation, application, retained denominators and native request accounting replay offline; this suite has no provider results yet.
+
+```bash
+python3 -m decision_lab research typed-dag-demo --output runs/typed-dag-demo.json
+python3 -m decision_lab research typed-dag-report runs/typed-dag-demo.json
+```
 
 ## Research infrastructure
 

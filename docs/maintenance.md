@@ -49,6 +49,8 @@ API 能力方向编辑 `catalog/capabilities.json` 和 `docs/api-capabilities.md
 
 持续研究目标由 `docs/research-programme.md` 拥有；主动取证设计与可执行契约由 `decision_lab/evidence.py`、`evidence_workflow.py` 和 `experiments/active-evidence/README.md` 拥有。修改 query、先验、损失或预算即改变任务；验证相同可见历史不泄漏 actual world、一步／多步 oracle 区别、回合绑定、已花成本与 missing 分母、prior/scenario/family 汇总及业务暂缓与 API failure。回合继续用 api-lab/collector，不能将整个 manifest 当 provider body 或新增隐藏网络。保存新的 state 文件，不能覆盖旧回合或从缓存评价恢复事实。
 
+E3 的 stage 关联、三路径与阶段干预由 `decision_lab/typed_dag.py` 和 `experiments/typed-dag/README.md` 拥有，原生 records/parsers/transport 仍复用现有 owner。修改抽取字段、计算或检索时，核查上一阶段实际值是否进入下一阶段 body、schema 不充分配对是否仍不可由字段区分、null 是否保持缺失、gold-derived 来源与完整分母是否保留。共享上游请求只能计账一次，保存重载须重新解码来源并拒绝过期阶段。日期 E2 实测由自己的协议页记录，不能倒写 authoring 状态或把有限 planning 结论扩成开放调查。
+
 更换站点资产后，旧 `_site/` 可能留下已退役的文件；builder 会报 `Unexpected existing output`，不会擅自清空目录。先检查报错路径，确认它仅是旧的生成文件，再移除该文件并重新构建。当前源码不再生成旧版的 `site/orbit.js`。
 
 历史矩阵的三组数字来自 `research/2026-10-08/reanalysis/sys1_reanalysis.json`；交互练习选取 `experiments/next-action/cases.json` 中的三个 dev cases，标签与理由随构建投影。矩阵每格代表一条记录的计数，按汇总结果分组，不声称恢复原始样本身份或顺序。修改这些源时同时检查首页显示；不要在 HTML 或浏览器脚本里另写答案副本。站点脚本变更会生成新的资源版本 URL，供浏览器区分构建后的缓存。完整验证包含无网络 JavaScript 行为检查；排版、手机断行和实际点击仍需浏览器检视。

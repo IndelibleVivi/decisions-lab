@@ -1,5 +1,7 @@
 # Typed values：三组可核对的实验
 
+串行 extraction → Decimal → 原生 decision 的新路径由独立 [Typed DAG 实验](../typed-dag/README.md)拥有。下列三组历史题本及其 authoring 状态继续保留；旧 baseline 不转写为新 DAG 的模型成绩。
+
 [字段方法](../../docs/typed-values.md) · [原创请求与编辑答案](examples.json) · [10-20 契约核查](../../research/2026-10-20/README.md)
 
 **题本 authoring 状态：NOT_RUN。** 本目录提供实验设计与原创合成材料：3 组实验、7 个请求案例，不在题本中附真实模型响应。`examples.json` 中的 `editorial_oracle` 是编辑依据输入写出的预期答案，第三组另有原创的事后观测；`provider_results` 为空。下面的确定性计算只验证这些教学材料；后续真实调用与带条件的观察由[日期实验](../provider-pilot/README.md)独立报告，不改写编辑答案。
