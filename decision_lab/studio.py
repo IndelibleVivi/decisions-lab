@@ -84,7 +84,7 @@ def initial_records(definition):
     reps = definition.get("replicates")
     al.require(type(reps) is int and 1 <= reps <= 10, "replicates must be 1–10")
     conditions = definition.get("conditions")
-    al.require(isinstance(conditions, list) and 2 <= len(conditions) <= 6, "use 2–6 conditions")
+    al.require(isinstance(conditions, list) and 2 <= len(conditions) <= 8, "use 2–8 conditions")
     records = {}
     for condition in conditions:
         al.require(isinstance(condition, dict), "condition must be an object")

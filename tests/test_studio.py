@@ -51,6 +51,20 @@ class StudyTests(unittest.TestCase):
             self.act(study, 'save', definition=study['definition'])
         self.assertEqual(self.store.get(study['id']), current)
 
+    def test_eight_conditions_keep_every_planned_run_and_reject_a_ninth(self):
+        definition = studio.template('typed-dag')
+        base = definition['conditions'][0]
+        definition['conditions'] = [{**base, 'id': letter, 'label': letter} for letter in 'abcdefgh']
+        study = self.store.command('create', {'definition': definition})
+        study = self.act(study, 'freeze')
+        self.assertEqual(set(study['runs']), set('abcdefgh'))
+        reports = study['analyses'][-1]['result']['conditions']
+        self.assertTrue(all(value['report']['counts']['missing'] == 7 for value in reports.values()))
+        invalid = copy.deepcopy(definition)
+        invalid['conditions'].append({**base, 'id': 'i', 'label': 'i'})
+        with self.assertRaisesRegex(ValueError, '2–8'):
+            studio.initial_records(invalid)
+
     def test_frozen_design_cannot_change_and_fork_has_no_old_results(self):
         study = self.act(self.frozen(), 'run')
         with self.assertRaisesRegex(ValueError, 'frozen'):

@@ -17,7 +17,7 @@ python3 -m venv .venv
 
 ## 一次研究怎样走完
 
-1. 在实验 D 装入 E1、E2 或 E3，写下研究问题和竞争解释。条件支持原生路线、模型、离线 policy、重复；E3 另有表示路径与 gold-stage 干预。完整 JSON 编辑器用于调整题本、候选、rubric 或有限世界。
+1. 在实验 D 装入 E1、E2 或 E3，写下研究问题和竞争解释。同一会话支持 2–8 个条件，包含原生路线、模型、离线 policy、重复；E3 另有表示路径与 gold-stage 干预，可容纳三路径及完整阶段对照。完整 JSON 编辑器用于调整题本、候选、rubric 或有限世界。
 2. 保存草稿。每次保存校验原生可表达性，revision 冲突会拒绝覆盖；未保存离开会提示。冻结固定设计与全部 planned slots，并建立初始 missing 分析。此后改变设计应派生新研究。
 3. 运行离线对照，或下载当前请求后导入既有记录。E1 支持 api-record、api-responses 与 api-lab collection；部分响应保留缺失。E2/E3 支持完整 workflow 或当前回合／阶段的原生记录，严格绑定冻结输入；不完整或 uncertain 回合保持待处理，不会跳过阶段。每次导入或运行追加证据和分析。
 4. 点证据矩阵中的样本，查看保留请求、原生回答、测量定义与完整记录。E1 同时保留 classification error 和 numeric absolute error，按测量分开阅读；E2 保留查询成本、先验加权和等 world 口径；E3 保留字段、来源与终局决定的区别。
@@ -27,6 +27,8 @@ python3 -m venv .venv
 ## 配对与版本的边界
 
 E1 冻结时生成显式 scientific pairing。两侧的科学输入、候选、gold、测量和 planned 身份必须相同；路线、模型和原生 manifest 继续保留。它不是允许任意不同任务按相似名字强行对齐。数值题的 absolute error 不替代原生答案或原来的正确性标记；异质测量分别比较，不能加成总分。confidence 标签不证明与其他 primitive 或 route 的信号同义。
+
+E3 比较分别显示正确决定、与确定性 body policy 的一致数及 gold 干预。policy agreement 不代表诚实度或语义充分性；`synthetic` 来源标记也不代替阶段干预说明，原生 decision 可以读取本地 gold 值。具体限制随日期研究保留。
 
 解释器快照由本机 `decision_lab` 源码及 Python 版本确定，复现前逐文件验证。JSON 导出不包含这些可执行文件，不会从导入包安装解释器。另一台机器只有具备相同本地解释器与 runtime 才能复现旧分析；否则可查看导入报告或用当前版本重分析，不能把这称为历史复现。digest 用于一致性检查，不认证 provider 调用或报告作者。
 

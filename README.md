@@ -34,7 +34,7 @@ python3 -m decision_lab research evidence-report runs/evidence-native-demo.json
 
 这里的响应由确定性控制合成，演示完整多轮数据流，不调用模型。真实采集须另行固定模型、输入和全程预算；query 仅揭示本地合成观察，不执行外部动作。
 
-[Typed DAG 实验](experiments/typed-dag/README.md)将原文 → Clairic 原生抽取 → Decimal 计算 → 原生 decision 接成实际依赖链。完整原文、仅字段、字段带来源三条路径共用任务规则；gold 抽取／计算／检索干预帮助定位错误，schema 不充分配对区分“抽错了字段”和“字段根本不足以决定”。stage prepare/apply、完整分母、原生来源与请求计账可以离线回放，本题本尚无 provider 结果。
+[Typed DAG 实验](experiments/typed-dag/README.md)将原文 → Clairic 原生抽取 → Decimal 计算 → 原生 decision 接成实际依赖链。完整原文、仅字段、字段带来源三条路径共用任务规则；gold 抽取／计算／检索干预帮助定位错误，schema 不充分配对区分“抽错了字段”和“字段根本不足以决定”。stage prepare/apply、完整分母、原生来源与请求计账可以离线回放。[10-30 首次实采](experiments/typed-dag/pilot-2026-10-30.md)完成 Clairic＋官方 Luna 的 126 次请求、8 条件各 14 个终局样本：原文直判和 gold 来源补全均为 14/14，普通字段／来源版为 10/14。普通来源版的 quote 校验全部未通过；gold calculation 另暴露等值数值格式的混杂，不能将这些差异解释为一般检索收益或算术因果效果。
 
 ```bash
 python3 -m decision_lab research typed-dag-demo --output runs/typed-dag-demo.json

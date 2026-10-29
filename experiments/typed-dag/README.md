@@ -2,7 +2,7 @@
 
 本实验把原文 → Clairic 类型化抽取 → Decimal 计算 → 原生 decision 变成可保存和回放的依赖链。它研究字段抽取是否保留了决定所需的信息，并通过 gold-stage 干预定位失败发生在哪一层。原生记录继续由 typed-values、api-lab 与 collector 拥有；本模块只保存任务、阶段关联和工作流评价，不新增 transport。
 
-本题本的 provider 实验尚未运行。synthetic demo 验证依赖与测量路径，不提供模型收益或生产效果结论。
+本题本的[首轮模型实验](pilot-2026-10-30.md)固定 Clairic＋官方 Luna、8 个条件与两次重复；设计、实采状态与汇总独立保留。synthetic demo 验证依赖与测量路径，不提供模型收益或生产效果结论。
 
 当前题本为 **7 cases／6 source families**：完整数值、同名异实体、现行版本更正、缺失操作数、schema-gap 配对、证据链接修复。它使用固定的 1,200 CNY 采购规则与明确的「目标现行状态」文本约定；可以在该有限契约中增加 cases，不是任意业务规则的通用 DAG engine。改变规则须修改并验证 evaluator，不能只改 suite 文案。
 

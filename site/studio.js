@@ -117,7 +117,7 @@
       return {planned:r.coverage.expected_questions,missing:r.coverage.missing_question_slots,main:measures.length===1&&losses.length?losses.reduce((a,b)=>a+b,0)/losses.length:null,unit:measures.join(' / '),readings,rows:[['ok',r.coverage.ok],['unknown',r.coverage.unknown],['refusal',r.coverage.refusal],['error',r.coverage.error]],note:'各读数为对应测量中已定义且 ok 样本的均值；完整 planned 与失败代价见下方配对报告。'};
     }
     if(kind==='active-evidence')return {planned:r.summary.planned,missing:r.summary.missing,main:r.summary.prior_weighted_mean_total_loss,unit:'prior-weighted total loss',rows:[['查询成本',r.summary.query_cost],['业务暂缓',r.summary.abstained],['API failure',r.summary.api_failed]],note:'主读数按 scenario prior 加权；配对报告另保留 family 等权与等 world 口径。'};
-    return {planned:r.planned,missing:r.counts.missing,main:r.loss.total,unit:'terminal loss · total',rows:[['完整终局',r.counts.terminal],['正确决定',r.counts.correct],['诚实但表示受限',r.counts.honest_under_projection]],note:'schema 充分性、字段正确与下游决定分别评价；缺失使总损失保持未知。'};
+    return {planned:r.planned,missing:r.counts.missing,main:r.loss.total,unit:'terminal loss · total',rows:[['完整终局',r.counts.terminal],['正确决定',r.counts.correct],['与确定性 policy 一致',r.counts.honest_under_projection],['Gold 干预',r.gold_intervention||'无']],note:'policy 一致不代表诚实度或语义充分。原生来源与 gold 干预分开阅读；缺失使总损失保持未知。'};
   }
   function renderAnalysis(){
     const analysis=selectedAnalysis();$('analysis-select').innerHTML=study.analyses.map((a,i)=>`<option value="${a.id}"${a.id===analysis?.id?' selected':''}>${i+1} · ${esc(a.mode)} · ${esc(a.created_at.slice(11,19))} UTC</option>`).join('');
@@ -145,7 +145,7 @@
   $('new-study').onclick=()=>{if(!abandon())return;study=null;draft=null;dirty=false;history.replaceState(null,'','#research-studio');render();refreshShelf().catch(e=>notice(e.message,true));};
   $('design-form').addEventListener('input',()=>{dirty=true;$('save-state').textContent='草稿有未保存修改';});
   $('conditions').addEventListener('change',()=>{draft=readDraft();dirty=true;renderConditions();});
-  $('add-condition').onclick=()=>{draft=readDraft();if(draft.conditions.length>=6)return notice('最多6个条件',true);const id='abcdef'.split('').find(x=>!draft.conditions.some(c=>c.id===x));draft.conditions.push({...draft.conditions.at(-1),id,label:'新条件'});dirty=true;renderConditions();};
+  $('add-condition').onclick=()=>{draft=readDraft();if(draft.conditions.length>=8)return notice('最多8个条件',true);const id='abcdefgh'.split('').find(x=>!draft.conditions.some(c=>c.id===x));draft.conditions.push({...draft.conditions.at(-1),id,label:'新条件'});dirty=true;renderConditions();};
   $('apply-json').onclick=()=>{try{const parsed=JSON.parse($('definition-json').value);if(parsed.kind!==draft.kind||!Array.isArray(parsed.conditions))throw new Error('保留研究 family，并提供 conditions 列表');draft=parsed;render();dirty=true;notice('JSON 已应用到草稿；保存时执行完整校验。');}catch(e){notice(e.message,true);}};
   $('design-form').onsubmit=e=>{e.preventDefault();perform(()=>mutate('save',{definition:readDraft()}));};
   $('freeze-design').onclick=()=>perform(async()=>{await mutate('save',{definition:readDraft()});await mutate('freeze');},'设计已冻结；全部 planned 样本已保留。');
