@@ -37,8 +37,29 @@ class ResearchCliTests(unittest.TestCase):
             self.assertEqual((code, err), (0, ""))
             result = json.loads(out)
             self.assertEqual(result["paired"], 78)
-            self.assertGreater(result["estimate"]["delta"], 0)
+            self.assertIsNone(result["estimate"]["delta"])
+            self.assertEqual(len(result["by_measurement"]), 2)
+            self.assertTrue(all(group["report"]["estimate"]["delta"] > 0 for group in result["by_measurement"]))
             self.assertIsNone(result["estimate"]["ci95"])
+
+    def test_cross_route_pairing_cli_retains_explicit_spec(self):
+        from decision_lab import api_lab, studio
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            initial = studio.initial_records(studio.template('api-lab'))
+            paths = []
+            for key, value in initial.items():
+                path = root / (key + '.json')
+                record = api_lab.build_record(value['manifest'], api_lab.oracle_entries(value['manifest'], 'perfect'), provenance='synthetic')
+                path.write_text(json.dumps(record)); paths.append(str(path))
+            self.assertNotEqual(self.command('research', 'compare', *paths)[0], 0)
+            spec = str(root / 'pairing.json')
+            self.assertEqual(self.command('research', 'pairing', *paths, '--output', spec)[0], 0)
+            code, out, err = self.command('research', 'compare', *paths, '--pairing', spec)
+            self.assertEqual((code, err), (0, ''))
+            report = json.loads(out)
+            self.assertEqual(report['paired'], 39)
+            self.assertTrue(all(group['report']['estimate']['delta'] == 0 for group in report['by_measurement']))
 
     def test_collect_requires_permission_switch_via_cli(self):
         with tempfile.TemporaryDirectory() as directory:

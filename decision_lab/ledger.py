@@ -10,6 +10,7 @@ from . import api_lab as al
 from . import typed_values as tv
 from . import collection
 from . import role_tasks
+from . import measurement
 
 SCHEMA = "decisions-lab.run-ledger/1"
 
@@ -50,6 +51,7 @@ def from_api(manifest, entries, *, metadata=None):
                             ("outcome", "choice", "semantic_action", "unsafe", "guard_rejected", "loss",
                              "metric", "retained_failure_loss", "loss_matrix")})
                 row["correct"] = role["correct"] if role["outcome"] == "ok" else None
+            measurement.attach(row, request, qid, manifest["route"])
             trials.append(row)
     dataset = {"route": manifest["route"], "requests": [
         {"id": r["id"], "trial": r.get("trial"), "rubric": r["rubric"],
@@ -62,7 +64,12 @@ def from_api(manifest, entries, *, metadata=None):
     return {"schema": SCHEMA, "dataset_id": al.digest(dataset), "manifest_digest": manifest["manifest_digest"],
             "route": manifest["route"], "endpoint": manifest.get("endpoint"),
             "requested_model": manifest["model"], "model_id": model_id,
-            **(metadata or {}), "trials": trials, "requests": report["reported_request_usage"]}
+            **(metadata or {}), "trials": trials, "requests": report["reported_request_usage"],
+            "task_contracts": [{"request_id": r["id"], "contract": measurement.task_contract(r, manifest["route"])}
+                               for r in manifest["requests"]],
+            "native_manifest": copy.deepcopy(manifest),
+            "treatment": {"route": manifest["route"], "model": manifest["model"]},
+            "native_execution": {"manifest_digest": manifest["manifest_digest"], "endpoint": manifest.get("endpoint")}}
 
 
 def _typed_trials(request, evaluated):

@@ -488,6 +488,9 @@ def _cmd_research(args):
                   "record": str(__import__("pathlib").Path(args.run_dir) / "collection.json")}
     elif command == "ledger":
         result = ledger.load_ledger(args.record, suite_path=args.suite)
+    elif command == "pairing":
+        result = comparison.make_pairing_spec(ledger.load_ledger(args.left, suite_path=args.suite),
+                                               ledger.load_ledger(args.right, suite_path=args.suite))
     elif command == "compare":
         left = ledger.load_ledger(args.left, suite_path=args.suite)
         right = ledger.load_ledger(args.right, suite_path=args.suite)
@@ -495,7 +498,8 @@ def _cmd_research(args):
         right.setdefault("run_id", args.right)
         result = comparison.compare_runs(left, right, seed=args.seed, bootstrap_samples=args.bootstrap_samples,
                                          failure_loss=args.failure_loss, split=args.split, condition=args.condition,
-                                         plan=al.read_json(args.analysis_plan) if args.analysis_plan else None)
+                                         plan=al.read_json(args.analysis_plan) if args.analysis_plan else None,
+                                         pairing=al.read_json(args.pairing) if args.pairing else None)
     elif command == "freeze-plan":
         result = comparison.freeze_analysis_plan(dataset_id=args.dataset_id, comparison=[args.left, args.right],
                                                  failure_loss=args.failure_loss, split=args.split,
@@ -506,6 +510,15 @@ def _cmd_research(args):
         path = al._safe_output(args.output)
         al._write(path, result)
     _print_json(result)
+    return 0
+
+
+def _cmd_studio(args):
+    from .studio_server import serve
+    try:
+        serve(args.workspace, args.port)
+    except OSError as exc:
+        raise al.ApiLabError(f"Studio could not start: {exc}. Choose an available --port and writable --workspace.") from exc
     return 0
 
 
@@ -728,6 +741,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp = research_parser("ledger")
     sp.add_argument("record")
     sp.add_argument("--suite")
+    sp = research_parser("pairing")
+    sp.add_argument("left")
+    sp.add_argument("right")
+    sp.add_argument("--suite")
     sp = research_parser("compare")
     sp.add_argument("left")
     sp.add_argument("right")
@@ -735,6 +752,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--split")
     sp.add_argument("--condition")
     sp.add_argument("--analysis-plan")
+    sp.add_argument("--pairing", help="retained explicit scientific pairing JSON")
     sp.add_argument("--failure-loss", type=float, default=1.0)
     sp.add_argument("--seed", type=int, default=0)
     sp.add_argument("--bootstrap-samples", type=int, default=2000)
@@ -796,6 +814,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="explicit switch acknowledging outbound network use",
     )
     sp.set_defaults(func=_cmd_collect_live)
+
+    sp = sub.add_parser("studio", help="open the local research Studio (loopback only; no provider calls)")
+    sp.add_argument("--workspace", default="runs/studio", help="local research directory; never published by the reader build")
+    sp.add_argument("--port", type=int, default=8765)
+    sp.set_defaults(func=_cmd_studio)
 
     return p
 

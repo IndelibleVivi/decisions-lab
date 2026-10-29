@@ -2,11 +2,24 @@
 
 **把判断与取值，变成可以检查的实验。**
 
-[English](README.en.md) · [研究主线](docs/research-programme.md) · [主动取证](experiments/active-evidence/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [研究主线](docs/research-programme.md) · [本地研究台](docs/studio.md) · [主动取证](experiments/active-evidence/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
 
 Decisions Lab 研究 decision models 与类型化取值：从证据中选择动作、提取字段、计算数值，或估计尚未确定的结果。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
 这里有三种不同寿命的内容：可持续使用的方法、带日期的调查、可以重新运行的实验。版本和价格会变；当时的来源、请求和结论不应跟着消失。
+
+## 在原网页里继续研究
+
+[本地研究台](docs/studio.md)位于现有首页的实验 D，沿用原阅读站与像素组件。E1 概率／原生路线、E2 取证／停止、E3 字段／来源提供可编辑起点：写问题和竞争解释，调整条件，冻结设计，运行离线控制或导入原生证据，再逐样本检查请求、回答、测量和反例。会话、分析版本和研究笔记保存到本机，可重开、派生和导出。
+
+```bash
+# 使用下文阅读站已有的 requirements-site.txt 环境
+.venv/bin/python -m decision_lab studio --port 8776
+```
+
+命令在本机构建同一阅读站并显示地址。默认研究目录为忽略的 `runs/studio`；静态站只显示启动入口，不调用本地 API。Studio 当前支持 macOS／Linux，服务仅绑定 `127.0.0.1`，不读取凭据、不调用模型。导入包只有数据；历史复现依赖本机保留的源码解释器和相同 Python runtime，当前重分析另存结果与差异。JSON 导出包含输入和原始回答，分享前应检查敏感内容。
+
+数值答案在 ledger 保留 absolute error，角色保留专用 loss；显式 scientific pairing 将科学任务与路线／模型执行身份分开，同题跨路线比较仍保留原生请求。不同含义的 selection signal 不共享门槛，异质测量不合成总分。它们改变的是测量与复算能力，本轮没有新增 provider 实采。
 
 ## 从接口能力走向完整决定
 
@@ -136,7 +149,7 @@ python3 tools/catalog.py recipes --query NPC --json
 
 概率地形可以切换示意分布、调整候选偏向，并查看 maxP 和熵；历史像素矩阵可切换三组任务及高 maxP 子集，显示对应正确／错误数量；切换时格子以有限的阶梯动效落位，数字立即更新。三个原创合成案例允许选择下一步动作、查看编辑标签和理由。粒子几何与颜色只用于视觉反馈，不编码模型关系或性能；概率地形也不是模型输出。PLAY 点阵招牌轮播六组玩法记号，每屏最多两组；入口图标、概率地形和历史矩阵带有受控动效。Space Grotesk 用于英文 display 排版，Silkscreen 用于少量标签，均自托管。长文支持章节目录、阅读进度、代码复制和表格内横向滚动；项目地图可检索并跳到匹配行，原有局限和来源说明始终保留。
 
-浏览器不请求模型，不向外部字体服务、分析脚本或 CDN 发请求，不保存练习答案；仅在本地保存手动选择的日／夜外观。默认外观跟随系统，所有阅读页共用同一选择。动态作品可暂停，并尊重系统减少动态效果偏好；页面后台或作品滚出视野时停止动画。暂停或减少动态效果时仍可切换静态形态、拖动或用键盘调整静态视角；鼠标悬停不会唤起动画。标题动效随封面暂停，下方共享暂停按钮同时控制信号场、招牌、图标、概率地形和历史矩阵等环境动态；暂停时仍可点选静态路线、查看离线状态或调整示意分布，读数立即更新。减少动态效果时不播放这些动画。WebGL 或 Canvas 2D 不可用时保留对应静态图；关闭 JavaScript 后仍可阅读全部玩法、历史汇总、正文与案例材料。构建需要 Python 3.11+ 与 `requirements-site.txt`；完整验证另外需要 Node.js 22+，无需安装 npm packages。
+浏览器不请求模型，不向外部字体服务、分析脚本或 CDN 发请求，不保存练习答案；静态阅读站仅在本地保存手动选择的日／夜外观。默认外观跟随系统，所有阅读页共用同一选择。动态作品可暂停，并尊重系统减少动态效果偏好；页面后台或作品滚出视野时停止动画。暂停或减少动态效果时仍可切换静态形态、拖动或用键盘调整静态视角；鼠标悬停不会唤起动画。标题动效随封面暂停，下方共享暂停按钮同时控制信号场、招牌、图标、概率地形和历史矩阵等环境动态；暂停时仍可点选静态路线、查看离线状态或调整示意分布，读数立即更新。减少动态效果时不播放这些动画。WebGL 或 Canvas 2D 不可用时保留对应静态图；关闭 JavaScript 后仍可阅读全部玩法、历史汇总、正文与案例材料。构建需要 Python 3.11+ 与 `requirements-site.txt`；完整验证另外需要 Node.js 22+，无需安装 npm packages。
 
 ```bash
 python3 -m venv .venv

@@ -92,7 +92,7 @@ python3 -m decision_lab api-lab replay runs/api-import-001
 
 synthetic 是输入来源声明，可为 true、false、或省略表示未知，不证明 provider 真实性。import provenance 始终是 `imported`，live_verified 始终 false；导入 synthetic 示例仍保留 synthetic 标记。
 
-默认要求全覆盖；`--allow-partial` 明确允许部分导入，报告以完整 manifest 的请求／题数为分母。重复／外来 request ID、重复 JSON key、非有限值拒绝。每题的缺失、refusal、解析错误独立记录，能对齐的其他答案保留；外来答案另列 request contract issue。Jev 没有文档支持的 refusal 形状，不能凭空添加。
+默认要求全覆盖；`--allow-partial` 明确允许部分导入（包括空响应数组，此时全部 planned slots 均为 missing），报告以完整 manifest 的请求／题数为分母。重复／外来 request ID、重复 JSON key、非有限值拒绝。每题的缺失、refusal、解析错误独立记录，能对齐的其他答案保留；外来答案另列 request contract issue。Jev 没有文档支持的 refusal 形状，不能凭空添加。
 
 ## 快照、重放与第二版 rubric
 

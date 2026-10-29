@@ -66,6 +66,25 @@ def _validate(rows):
             value = row.get(field)
             if value is not None and (not _number(value) or value < 0):
                 raise ComparisonError(f"invalid {field}")
+        measure = row.get("measurement")
+        if measure is not None:
+            if (not isinstance(measure, dict) or any(not isinstance(measure.get(k), str) or not measure[k]
+                                                     for k in ("id", "unit", "semantics"))):
+                raise ComparisonError("invalid measurement definition")
+            value = measure.get("value")
+            if value is not None and (not _number(value) or value < 0):
+                raise ComparisonError("invalid measurement value")
+            if row["outcome"] != "ok" and value is not None:
+                raise ComparisonError("non-ok measurement must remain null")
+            if row["outcome"] == "ok" and value != row.get("loss"):
+                raise ComparisonError("measurement value differs from loss")
+        signal = row.get("selection_signal")
+        if signal is not None:
+            if (not isinstance(signal, dict) or any(not isinstance(signal.get(k), str) or not signal[k]
+                                                    for k in ("id", "semantics"))
+                    or type(signal.get("formula_known")) is not bool
+                    or signal.get("value") != row.get("confidence")):
+                raise ComparisonError("invalid selection signal or confidence mismatch")
         if row.get("confidence") is not None and row["confidence"] > 1:
             raise ComparisonError("confidence must be within [0, 1]")
     return families, splits
@@ -175,13 +194,15 @@ def _request_metrics(ledger, selected_rows):
 
 def freeze_analysis_plan(*, dataset_id, comparison, metric="workflow_loss", failure_loss=1.0,
                          split="test", condition=None, calibration_split="calibration",
-                         threshold=None):
+                         threshold=None, selection_signal=None):
     """Return a JSON plan to save BEFORE viewing test outcomes; no inference of timing."""
     plan = {"schema": PLAN_SCHEMA, "dataset_id": copy.deepcopy(dataset_id),
             "comparison": list(comparison), "metric": metric, "failure_loss": failure_loss,
             "split": split, "condition": condition, "calibration_split": calibration_split,
             "threshold": threshold, "threshold_selection_split": calibration_split if threshold is not None else None,
             "unit_aggregation": "unit_id", "cluster": "source_family", "delta": "right-left"}
+    if selection_signal is not None:
+        plan["selection_signal"] = copy.deepcopy(selection_signal)
     _check_plan(plan)
     return plan
 
@@ -197,6 +218,11 @@ def _check_plan(plan):
         raise ComparisonError("invalid planned failure_loss")
     if plan.get("split") != "test" or plan.get("calibration_split") != "calibration":
         raise ComparisonError("confirmatory plan requires calibration/test separation")
+    signal = plan.get("selection_signal")
+    if signal is not None and (not isinstance(signal, dict) or "value" in signal
+            or any(not isinstance(signal.get(k), str) or not signal[k] for k in ("id", "semantics"))
+            or type(signal.get("formula_known")) is not bool):
+        raise ComparisonError("invalid planned selection signal")
     if plan.get("threshold") is not None:
         if not _number(plan["threshold"]) or not 0 <= plan["threshold"] <= 1:
             raise ComparisonError("invalid planned threshold")
@@ -210,8 +236,68 @@ def _meta(ledger, field):
     return ledger.get(field, ledger.get("metadata", {}).get(field))
 
 
+def _scientific_tasks(run):
+    # Recompute from retained native input, never trust caller-authored task IDs.
+    from . import ledger as ledger_module
+    try:
+        native = run["native_manifest"]
+        projected = ledger_module.from_api(native, [])
+    except (KeyError, ValueError, TypeError) as exc:
+        raise ComparisonError("scientific pairing requires a valid retained native manifest") from exc
+    if (run.get("dataset_id") != projected["dataset_id"]
+            or run.get("manifest_digest") != projected["manifest_digest"]
+            or run.get("route") != projected["route"]
+            or run.get("requested_model") != projected["requested_model"]
+            or run.get("treatment") != projected["treatment"]
+            or run.get("native_execution") != projected["native_execution"]
+            or run.get("task_contracts") != projected["task_contracts"]):
+        raise ComparisonError("native identity or task contract differs from retained manifest")
+    contracts = {r["request_id"]: r["contract"] for r in projected["task_contracts"]}
+    expected = {tuple(r[f] for f in KEY_FIELDS): r for r in projected["trials"]}
+    actual = {tuple(r[f] for f in KEY_FIELDS): r for r in run["trials"]}
+    if actual.keys() != expected.keys():
+        raise ComparisonError("scientific pairing requires the full native planned set")
+    tasks = {}
+    for key, row in actual.items():
+        ref = expected[key]
+        if any(row.get(f) != ref.get(f) for f in (*KEY_FIELDS, "request_id", "source_family", "split", "seed")):
+            raise ComparisonError("trial identity differs from retained native task")
+        declared = {k: v for k, v in row.get("measurement", {}).items() if k != "value"}
+        intended = {k: v for k, v in ref["measurement"].items() if k != "value"}
+        if declared != intended:
+            raise ComparisonError("measurement differs from retained task")
+        tasks[key] = {"request_id": row["request_id"], "question_id": row["question_id"],
+                      "contract": contracts[row["request_id"]],
+                      "source_family": row["source_family"], "split": row["split"], "seed": row.get("seed")}
+    return tasks
+
+
+def make_pairing_spec(left_ledger, right_ledger):
+    """Freeze explicit scientific alignment, independent of response availability.
+
+    Native dataset and execution identities remain intact. This is an inspectable
+    contract, not authentication or proof of preregistration.
+    """
+    for run in (left_ledger, right_ledger):
+        _validate(run["trials"])
+    a, b = _scientific_tasks(left_ledger), _scientific_tasks(right_ledger)
+    if not a.keys() & b.keys():
+        raise ComparisonError("no shared scientific task slots")
+    mapping = []
+    for key in sorted(a.keys() | b.keys(), key=repr):
+        ar, br = a.get(key), b.get(key)
+        if ar and br and any(ar[k] != br[k] for k in ("contract", "source_family", "split", "seed")):
+            raise ComparisonError("scientific task/gold/units/measurement mismatch")
+        mapping.append({"trial": dict(zip(KEY_FIELDS, key)), "left": copy.deepcopy(ar), "right": copy.deepcopy(br)})
+    def native(run):
+        return {"dataset_id": _meta(run, "dataset_id"), "manifest_digest": run.get("manifest_digest"),
+                "route": run.get("route"), "requested_model": run.get("requested_model")}
+    return {"schema": "decisions-lab.scientific-pairing/1", "left_native": native(left_ledger),
+            "right_native": native(right_ledger), "mapping": mapping}
+
+
 def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.0,
-                 split=None, condition=None, min_clusters=8, plan=None, metric=None):
+                 split=None, condition=None, min_clusters=8, plan=None, metric=None, pairing=None, _measurement_group=None):
     """Pair all planned keys; positive delta means right has higher loss.
 
     Union keys retain unpaired trials as explicit missing counterparts. The
@@ -233,7 +319,9 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
     if any(ls[f] != rs[f] for f in ls.keys() & rs.keys()):
         raise ComparisonError("source_family split mapping differs across runs")
     ld, rd = _meta(left, "dataset_id"), _meta(right, "dataset_id")
-    if ld is not None and rd is not None and ld != rd:
+    if pairing is not None and pairing != make_pairing_spec(left, right):
+        raise ComparisonError("pairing differs from frozen scientific mapping")
+    if pairing is None and ld is not None and rd is not None and ld != rd:
         raise ComparisonError("dataset_id differs across runs")
     if metric is not None and metric not in {"workflow_loss", "error_loss"}:
         raise ComparisonError("unsupported metric")
@@ -251,14 +339,23 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
     metric = metric or "workflow_loss"
     a = _filtered(left["trials"], split, condition)
     b = _filtered(right["trials"], split, condition)
+    if _measurement_group is not None:
+        a = [r for r in a if _measurement_key(r) == _measurement_group]
+        b = [r for r in b if _measurement_key(r) == _measurement_group]
     for row in a + b:
         retained = row.get("retained_failure_loss")
         if retained is not None and not math.isclose(retained, failure_loss, rel_tol=0, abs_tol=1e-12):
             raise ComparisonError("failure_loss differs from retained task loss; use the frozen retained_failure_loss")
     if plan is not None and plan.get("threshold") is not None:
+        observed_signal = _signal(a + b)
+        expected_signal = plan.get("selection_signal", {"id": "legacy_unspecified_confidence",
+                                    "semantics": "legacy confidence; formula unknown", "formula_known": False})
+        if observed_signal != expected_signal:
+            raise ComparisonError("frozen plan selection signal differs from trial signal")
         def apply_threshold(row):
             if row["outcome"] == "ok" and (row.get("confidence") is None or row["confidence"] < plan["threshold"]):
-                return {**row, "original_outcome": "ok", "outcome": "unknown", "correct": None, "loss": None}
+                return {**row, "original_outcome": "ok", "outcome": "unknown", "correct": None, "loss": None,
+                        **({"measurement": {**row["measurement"], "value": None}} if row.get("measurement") else {})}
             return row
         a, b = [apply_threshold(r) for r in a], [apply_threshold(r) for r in b]
     ai = {tuple(r[f] for f in KEY_FIELDS): r for r in a}
@@ -271,9 +368,18 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
         missing = {**template, "request_id": None, "outcome": "missing", "correct": None,
                    "loss": None, "confidence": None, "latency_ms": None, "cost": None,
                    "unsafe": None, "guard_rejected": None, "semantic_action": None, "choice": None}
+        if missing.get("measurement") is not None:
+            missing["measurement"] = {**missing["measurement"], "value": None}
+        if missing.get("selection_signal") is not None:
+            missing["selection_signal"] = {**missing["selection_signal"], "value": None}
         ar, br = ar if ar is not None else missing, br if br is not None else missing
         if (ar.get("metric") == "role_workflow_loss" or br.get("metric") == "role_workflow_loss") and ar.get("metric") != br.get("metric"):
             raise ComparisonError("role loss metric differs; regenerate old ledgers from retained native records")
+        am, bm = ar.get("measurement"), br.get("measurement")
+        if bool(am) != bool(bm) and (am or bm).get("id") == "absolute_error":
+            raise ComparisonError("numeric measurement missing; regenerate old ledgers from retained native records")
+        if am is not None and bm is not None and any(am.get(f) != bm.get(f) for f in ("id", "unit", "semantics")):
+            raise ComparisonError("measurement differs across runs")
         al, bl = _loss(ar, failure_loss), _loss(br, failure_loss)
         if metric == "error_loss":
             for row in (ar, br):
@@ -293,6 +399,8 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
                       "left_confidence": ar.get("confidence"), "right_confidence": br.get("confidence"),
                       "left_unsafe": ar.get("unsafe"), "right_unsafe": br.get("unsafe"),
                       "left_guard_rejected": ar.get("guard_rejected"), "right_guard_rejected": br.get("guard_rejected"),
+                      "left_measurement": copy.deepcopy(ar.get("measurement")), "right_measurement": copy.deepcopy(br.get("measurement")),
+                      "left_selection_signal": copy.deepcopy(ar.get("selection_signal")), "right_selection_signal": copy.deepcopy(br.get("selection_signal")),
                       "left_loss": al, "right_loss": bl,
                       "delta": bl - al, "paired": key in ai and key in bi})
     unit_rows = [{"unit_id": u, "source_family": rows[0][0], "trials": len(rows),
@@ -303,9 +411,10 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
     for row in unit_rows:
         clusters[row["source_family"]].append(row["delta"])
     families = sorted(clusters, key=repr)
+    groups = sorted({_measurement_key(r) for r in a + b}, key=repr)
     ci = None
     reason = "fewer than min_clusters source families; descriptive only"
-    if len(families) >= min_clusters:
+    if len(families) >= min_clusters and len(groups) <= 1:
         rng = random.Random(seed)
         draws = []
         for _ in range(bootstrap_samples):
@@ -318,7 +427,7 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
             return draws[lo] + (draws[min(lo + 1, len(draws) - 1)] - draws[lo]) * (x - lo)
         ci = [percentile(.025), percentile(.975)]
         reason = None
-    return {"schema": "decisions-lab.comparison/1", "metric": metric, "delta_direction": "right-left",
+    report = {"schema": "decisions-lab.comparison/1", "metric": metric, "delta_direction": "right-left",
             "evidence": {"left": evidence_origin(left), "right": evidence_origin(right),
                          "note": "Source markers are retained claims; comparison does not authenticate provider calls."},
             "failure_loss": failure_loss, "split": split, "condition": condition,
@@ -332,7 +441,52 @@ def compare_runs(left, right, *, seed=0, bootstrap_samples=2000, failure_loss=1.
                          "units": len(unit_rows), "clusters": len(families), "ci95": ci,
                          "inference": "cluster-bootstrap" if ci is not None else "descriptive-only",
                          "reason": reason, "seed": seed, "bootstrap_samples": bootstrap_samples},
-            "units": unit_rows, "trace": trace, "analysis_plan": copy.deepcopy(plan)}
+            "units": unit_rows, "trace": trace, "analysis_plan": copy.deepcopy(plan),
+            "pairing": copy.deepcopy(pairing)}
+    report["by_measurement"] = []
+    if _measurement_group is None and len(groups) > 1:
+        report["by_measurement"] = [
+            {"measurement": dict(zip(("id", "unit", "semantics"), group)),
+             "report": compare_runs(left, right, seed=seed, bootstrap_samples=bootstrap_samples,
+                                    failure_loss=failure_loss, split=split, condition=condition,
+                                    min_clusters=min_clusters, plan=plan, metric=metric, pairing=pairing,
+                                    _measurement_group=group)} for group in groups]
+        for side in ("left", "right"):
+            report[side]["workflow_loss"] = None
+        for key in ("left_loss", "right_loss", "delta", "ci95"):
+            report["estimate"][key] = None
+        report["estimate"]["inference"] = "not-aggregated"
+        report["estimate"]["reason"] = "heterogeneous measurements; inspect by_measurement"
+        for unit in report["units"]:
+            for key in ("left_loss", "right_loss", "delta"):
+                unit[key] = None
+    return report
+
+
+def _measurement_key(row):
+    measurement = row.get("measurement")
+    if measurement is None:
+        return ("legacy_unspecified", "unspecified", "legacy loss contract")
+    return tuple(measurement.get(key) for key in ("id", "unit", "semantics"))
+
+
+def _signal(rows):
+    signals = []
+    for row in rows:
+        signal = row.get("selection_signal")
+        signature = ({k: v for k, v in signal.items() if k != "value"} if signal is not None else
+                     {"id": "legacy_unspecified_confidence", "semantics": "legacy confidence; formula unknown", "formula_known": False})
+        if signature not in signals:
+            signals.append(signature)
+    if len(signals) > 1:
+        raise ComparisonError("different selection signals cannot share a threshold")
+    return signals[0] if signals else None
+
+
+def _observed_loss(rows):
+    if not rows or len({_measurement_key(row) for row in rows}) > 1:
+        return None
+    return mean(_loss(row, 1.0) for row in rows)
 
 
 def risk_coverage(rows):
@@ -344,6 +498,7 @@ def risk_coverage(rows):
     """
     rows = _rows(rows)
     _validate(rows)
+    signal = _signal(rows)
     eligible = [r for r in rows if r["outcome"] == "ok" and r.get("correct") is not None
                 and r.get("confidence") is not None]
     result, selected = [], []
@@ -352,10 +507,10 @@ def risk_coverage(rows):
         grouped[row["confidence"]].append(row)
     for score in sorted(grouped, reverse=True):
         selected.extend(grouped[score])
-        result.append({"threshold": score, "selected": len(selected), "planned": len(rows),
+        result.append({"selection_signal": signal, "threshold": score, "selected": len(selected), "planned": len(rows),
                        "coverage": len(selected) / len(rows),
                        "risk": mean(not r["correct"] for r in selected),
-                       "loss": mean(_loss(r, 1.0) for r in selected)})
+                       "loss": _observed_loss(selected)})
     return result
 
 
@@ -377,7 +532,7 @@ def select_threshold(rows, *, target_risk=0.1):
     return {"threshold": point["threshold"] if point else None, "selection_split": "calibration",
             "source_families": sorted({r["source_family"] for r in rows}, key=repr),
             "target_risk": target_risk, "calibration": point, "risk_guarantee": False,
-            "reject_all": point is None}
+            "reject_all": point is None, "selection_signal": _signal(rows)}
 
 
 def evaluate_threshold(rows, threshold):
@@ -387,14 +542,16 @@ def evaluate_threshold(rows, threshold):
         raise ComparisonError("requires a calibration threshold selection object")
     if set(threshold.get("source_families", [])) & {r["source_family"] for r in rows}:
         raise ComparisonError("calibration and test source families overlap")
+    if threshold.get("selection_signal") != _signal(rows):
+        raise ComparisonError("threshold selection signal differs from evaluation signal")
     value = threshold.get("threshold")
     if value is not None and (not _number(value) or not 0 <= value <= 1):
         raise ComparisonError("invalid threshold")
     selected = [r for r in rows if value is not None and r["outcome"] == "ok"
                 and r.get("correct") is not None and r.get("confidence") is not None
                 and r["confidence"] >= value]
-    return {"threshold": value, "evaluation_split": "test", "planned": len(rows),
+    return {"selection_signal": _signal(rows), "threshold": value, "evaluation_split": "test", "planned": len(rows),
             "selected": len(selected), "coverage": len(selected) / len(rows),
             "risk": mean(not r["correct"] for r in selected) if selected else None,
-            "loss": mean(_loss(r, 1.0) for r in selected) if selected else None,
+            "loss": _observed_loss(selected),
             "risk_guarantee": False}

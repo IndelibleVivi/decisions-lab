@@ -21,6 +21,12 @@ python3 -m decision_lab research compare runs/perfect-001 runs/wrong-001
 
 `api-lab` 的 manifest/record、typed-values 的字段记录、next-action 的 action 记录各自拥有原生语义。`research ledger` 只读这些文件并重算已有评分，产生 `decisions-lab.run-ledger/1` 视图。它列出每个 planned question 的 trial、结果和引用，以及独立的 request metrics，不改写旧文件。collector 在同一外层保留 attempt，仍由原评分器解释答案。
 
+新的 API ledger 将 task、treatment 和 native execution 分开保留：`task_contracts` 是题面与 gold/measurement 契约，`treatment` 标明 route/model，`native_manifest` 与 `native_execution` 保留原请求身份。每题 `measurement` 明确 loss 的 id/value/unit/semantics；numeric truth 使用 absolute error，例如 .5 对 .4 为 .1，对 .0 为 .5，不再压成同一种二元错误。非正常 outcome 不制造 measurement，失败仍由比较器按预定 penalty 计入。同一报告含不同 measurement id/unit/semantics 时，`by_measurement` 各组独立比较，顶层合并 workflow loss 和 delta 保持 null；完整 planned 分母仍保留。
+
+默认比较仍严格核对原 `dataset_id`。需要跨 route 比较同题时，调用 `comparison.make_pairing_spec(left, right)` 显式冻结科学 mapping，再传给 `compare_runs(..., pairing=spec)`。mapping 可从空 responses 的 ledger 生成；后续结果变化不改变任务契约。比较时从 retained manifest 重建并核对，不允许换个 task ID 绕过题面、gold、单位或 measurement 差异。原生身份保留，planned 并集与 missing 不缩减。它当前支持新的 API ledger/collection，旧 Choice 和 typed callers 继续原严格路径。spec 不证明预注册时间或 live 真实性。
+
+confidence 另有带 route/primitive 的 `selection_signal`。当前投影明确不宣称知道 native confidence 的公式，Predicate/Noul 不生成独立 confidence；不同信号不共用 risk–coverage threshold。calibration selection 与 test 应用都保留并验证 signal signature。具体字段与 Python API 见[比较说明](../experiments/comparison/README.md)。
+
 角色题本另由共享 scorer 保留 retained loss matrix、合法语义错误／unsafe／guard 区别，通用 ledger 不用二元 loss 覆盖它；比较必须沿用 retained failure loss。通用 compare 和主动取证 compare 的结果均直接列出两侧来源标记；合成控制、外部导入与 collector 轨迹可以比较，但不能丢掉证据等级。详细字段和失败代价约束见[比较说明](../experiments/comparison/README.md)。
 
 | 对象 | 真源与意义 |

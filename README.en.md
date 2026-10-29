@@ -2,11 +2,24 @@
 
 **Make decisions and typed values inspectable.**
 
-[中文](README.md) · [Research programme](docs/research-programme.md) · [Active evidence](experiments/active-evidence/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
+[中文](README.md) · [Research programme](docs/research-programme.md) · [Local Studio](docs/studio.md) · [Active evidence](experiments/active-evidence/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
 
 Decisions Lab studies decision models and typed value extraction: selecting actions, extracting fields, computing values, and estimating unknown outcomes. It examines their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
 
 Stable methods, dated research, and replayable experiments have different lifetimes. The initial snapshot indexes 23 model/service entities, 21 repositories, 6 studies and 171 sources. The supplied historical dataset was recomputed: 1,000 cases, 4,000 probability records and 14 matching author aggregates. Historical predictions are not redistributed. See the [snapshot guide](research/2026-10-08/README.md) for reproduction using an independently supplied bundle.
+
+## Continue research in the existing reader
+
+The [local Studio](docs/studio.md) extends the existing home page as Experiment D. E1 probability/native-route, E2 evidence/stopping, and E3 fields/source templates connect an editable question and competing explanations to frozen conditions, offline controls or imported native records, sample inspection, comparisons, and notes. Sessions persist locally and can be reopened, forked, exported, and imported.
+
+```bash
+# Use the requirements-site.txt environment described below
+.venv/bin/python -m decision_lab studio --port 8776
+```
+
+The command builds and serves the same reader. The default workspace is ignored `runs/studio`; the static site only shows launch instructions. Studio currently supports macOS/Linux, binds to `127.0.0.1`, reads no credentials, and makes no model calls. Imported bundles contain data only. Historical reproduction requires the retained local source interpreter and matching Python runtime; current reanalysis preserves earlier results and records differences. Exports contain inputs and raw answers and need a privacy check before sharing.
+
+Numeric ledger measurements preserve absolute error; role tasks retain their dedicated loss. Explicit scientific pairing separates the task from native route/model execution identity while preserving original requests. Semantically different selection signals cannot share a threshold, and heterogeneous measurements do not become one score. This change adds no provider experiment.
 
 ## From API capabilities to complete decisions
 
@@ -110,7 +123,7 @@ The home page opens with full-screen typography and an original WebGL particle s
 
 Further down are an illustrative probability landscape with presets, a bias slider, maxP and entropy, and a historical pixel matrix with task and high-maxP subset controls. Cells settle with a finite stepped animation while the actual counts update immediately. Three original synthetic cases let you choose a next action and compare it with editorial labels and rationale. Particle geometry and color are visual treatments, not model relationships or performance; the probability landscape is also illustrative. The PLAY dot-matrix sign cycles through six group marks, displaying at most two per frame. Entry glyphs, the probability landscape and the historical matrix have controlled motion. Space Grotesk display text and Silkscreen labels are self-hosted. Articles have section navigation, reading progress, code copying and scrollable tables. Project search offers direct links to matching rows while retaining limitations and source notes.
 
-Building requires Python 3.11+ and `requirements-site.txt`; full verification also requires Node.js 22+, with no npm packages. Answers are not stored. Only a manually selected day/night appearance is saved locally; the initial theme follows the system and applies throughout the reader. Motion can be paused, respects reduced-motion preferences, and stops while offscreen or in a background tab. Shape changes, dragging and keyboard rotation work as static updates when paused or under reduced motion; hovering does not restart animation. Title motion follows the cover pause control; the shared lower-page pause control also stops the signal field, sign, glyphs, probability landscape and historical matrix. Static route choices, offline outcome examples and distribution controls remain available while paused, with immediate readouts. Reduced motion suppresses these animations. Static images remain when WebGL or Canvas 2D is unavailable. All recipes, historical aggregates, articles and case material remain readable without JavaScript.
+Building requires Python 3.11+ and `requirements-site.txt`; full verification also requires Node.js 22+, with no npm packages. Practice answers are not stored. The static reader only saves a manually selected day/night appearance locally; the initial theme follows the system and applies throughout the reader. Motion can be paused, respects reduced-motion preferences, and stops while offscreen or in a background tab. Shape changes, dragging and keyboard rotation work as static updates when paused or under reduced motion; hovering does not restart animation. Title motion follows the cover pause control; the shared lower-page pause control also stops the signal field, sign, glyphs, probability landscape and historical matrix. Static route choices, offline outcome examples and distribution controls remain available while paused, with immediate readouts. Reduced motion suppresses these animations. Static images remain when WebGL or Canvas 2D is unavailable. All recipes, historical aggregates, articles and case material remain readable without JavaScript.
 
 ```bash
 python3 -m venv .venv

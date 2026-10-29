@@ -55,6 +55,12 @@ E3 的 stage 关联、三路径与阶段干预由 `decision_lab/typed_dag.py` �
 
 历史矩阵的三组数字来自 `research/2026-10-08/reanalysis/sys1_reanalysis.json`；交互练习选取 `experiments/next-action/cases.json` 中的三个 dev cases，标签与理由随构建投影。矩阵每格代表一条记录的计数，按汇总结果分组，不声称恢复原始样本身份或顺序。修改这些源时同时检查首页显示；不要在 HTML 或浏览器脚本里另写答案副本。站点脚本变更会生成新的资源版本 URL，供浏览器区分构建后的缓存。完整验证包含无网络 JavaScript 行为检查；排版、手机断行和实际点击仍需浏览器检视。
 
+## 本地研究台的维护边界
+
+`site/studio.html` 是首页实验 D 的片段，由同一 builder 插入；只维护这一入口。`studio.js/css` 使用现有字体、颜色、像素卡带与实验区，不生成独立欢迎页。静态 build 中的 session token 为空，不请求研究 API；本地 `studio_server` 构建并服务相同 allowlist，只向本机首页注入会话 token。新增页面必须进入 `PAGES`；研究包、源码解释器与 runs 永远不进入 allowlist。
+
+修改会话行为时检查冻结/派生、revision 冲突、失败原子性、完整 planned 分母、错误条件导入、原生 provenance 和分析绑定。历史源码只来自本机 snapshot registry；导入包不能安装程序，缺少旧源码或 Python runtime 不匹配时应明确拒绝历史复现，当前重分析仍可另存结果。命令与当前边界同步 [Studio 操作说明](studio.md)、中英文 README 和仓库契约。
+
 ## 图形与外观的维护边界
 
 `site/sculpture.js` 的 WebGL 粒子作品在编织、分岔、环流间变形，支持整体姿态跟随、带惯性的拖拽、衰减轨迹、冲散和键盘旋转；Home／复位会清除视角偏移、惯性和冲散，保持当前选定形态。暂停／减少动态效果下，拖拽与键盘仅更新静帧，悬停不启动动画；触摸保留纵向滚动。取消、失焦、离屏、后台或 context 丢失会清理拖拽和 pointer capture。几何和颜色不代表模型关系或性能。无 WebGL 或 context 丢失时保留 SVG，恢复 context 后重新初始化并保留暂停状态。

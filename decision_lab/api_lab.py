@@ -690,7 +690,8 @@ def normalize_request(request, entry, route):
 
 
 def validate_responses(entries, manifest, *, allow_partial=False):
-    require(isinstance(entries, list) and entries, "responses must be a nonempty array")
+    require(isinstance(entries, list) and (entries or allow_partial),
+            "responses must be a nonempty array unless partial evidence is allowed")
     known = {request["id"] for request in manifest["requests"]}
     ids = []
     for entry in entries:

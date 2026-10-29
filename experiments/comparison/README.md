@@ -1,8 +1,36 @@
 # 离线配对比较与选择性预测
 
-`decision_lab/comparison.py` 比较两个 normalized common run ledger，不调用 provider。数据输入为 `schema: decisions-lab.run-ledger/1` 的 JSON object，`trials` 列出全部 planned trials；`metadata.dataset_id` / `metadata.run_id`（也接受顶层同名字段）关联题本身份与 run。只有 manifest 身份时不能将含 model 的 manifest 当作跨模型题本身份。已知的两个 dataset_id 不同会拒绝比较。
+`decision_lab/comparison.py` 比较两个 normalized common run ledger，不调用 provider。数据输入为 `schema: decisions-lab.run-ledger/1` 的 JSON object，`trials` 列出全部 planned trials；`metadata.dataset_id` / `metadata.run_id`（也接受顶层同名字段）关联题本身份与 run。只有 manifest 身份时不能将含 model 的 manifest 当作跨模型题本身份。默认严格模式下，已知的两个 dataset_id 不同会拒绝比较；显式科学配对是下面单独校验的入口。
 
 每个 trial 包含 `request_id`、`question_id`、`unit_id`、`source_family`、`condition`、`replicate`、`split`、`outcome`，以及 nullable 的 `correct`、`loss`、`confidence`、`latency_ms`、`cost`。`outcome` 是 `ok`、`unknown`、`refusal`、`error`、`missing` 之一。正常答案需有 `loss` 或 boolean `correct`；两者均未知时无法计算 workflow loss，函数拒绝产生貌似完整的评分。`correct: null` 不转换成错误标签；有数值 loss 而没有 correctness 时仍可比较 workflow loss，但 error loss 与 conditional accuracy 不虚构答案。
+
+## 测量与显式科学配对
+
+新的 API ledger 为每题保留 `measurement: {id, value, unit, semantics}`，`value` 与该题的 `loss` 对应。明确带 `numeric_truth` 的题或 `kind: number` 题使用 `absolute_error`，而非把数值距离压成二元错误。例如答案 .5 对 gold .4 的 loss 是 .1，对 gold .0 是 .5；带明确数值 rubric 的 Choice 标签先按数值解释，原生标签仍保留在 `value`。Choice 分类、数值答案、confidence 和 role loss 仍各自拥有语义。missing/refusal/error/unknown 的 measurement value 是 null，workflow 比较才另按冻结失败代价计入。旧数字 ledger 缺少该 measurement 时须从 retained record 重建，不能与新连续 loss 静默混用。
+
+同一题本包含多种 measurement 时（例如 probability 题本同时有数值误差与菜单分类错误），报告按 `(id, unit, semantics)` 在 `by_measurement` 分组。每项含 `measurement` 和完整 `report`，各组独立保留 planned/missing、unit 聚合与 source-family 区间。顶层仍列全分母与逐题 trace，但 `left/right.workflow_loss`、`estimate.left_loss/right_loss/delta/ci95` 为 null，`inference: not-aggregated`；不会把 probability distance 与分类错误混成一个效应。旧 ledger 没有 measurement 时保持原兼容行为，其未知度量不与新度量自动混合。
+
+`task_contracts` 描述题面、全部问题、gold/rubric、assets、headers 和 measurement；`treatment` 描述 route/model；`native_execution` 和 `native_manifest` 保留原 manifest 与 endpoint 身份。原 `dataset_id` 算法不变，跨 route 的原生身份仍然不同。只有主动传入 `pairing` 才允许在明确核对科学任务后跨 route 比较：
+
+```python
+from decision_lab.comparison import make_pairing_spec, compare_runs
+
+# 可在 responses 为空时由 from_api(manifest, []) 产生的 ledger 冻结。
+pairing = make_pairing_spec(left, right)
+# 用 json.dump 保存到独立分析文件；原生身份不会被改写。
+report = compare_runs(left, right, pairing=pairing, bootstrap_samples=200)
+```
+
+CLI 对应入口同样离线：
+
+```bash
+python3 -m decision_lab research pairing <left-record> <right-record> --output runs/scientific-pairing.json
+python3 -m decision_lab research compare <left-record> <right-record> --pairing runs/scientific-pairing.json
+```
+
+spec 为 `decisions-lab.scientific-pairing/1` JSON object，包含 `left_native/right_native` 和逐 request/question 的完整 planned slot mapping。比较时重新验证 retained native manifest、重建 task projection 并与 spec 深比较；仅提供或改写 task ID、dataset ID 或 spec 映射不能绕过 task/gold/unit/measurement 不一致。原生 wire 差异只按已支持的 input/state、predicate/noul、Choice criteria、Score level 描述映射；整个 request 的上下文与问题顺序仍参与核对。未知等价关系保守拒绝，不做语义猜测。不同 native request ID 可映射到相同 trial slot；两侧 planned 集合的并集仍显式包含缺失 counterpart。该入口当前支持保留完整 API manifest 的新 ledger（含 API collection 投影）；旧 Choice/typed caller 保留原严格路径，不被猜测成跨协议同构。
+
+spec 不绑定响应内容，因此真实采集或离线导入结果不会使预先冻结的 mapping 失效。它不证明 preregistration 时间或 native 证据真实性；两侧 provenance 和 synthetic 标记仍独立保留。现有 `analysis_plan` 仍绑定单一原生 dataset ID；跨 route 科学 mapping 不能冒充这个旧单 dataset 确认性计划。
 
 ## 配对、分母与估计
 
@@ -36,6 +64,10 @@ CI 采用 source-family cluster percentile bootstrap：以 family 为单位有�
 只有全部相关 request 的 latency 已知时才报告总计和平均，否则保持 null 并报告已知数量。只有全部 request 的 cost 均为 `{amount: number, currency: string}` 且 currency 一致时才求和。bare number、currency 不明、混合 currency 或任一未知 cost 均保持 `cost_total: null`；不使用模型标价补齐，不换汇。输入 metrics 是 run 的记录事实，不代表实测价格或当前 provider 报价。
 
 ## Confidence、ties 与 calibration
+
+新 API trial 另保留 `selection_signal: {id, value, semantics, formula_known}`。id 包括 route 与 primitive；原生 confidence 明确标为 provider-reported，当前投影不宣称已核定其公式（`formula_known: false`）。Predicate/Noul 的事件概率是答案，不生成独立 confidence。不会把原生 option mass 或最大 mass 偷换成正确率或 native confidence。
+
+`risk_coverage`、`select_threshold` 和 `evaluate_threshold` 只接受同一种 signal signature；调用者应先选择同 route/primitive 的题。不同信号不能合用一条 threshold，selection object 保留 signature，test 应用时必须一致。没有这些字段的旧同类 rows 使用 `legacy_unspecified_confidence` 兼容语义，仍不声称公式已知。冻结数值 threshold 的新 API analysis plan 还须传 `selection_signal={...}`（不含 value），使阈值与信号一起冻结；旧未标注 rows 的计划保持兼容。
 
 `risk_coverage(rows)` 返回各个有效 confidence threshold 的累计点。同 confidence 的 ties 一起接纳。只有 `ok`、correctness 已知、有效 `[0,1]` confidence 的 trial 可以接纳；unknown、没有 score 的答案、调用失败都不会被补成零 confidence。coverage 分母始终是全部 planned trials；risk 是已接纳答案的错误率，loss 是已接纳答案的 workflow loss，两者分开。无有效 score 返回空曲线。
 
@@ -72,7 +104,9 @@ plan 是可检查的预先约定文件，软件不能证明文件创建时间、
 ## 本地验证
 
 ```sh
-python3 -m unittest tests.test_comparison -v
+python3 -m unittest tests.test_measurement tests.test_comparison tests.test_collection tests.test_research_cli -v
 ```
 
 测试只使用合成 ledger，覆盖 null/已知效应、cluster 内相关、unit variants 权重、少簇、顺序不变、missing/失败分母、ties、校准与 test 分离、frozen plan、unknown cost、request 去重。它们验证离线统计契约，不是 live provider 测量或模型能力结论。
+
+阈值曲线的 `risk` 始终是已选答案的分类错误率；`loss` 仅在已选答案属于同一 measurement 时计算，异质 loss 保持 null，不因 confidence 相同而相加。
