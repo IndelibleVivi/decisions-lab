@@ -15,7 +15,7 @@ import tempfile
 import uuid
 
 from . import api_lab as al, api_tasks, collection, evidence, evidence_workflow as ew, typed_dag as td
-from . import interpretation
+from . import interpretation, schema_inquiry
 
 SCHEMA = "decisions-lab.study/1"
 BUNDLE_SCHEMA = "decisions-lab.study-bundle/1"
@@ -53,6 +53,15 @@ def imported_json(data, key):
 
 def template(kind):
     common = {"kind": kind, "replicates": 1, "hypotheses": "", "next_question": ""}
+    if kind == "schema-inquiry":
+        return {**common, "kind": "active-evidence", "title": "这些字段，还缺什么？",
+                "question": "相同表示能否支持共同的最优行动；若不能，下一条证据值得查吗？",
+                "schema_design": schema_inquiry.build_design(),
+                "hypotheses": "H1：现行条款缺失会产生相同字段、相反行动的反例。\nH2：有效回查可消除部分歧义；证据不可得时应停止。",
+                "conditions": [{"id": "stop", "label": "仅字段 · 停止", "route": "decisions", "policy": "stop"},
+                               {"id": "full", "label": "完整原文 · 全部读取", "route": "decisions", "policy": "optimal", "query_mode": "read-all"},
+                               {"id": "optimal", "label": "按需核查 · 精确控制", "route": "decisions", "policy": "optimal"},
+                               {"id": "model", "label": "原生模型 · 待导入", "route": "decisions", "policy": "optimal"}]}
     if kind == "api-lab":
         rows = [r for r in api_tasks.all_cases() if r["experiment"] == "probability"]
         return {**common, "title": "相同事件，不同测量", "question": "原生路线改变时，事件概率误差是否仍然可比较？",
@@ -73,7 +82,7 @@ def template(kind):
     raise al.ApiLabError("unknown research family")
 
 
-def initial_records(definition):
+def initial_records(definition, *, retained=None):
     """Compile frozen treatments, preserving unsupported native conditions as errors."""
     al.require(isinstance(definition, dict), "definition must be an object")
     kind = definition.get("kind")
@@ -83,6 +92,12 @@ def initial_records(definition):
         al.require(len(definition[field]) <= 2000, f"{field} is too long")
     reps = definition.get("replicates")
     al.require(type(reps) is int and 1 <= reps <= 10, "replicates must be 1–10")
+    if "schema_design" in definition:
+        al.require(kind == "active-evidence" and "suite" not in definition,
+                   "schema inquiry owns its compiled suite; do not supply a second suite")
+        suite = schema_inquiry.compile_suite(definition["schema_design"])
+    else:
+        suite = definition.get("suite")
     conditions = definition.get("conditions")
     al.require(isinstance(conditions, list) and 2 <= len(conditions) <= 8, "use 2–8 conditions")
     records = {}
@@ -104,11 +119,19 @@ def initial_records(definition):
             records[ident] = al.build_record(manifest, [], provenance="imported", allow_partial=True)
         elif kind == "active-evidence":
             al.require(policy in evidence.POLICIES, "invalid evidence control policy")
-            records[ident] = ew.start(definition["suite"], **kwargs)
+            records[ident] = ew.start(suite, query_mode=condition.get("query_mode", "adaptive"), **kwargs)
         else:
             al.require(policy in td.DEMO_POLICIES, "invalid DAG control policy")
             records[ident] = td.start(definition["suite"], condition=condition.get("arm", "fields-only"),
                                      intervention=condition.get("intervention"), **kwargs)
+            if retained is not None and ident in retained:
+                # Existing bundles are callers of the retained projection contract.
+                if "projection_revision" in retained[ident]:
+                    records[ident]["projection_revision"] = retained[ident]["projection_revision"]
+                else:
+                    records[ident].pop("projection_revision", None)
+                td._seal(records[ident])
+                td.prepare_stage(records[ident])
     return records
 
 
@@ -119,9 +142,11 @@ def run_control(definition, condition, initial):
         manifest = initial["manifest"]
         return al.build_record(manifest, al.oracle_entries(manifest, condition["policy"]), provenance="synthetic")
     if definition["kind"] == "active-evidence":
-        return ew.demo(definition["suite"], policy=condition["policy"], **kwargs)
-    return td.demo(definition["suite"], condition=initial["condition"], intervention=initial["intervention"],
-                   policy=condition["policy"], **kwargs)
+        return ew.demo(initial["suite"], policy=condition["policy"], query_mode=initial.get("query_mode", "adaptive"), **kwargs)
+    workflow = clone(initial)
+    while td.prepare_stage(workflow) is not None:
+        workflow = td.apply_stage(workflow, td._demo_stage_source(workflow, condition["policy"]))
+    return workflow
 
 
 def native_plan(record):
@@ -146,6 +171,12 @@ def bind_import(initial, current, value):
         al.require(value.get("schema") in (al.RECORD_VERSION, collection.SCHEMA) and manifest == initial["manifest"],
                    "import does not match this frozen native manifest")
     elif value.get("schema") == initial["schema"]:
+        if initial["schema"] == ew.SCHEMA:
+            al.require(value.get("query_mode", "adaptive") == initial.get("query_mode", "adaptive"),
+                       "workflow differs from frozen query_mode")
+        if initial["schema"] == td.SCHEMA:
+            al.require(value.get("projection_revision", 1) == initial.get("projection_revision", 1),
+                       "workflow differs from frozen projection_revision")
         for key in initial:
             if key not in ("rounds", "evidence_digest"):
                 al.require(value.get(key) == initial[key], f"workflow differs from frozen {key}")
@@ -278,6 +309,8 @@ class Store:
             return self._command(action, data)
 
     def _command(self, action, data):
+        if action == "audit-schema":
+            return schema_inquiry.audit_design(data.get("design"))
         if action == "create":
             return self._new(data.get("definition") or template(data.get("kind", "api-lab")))
         if action == "import-bundle":
@@ -286,7 +319,8 @@ class Store:
             study = clone(bundle["study"])
             check_seal(study)
             al.require(study.get("schema") == SCHEMA and study.get("state") in ("draft", "frozen"), "invalid study schema")
-            compiled = initial_records(study["definition"])
+            compiled = initial_records(study["definition"], retained=(
+                study["frozen"]["initial"] if study["state"] == "frozen" else None))
             if study["state"] == "frozen":
                 al.require(study["frozen"]["design_digest"] == al.digest(study["definition"]), "frozen design changed")
                 al.require(set(compiled) == set(study["frozen"]["initial"]) == set(study["runs"]), "bundle conditions differ")

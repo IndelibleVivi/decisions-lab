@@ -381,7 +381,17 @@ def _cmd_api_replay(args):
 def _cmd_research(args):
     from . import collection, comparison, generators, ledger, rule_workflow
     command = args.research_command
-    if command.startswith("typed-dag-"):
+    if command.startswith("schema-"):
+        from . import schema_inquiry
+        if command == "schema-design":
+            result = schema_inquiry.build_design(seed=args.seed)
+        elif command == "schema-audit":
+            result = schema_inquiry.audit_design(al.read_json(args.design))
+        elif command == "schema-suite":
+            result = schema_inquiry.compile_suite(al.read_json(args.design))
+        else:
+            raise al.ApiLabError("unknown schema inquiry command")
+    elif command.startswith("typed-dag-"):
         from . import typed_dag
         if command == "typed-dag-suite":
             result = typed_dag.build_suite(seed=args.seed)
@@ -412,11 +422,11 @@ def _cmd_research(args):
                 result = evidence.run_suite(suite, policy=args.policy, replicates=args.replicates)
             elif command == "evidence-start":
                 result = evidence_workflow.start(suite, route=args.route, model=args.model,
-                                                 account_id=args.account_id, replicates=args.replicates)
+                                                 account_id=args.account_id, replicates=args.replicates, query_mode=args.query_mode)
             else:
                 result = evidence_workflow.demo(suite, route=args.route, model=args.model,
                                                 account_id=args.account_id, replicates=args.replicates,
-                                                policy=args.policy)
+                                                policy=args.policy, query_mode=args.query_mode)
         elif command == "evidence-prepare":
             result = evidence_workflow.prepare_round(al.read_json(args.record))
         elif command == "evidence-apply":
@@ -639,6 +649,11 @@ def build_parser() -> argparse.ArgumentParser:
         parser.add_argument("--output", help="new local JSON file; source tree restricted to runs/")
         parser.set_defaults(func=_cmd_research)
         return parser
+    sp = research_parser("schema-design")
+    sp.add_argument("--seed", type=int, default=20261030)
+    for name in ("schema-audit", "schema-suite"):
+        sp = research_parser(name)
+        sp.add_argument("design", help="finite authored schema inquiry design JSON")
     sp = research_parser("typed-dag-suite")
     sp.add_argument("--seed", type=int, default=0)
     for name in ("typed-dag-start", "typed-dag-demo"):
@@ -671,6 +686,7 @@ def build_parser() -> argparse.ArgumentParser:
         if name in ("evidence-run", "evidence-demo"):
             sp.add_argument("--policy", choices=("checklist", "stop", "myopic", "optimal"), default="optimal")
         if name != "evidence-run":
+            sp.add_argument("--query-mode", choices=("adaptive", "read-all"), default="adaptive")
             sp.add_argument("--route", required=name == "evidence-start", default="decisions", choices=al.ROUTES)
             sp.add_argument("--model")
             sp.add_argument("--account-id")

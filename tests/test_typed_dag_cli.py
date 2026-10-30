@@ -31,6 +31,7 @@ class TypedDagCliTests(unittest.TestCase):
             report = json.loads(out)
             self.assertTrue(report)
             self.assertIs(report["live_verified"], False)
+            self.assertEqual(report["projection_revision"], 2)
             self.assertEqual(self.command("typed-dag-prepare", str(record))[1].strip(), "null")
             code, out, err = self.command("typed-dag-compare", str(record), str(record))
             self.assertEqual((code, err), (0, ""))

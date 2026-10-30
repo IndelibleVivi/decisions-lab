@@ -26,6 +26,8 @@ SCHEMA = "decisions-lab.typed-dag/1"
 SUITE_SCHEMA = "decisions-lab.typed-dag-suite/1"
 REPORT_SCHEMA = "decisions-lab.typed-dag-report/1"
 COMPARE_SCHEMA = "decisions-lab.typed-dag-comparison/1"
+PROJECTION_REVISION = 2
+HISTORICAL_PROJECTION_REVISION = 1
 
 ARMS = ("direct", "fields-only", "source-linked")
 INTERVENTIONS = (None, "extraction", "calculation", "retrieval")
@@ -104,6 +106,34 @@ def _decimal(value: Any, *, where: str, nullable: bool = False) -> Decimal | Non
     return result
 
 
+def _decimal_text(value: Decimal | None, *, revision: int) -> str | None:
+    """Serialize a Decimal without conflating scale with numeric value."""
+
+    if value is None:
+        return None
+    if revision == HISTORICAL_PROJECTION_REVISION:
+        return str(value)
+    _require(revision == PROJECTION_REVISION, "unsupported projection revision")
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return "0" if Decimal(text) == 0 else text
+
+
+def _workflow_revision(workflow: dict[str, Any]) -> int:
+    """Return the explicit projection revision, defaulting old records to v1."""
+
+    revision = workflow.get(
+        "projection_revision", HISTORICAL_PROJECTION_REVISION
+    )
+    _require(
+        type(revision) is int
+        and revision in (HISTORICAL_PROJECTION_REVISION, PROJECTION_REVISION),
+        "unsupported workflow projection_revision",
+    )
+    return revision
+
+
 def _field(name: str, kind: str, instructions: str, **extra: Any) -> dict[str, Any]:
     del name
     return {"type": kind, "instructions": instructions, **extra}
@@ -119,6 +149,30 @@ def _distractor_line(source: str) -> str | None:
         if line is not None:
             return line
     return None
+
+
+def _tagged_line(
+    source: str, prefix: str
+) -> tuple[str, dict[str, Any]] | None:
+    """Return one uniquely tagged line and its Unicode-codepoint locator."""
+
+    offset = 0
+    matches: list[tuple[str, dict[str, Any]]] = []
+    for raw_line in source.splitlines(keepends=True):
+        line = raw_line.rstrip("\r\n")
+        if line.startswith(prefix):
+            matches.append((
+                line,
+                {
+                    "source": "provided-task-text",
+                    "start": offset,
+                    "end": offset + len(line),
+                    "unit": "unicode_codepoint",
+                    "range": "half_open",
+                },
+            ))
+        offset += len(raw_line)
+    return matches[0] if len(matches) == 1 else None
 
 
 def _case(
@@ -569,6 +623,7 @@ def start(
                  "Cloudflare decision route requires a 32-hex account_id")
     workflow = {
         "schema": SCHEMA,
+        "projection_revision": PROJECTION_REVISION,
         "suite": copy.deepcopy(suite),
         "route": route,
         "model": model,
@@ -589,6 +644,7 @@ def _calculate(
     values: dict[str, Any],
     *,
     force_gold: bool,
+    projection_revision: int = HISTORICAL_PROJECTION_REVISION,
 ) -> dict[str, Any]:
     selected = (
         case["oracle"]["gold_calculation"]
@@ -624,11 +680,17 @@ def _calculate(
         "source": "gold_synthetic" if force_gold else "decimal_code",
         "extracted": copy.deepcopy(values),
         "operands": {
-            "quantity": None if quantity is None else str(quantity),
-            "unit_price": None if price is None else str(price),
-            "shipping": None if shipping is None else str(shipping),
+            "quantity": _decimal_text(
+                quantity, revision=projection_revision
+            ),
+            "unit_price": _decimal_text(
+                price, revision=projection_revision
+            ),
+            "shipping": _decimal_text(
+                shipping, revision=projection_revision
+            ),
         },
-        "total": None if total is None else str(total),
+        "total": _decimal_text(total, revision=projection_revision),
         "complete": complete,
         "matches_gold": total == gold_total,
         "arithmetic_consistent": True if complete else None,
@@ -640,19 +702,179 @@ def _calculate(
     }
 
 
+def _rejected_binding(candidate: Any, reason: str) -> dict[str, Any]:
+    return {
+        "quote": None,
+        "source": None,
+        "valid": False,
+        "matches_gold": False,
+        "candidate": candidate,
+        "link": None,
+        "verification": {
+            "status": "rejected",
+            "reason": reason,
+            "locator": None,
+        },
+    }
+
+
+def _public_verification(binding: dict[str, Any] | None) -> dict[str, Any]:
+    if binding is None:
+        return {
+            "status": "rejected",
+            "reason": "status_evidence_field_absent",
+            "locator": None,
+        }
+    verification = binding.get("verification") or {
+        "status": "rejected",
+        "reason": "evidence_not_bound",
+        "locator": None,
+    }
+    if verification.get("status") == "bound":
+        return {
+            "status": "bound",
+            "reason": "current_target_state_excerpt_bound",
+            "locator": copy.deepcopy(verification.get("locator")),
+        }
+    return {
+        "status": verification.get("status", "rejected"),
+        "reason": verification.get("reason", "evidence_not_bound"),
+        "locator": None,
+    }
+
+
+def _bind_status_evidence(
+    case: dict[str, Any],
+    values: dict[str, Any],
+) -> dict[str, Any]:
+    """Bind an exact excerpt to the target entity's current-state line."""
+
+    source = case["source"]
+    candidate = values.get("status_evidence")
+    if candidate is None:
+        return _rejected_binding(candidate, "status_evidence_missing")
+    if not isinstance(candidate, str):
+        return _rejected_binding(candidate, "status_evidence_not_text")
+    if not candidate.strip():
+        return _rejected_binding(candidate, "status_evidence_empty")
+
+    record_match = _tagged_line(source, "目标记录：")
+    if record_match is None:
+        return _rejected_binding(
+            candidate, "target_record_missing_or_ambiguous"
+        )
+    record_line, record_link = record_match
+    entities = re.findall(r"实体\s+([^\s，,；;。]+)", record_line)
+    versions = re.findall(
+        r"(?:当前)?版本\s+([^\s，,；;。]+)", record_line
+    )
+    if len(entities) != 1:
+        return _rejected_binding(
+            candidate, "target_entity_missing_or_ambiguous"
+        )
+    if len(versions) != 1:
+        return _rejected_binding(
+            candidate, "target_version_missing_or_ambiguous"
+        )
+
+    target_entity = values.get("target_entity")
+    target_version = values.get("target_version")
+    if not isinstance(target_entity, str) or not target_entity:
+        return _rejected_binding(candidate, "extracted_target_entity_missing")
+    if target_entity != entities[0]:
+        return _rejected_binding(candidate, "target_entity_mismatch")
+    if not isinstance(target_version, str) or not target_version:
+        return _rejected_binding(candidate, "extracted_target_version_missing")
+    if target_version != versions[0]:
+        return _rejected_binding(candidate, "target_version_mismatch")
+
+    current_match = _tagged_line(source, "目标现行状态：")
+    if current_match is None:
+        return _rejected_binding(
+            candidate, "current_target_state_missing_or_ambiguous"
+        )
+    current_line, line_link = current_match
+    if candidate not in current_line:
+        return _rejected_binding(candidate, "not_in_current_target_state")
+    status_body = current_line[len("目标现行状态："):]
+    candidate_body = (
+        candidate[len("目标现行状态："):]
+        if candidate.startswith("目标现行状态：") else candidate
+    )
+    if not candidate_body.strip() or candidate_body not in status_body:
+        return _rejected_binding(candidate, "not_a_current_state_excerpt")
+    occurrences = status_body.count(candidate_body)
+    if occurrences != 1:
+        return _rejected_binding(candidate, "ambiguous_current_state_excerpt")
+    if source.find(candidate) != source.rfind(candidate):
+        return _rejected_binding(candidate, "ambiguous_source_excerpt")
+    start = line_link["start"] + current_line.index(candidate)
+    link = {
+        "source": "provided-task-text",
+        "start": start,
+        "end": start + len(candidate),
+        "unit": "unicode_codepoint",
+        "range": "half_open",
+    }
+    return {
+        "quote": candidate,
+        "source": "extracted",
+        "valid": True,
+        "matches_gold": (
+            candidate == case["oracle"]["gold_evidence"]["passage"]
+        ),
+        "candidate": candidate,
+        "link": link,
+        "verification": {
+            "status": "bound",
+            "reason": "unique_excerpt_in_target_current_state",
+            "locator": link,
+            "target_record_locator": record_link,
+            "current_state_locator": line_link,
+            "target_entity": target_entity,
+            "target_version": target_version,
+        },
+    }
+
+
 def _retrieval(
     case: dict[str, Any],
     values: dict[str, Any],
     intervention: str | None,
+    *,
+    projection_revision: int = HISTORICAL_PROJECTION_REVISION,
 ) -> dict[str, Any]:
     if intervention == "retrieval":
         passage = case["oracle"]["gold_evidence"]["passage"]
+        if projection_revision == PROJECTION_REVISION:
+            start = case["source"].index(passage)
+            link = {
+                "source": "provided-task-text",
+                "start": start,
+                "end": start + len(passage),
+                "unit": "unicode_codepoint",
+                "range": "half_open",
+            }
+            return {
+                "quote": passage,
+                "source": "gold_synthetic",
+                "valid": True,
+                "matches_gold": True,
+                "link": link,
+                "verification": {
+                    "status": "bound",
+                    "reason": "gold_retrieval_intervention",
+                    "locator": link,
+                },
+            }
         return {
             "quote": passage,
             "source": "gold_synthetic",
             "valid": True,
             "matches_gold": True,
         }
+    if projection_revision == PROJECTION_REVISION:
+        return _bind_status_evidence(case, values)
     candidate = values.get("status_evidence")
     valid = (
         isinstance(candidate, str)
@@ -714,10 +936,15 @@ def _action_from_input(payload: dict[str, Any]) -> str:
         if projection == "fields-only":
             status = (payload.get("fields") or {}).get("status_evidence")
         else:
-            status = (payload.get("evidence") or {}).get("quote")
+            evidence = payload.get("evidence") or {}
+            status = evidence.get("quote")
+            if evidence.get("link") is None:
+                status = None
     if amount is None or not isinstance(status, str):
         return "needs_more_context"
-    if not status.startswith("目标现行状态："):
+    if not status.startswith("目标现行状态：") and (
+        projection != "source-linked" or "verification" not in (payload.get("evidence") or {})
+    ):
         return "needs_more_context"
     if "无未解决争议" in status:
         return (
@@ -739,6 +966,8 @@ def _projection_body(
     values: dict[str, Any],
     calculation: dict[str, Any],
     retrieval: dict[str, Any] | None,
+    *,
+    projection_revision: int = HISTORICAL_PROJECTION_REVISION,
 ) -> dict[str, Any]:
     base = {
         "question": "依照给定任务规则，建议下一步怎样处理目标记录？",
@@ -755,6 +984,8 @@ def _projection_body(
         name: copy.deepcopy(value)
         for name, value in values.items()
         if name != "computed_total"
+        and not (projection_revision == PROJECTION_REVISION
+                 and arm == "source-linked" and name == "status_evidence")
     }
     body = {
         **base,
@@ -769,15 +1000,24 @@ def _projection_body(
         body["evidence"] = {
             "quote": None if retrieval is None else retrieval["quote"],
             "link": (
-                None if retrieval is None or retrieval["quote"] is None else {
-                    "source": "provided-task-text",
-                    "start": case["source"].index(retrieval["quote"]),
-                    "end": case["source"].index(retrieval["quote"]) + len(retrieval["quote"]),
-                    "unit": "unicode_codepoint",
-                    "range": "half_open",
-                }
+                None if retrieval is None or retrieval["quote"] is None
+                else copy.deepcopy(
+                    retrieval.get("link")
+                    or {
+                        "source": "provided-task-text",
+                        "start": case["source"].index(retrieval["quote"]),
+                        "end": (
+                            case["source"].index(retrieval["quote"])
+                            + len(retrieval["quote"])
+                        ),
+                        "unit": "unicode_codepoint",
+                        "range": "half_open",
+                    }
+                )
             ),
         }
+        if projection_revision == PROJECTION_REVISION:
+            body["evidence"]["verification"] = _public_verification(retrieval)
     return body
 
 
@@ -819,14 +1059,21 @@ def _decision_plan(
             calculation = _calculate(
                 case, values,
                 force_gold=workflow["intervention"] == "calculation",
+                projection_revision=_workflow_revision(workflow),
             )
             retrieval = (
-                _retrieval(case, values, workflow["intervention"])
+                _retrieval(
+                    case,
+                    values,
+                    workflow["intervention"],
+                    projection_revision=_workflow_revision(workflow),
+                )
                 if workflow["condition"] == "source-linked" else None
             )
         public_input = _projection_body(
             workflow["suite"], case, workflow["condition"], values,
             calculation, retrieval,
+            projection_revision=_workflow_revision(workflow),
         )
         questions = [{
             "id": "action",
@@ -1298,12 +1545,15 @@ def _rebuild(
 ]:
     workflow = _read(value)
     _require(workflow.get("schema") == SCHEMA, "invalid typed DAG workflow schema")
-    expected_keys = {
+    required_keys = {
         "schema", "suite", "route", "model", "account_id", "replicates",
         "condition", "intervention", "planned", "rounds", "evidence_digest",
     }
-    _require(set(workflow) == expected_keys,
+    _require(
+        set(workflow) == required_keys
+        or set(workflow) == required_keys | {"projection_revision"},
              "workflow has unknown or missing fields; derived state must not be retained")
+    _workflow_revision(workflow)
     _check_seal(workflow, where="workflow")
     suite = validate_suite(workflow["suite"])
     _require(workflow["condition"] in ARMS, "workflow condition changed")
@@ -1457,14 +1707,21 @@ def _row_report(
         calculation = _calculate(
             case, values,
             force_gold=workflow["intervention"] == "calculation",
+            projection_revision=_workflow_revision(workflow),
         )
         retrieval = (
-            _retrieval(case, values, workflow["intervention"])
+            _retrieval(
+                case,
+                values,
+                workflow["intervention"],
+                projection_revision=_workflow_revision(workflow),
+            )
             if workflow["condition"] == "source-linked" else None
         )
         public_input = _projection_body(
             workflow["suite"], case, workflow["condition"], values,
             calculation, retrieval,
+            projection_revision=_workflow_revision(workflow),
         )
         projected = _action_from_input(public_input)
 
@@ -1509,7 +1766,8 @@ def _row_report(
         "retrieval": (
             "not_applicable" if workflow["condition"] != "source-linked"
             else "not_run" if retrieval is None
-            else "exact" if retrieval["matches_gold"]
+            else "exact" if (retrieval["valid"] if _workflow_revision(workflow) == PROJECTION_REVISION
+                              else retrieval["matches_gold"])
             else "evidence_link_error"
         ),
         "decision": (
@@ -1673,6 +1931,7 @@ def report(workflow: Any) -> dict[str, Any]:
     return {
         "schema": REPORT_SCHEMA,
         "suite_digest": al.digest(workflow["suite"]),
+        "projection_revision": _workflow_revision(workflow),
         "route": workflow["route"],
         "requested_model": workflow["model"],
         "condition": workflow["condition"],
@@ -1741,6 +2000,11 @@ def compare(left: Any, right: Any) -> dict[str, Any]:
     shared_extraction = a_extract is not None and a_extract == b_extract
     _require(left_report["suite_digest"] == right_report["suite_digest"],
              "comparison requires the identical frozen suite")
+    _require(
+        left_report["projection_revision"]
+        == right_report["projection_revision"],
+        "comparison requires the same projection revision",
+    )
     left_rows = {
         (row["case_id"], row["replicate"]): row
         for row in left_report["rows"]
@@ -1783,6 +2047,8 @@ def compare(left: Any, right: Any) -> dict[str, Any]:
     return {
         "schema": COMPARE_SCHEMA,
         "suite_digest": left_report["suite_digest"],
+        "left_projection_revision": left_report["projection_revision"],
+        "right_projection_revision": right_report["projection_revision"],
         "left_condition": left_report["condition"],
         "right_condition": right_report["condition"],
         "shared_extraction_request_count": len(a_extract["plan"]["requests"]) if shared_extraction else 0,

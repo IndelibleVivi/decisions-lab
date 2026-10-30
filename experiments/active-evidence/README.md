@@ -69,6 +69,8 @@ python3 -m decision_lab research evidence-report runs/evidence/native-demo.json
 
 默认完整 demo 经过 3 轮：较早结束的 episode 不再请求，XOR 两次 query 后才 commit。`decisions`、`jev`、`clef`、`clef-flash` 和 `openrouter-decisions` 都复用现有原生准备规则；CF 需要 `--account-id`。离线支持一个 route 不证明该账户可调用。demo 的 one-hot probability / confidence 只是合法原生格式的 fixture，不用于校准，也不产生真实 latency、usage 或费用。
 
+`evidence-start` 和 `evidence-demo` 默认 `--query-mode adaptive`；可显式选择 `read-all`，在第一次原生决定之前揭示并收费全部本地查询，只请求一次终局动作。预算或查询上限不足时拒绝启动。该模式把本地查询次数与 provider 请求数分开，继续保留完整 planned 分母；旧 workflow 未记录该字段时保持 adaptive。独立[字段反例实验](../schema-inquiry/README.md)还为 read-all 提供可得完整原文，用同一冻结 suite 比较按需核查与全部读取。
+
 ## 准备、导入与继续
 
 ```bash
@@ -102,4 +104,4 @@ python3 -m decision_lab research evidence-report runs/evidence/state-1.json
 - 原生 request、attempt、usage、latency 与 cost 按请求归属，不能复制到每个查询或题目再累加。缺失费用保持 `null`，只有同货币且全部已知才汇总。synthetic 不提供真实调用用量。
 - `evidence-compare` 要求完全相同的冻结 suite 与 planned 身份，逐 episode 配对、保留全分母，并给出 family 分组。`evidence.left/right` 同时保留 synthetic/imported/collector 来源、原生 route/model 与逐轮 source records；来源未知仍是 null，比较不证明 live 调用。这批有限机制不输出总体置信区间。
 
-本实验走出了静态 next-action 的一步答案，首次实采已经显示有限已知模型中的规划差异；开放语义取证、等 provider calls 因果比较、外部资料迁移、人类实验与生产采用仍无证据。独立 [Typed DAG](../typed-dag/README.md)接续研究抽取、计算与下游信息保留，其 provider 研究尚未运行。后续先固定主要比较、等调用／等成本安排和未见机制；不能在看到结果后更改成本或真值。
+本实验走出了静态 next-action 的一步答案，首次实采已经显示有限已知模型中的规划差异；开放语义取证、等 provider calls 因果比较、外部资料迁移、人类实验与生产采用仍无证据。独立 [Typed DAG](../typed-dag/README.md)接续研究抽取、计算与下游信息保留，首次 provider 结果见其 [10-30 日期实验](../typed-dag/pilot-2026-10-30.md)。后续先固定主要比较、等调用／等成本安排和未见机制；不能在看到结果后更改成本或真值。

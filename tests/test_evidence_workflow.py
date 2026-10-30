@@ -198,6 +198,19 @@ class EvidenceWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "retained bytes"):
             ew.apply_round(workflow, source)
 
+    def test_nested_native_usage_survives_collector_replay(self):
+        workflow = self.xor()
+        source = collected(fixture(workflow), repeats=2)
+        for attempt in source["attempts"]:
+            attempt["usage"]["input_tokens_details"] = {"cached_tokens": 2, "cache_write_tokens": 0}
+        ew._seal(source)
+        usage = ew.report(ew.apply_round(workflow, source))["native"]["usage"]
+        self.assertEqual(usage, {"input_tokens": 56, "output_tokens": 24,
+                                 "input_tokens_details": {"cached_tokens": 16, "cache_write_tokens": 0}})
+        source["attempts"][0]["usage"]["input_tokens_details"]["cached_tokens"] = None
+        ew._seal(source)
+        self.assertIsNone(ew.report(ew.apply_round(workflow, source))["native"]["usage"])
+
     def test_imported_unknown_cost_and_provenance_stay_unknown(self):
         workflow = self.xor()
         source = fixture(workflow, provenance="imported")

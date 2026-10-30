@@ -2,7 +2,7 @@
 
 **把判断与取值，变成可以检查的实验。**
 
-[English](README.en.md) · [研究主线](docs/research-programme.md) · [本地研究台](docs/studio.md) · [主动取证](experiments/active-evidence/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [研究主线](docs/research-programme.md) · [本地研究台](docs/studio.md) · [主动取证](experiments/active-evidence/README.md) · [Schema 反例](experiments/schema-inquiry/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
 
 Decisions Lab 研究 decision models 与类型化取值：从证据中选择动作、提取字段、计算数值，或估计尚未确定的结果。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
@@ -19,7 +19,7 @@ Decisions Lab 研究 decision models 与类型化取值：从证据中选择动�
 
 命令在本机构建同一阅读站并显示地址。默认研究目录为忽略的 `runs/studio`；静态站只显示启动入口，不调用本地 API。Studio 当前支持 macOS／Linux，服务仅绑定 `127.0.0.1`，不读取凭据、不调用模型。导入包只有数据；历史复现依赖本机保留的源码解释器和相同 Python runtime，当前重分析另存结果与差异。JSON 导出包含输入和原始回答，分享前应检查敏感内容。
 
-数值答案在 ledger 保留 absolute error，角色保留专用 loss；显式 scientific pairing 将科学任务与路线／模型执行身份分开，同题跨路线比较仍保留原生请求。不同含义的 selection signal 不共享门槛，异质测量不合成总分。它们改变的是测量与复算能力，本轮没有新增 provider 实采。
+数值答案在 ledger 保留 absolute error，角色保留专用 loss；显式 scientific pairing 将科学任务与路线／模型执行身份分开，同题跨路线比较仍保留原生请求。不同含义的 selection signal 不共享门槛，异质测量不合成总分。这些测量与复算能力不认证 provider 调用；真实采集由下方各日期实验独立记录。
 
 ## 从接口能力走向完整决定
 
@@ -39,6 +39,14 @@ python3 -m decision_lab research evidence-report runs/evidence-native-demo.json
 ```bash
 python3 -m decision_lab research typed-dag-demo --output runs/typed-dag-demo.json
 python3 -m decision_lab research typed-dag-report runs/typed-dag-demo.json
+```
+
+[Schema 反例与主动核查](experiments/schema-inquiry/README.md)把“字段还缺什么？”接到同一研究台：勾选字段，找出相同表示却没有共同最优行动的最小反例，再比较按需核查、完整原文和停止。4 类原创机制、8 个有限世界复用 E2 原生回合；字段来自合成 oracle，来源返回实体、版本、quote 与文档 locator。[10-30 Luna 实验](experiments/schema-inquiry/pilot-2026-10-30.md)完成 48 次请求、两条件各 16 episodes：按需与全部读取都无错误承诺，各暂缓 4 次；总损失均值为 1.75／2.75，精确控制为 1.25。按需减少材料读取，但用了更多模型请求；不可得证据上仍存在无效核查。
+
+```bash
+python3 -m decision_lab research schema-design --output runs/schema-design.json
+python3 -m decision_lab research schema-audit runs/schema-design.json
+python3 -m decision_lab research schema-suite runs/schema-design.json --output runs/schema-suite.json
 ```
 
 ## 能力研究与日期依据
@@ -79,6 +87,7 @@ python3 -m decision_lab research rule-replay runs/rule-repair.json
 | --- | --- |
 | 理解整体目标与下一阶段研究 | [研究主线与能力边界](docs/research-programme.md) |
 | 比较何时追问、问什么和最终损失 | [主动取证：完整多轮实验](experiments/active-evidence/README.md) |
+| 查找字段遗漏，并比较来源核查是否值得 | [Schema 反例与主动核查](experiments/schema-inquiry/README.md) |
 | 定位抽取、计算和下游决定之间的信息损失 | [Typed DAG：依赖链与阶段干预](experiments/typed-dag/README.md) |
 | 研究 API 能力、准备原生多问题实验 | [能力方法](docs/api-capabilities.md) → [规则编译、概率组合、视觉判据](experiments/api-capabilities/README.md) |
 | 查看最近 API、模型与价格变化 | [2026-10-20 Clairic 增量](research/2026-10-20/README.md)；[10-15 原生契约调查](research/2026-10-15/README.md) |

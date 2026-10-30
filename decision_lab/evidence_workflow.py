@@ -39,20 +39,36 @@ def _read(value):
     return copy.deepcopy(value)
 
 
-def start(suite, *, route, model=None, account_id=None, replicates=1):
+def start(suite, *, route, model=None, account_id=None, replicates=1, query_mode="adaptive"):
     evidence.validate_suite(suite)
+    al.require(query_mode in ("adaptive", "read-all"), "invalid query mode")
+    if "schema_design" in suite:
+        from .schema_inquiry import inspect_suite
+        inspect_suite(suite)
     value = {"schema": SCHEMA, "suite": copy.deepcopy(suite), "policy": POLICY,
              "route": route, "model": al.route_model(route, model), "account_id": account_id,
              "replicates": replicates, "planned": evidence.planned_episodes(suite, POLICY, replicates),
              "rounds": []}
+    if query_mode == "read-all":
+        value["query_mode"] = query_mode
     _manifest(value, _initial(value), 0)  # validate native route/config before retaining a workflow
     return _seal(value)
 
 
 def _initial(workflow):
     scenarios = {s["id"]: s for s in workflow["suite"]["scenarios"]}
-    return {p["id"]: evidence.initial_state(scenarios[p["scenario_id"]], p["world_id"])
-            for p in workflow["planned"]}
+    states = {}
+    for plan in workflow["planned"]:
+        scenario = scenarios[plan["scenario_id"]]
+        state = evidence.initial_state(scenario, plan["world_id"])
+        if workflow.get("query_mode") == "read-all":
+            al.require(len(scenario["queries"]) <= scenario["max_queries"]
+                       and sum(q["cost"] for q in scenario["queries"]) <= scenario["budget"],
+                       "read-all requires a budget that covers every query")
+            for query in scenario["queries"]:
+                state = evidence.step(scenario, state, "query:" + query["id"])
+        states[plan["id"]] = state
+    return states
 
 
 def _manifest(workflow, states, turn):
@@ -63,6 +79,9 @@ def _manifest(workflow, states, turn):
         if state["terminal"] is not None:
             continue
         visible = evidence.visible_state(scenarios[plan["scenario_id"]], state)
+        if workflow.get("query_mode") == "read-all" and "schema_design" in workflow["suite"]:
+            from .schema_inquiry import episode_evidence
+            visible["source_text"] = episode_evidence(workflow["suite"], {**plan, "history": []})["source"]
         actions = visible["available_actions"]
         choices = [{"value": a, "description": a} for a in actions]
         choices.append({"value": "unknown", "description": "API unknown: cannot return an action; distinct from business abstain."})
@@ -192,10 +211,15 @@ def _source(value, expected):
 def _rebuild(value):
     workflow = _read(value)
     al.require(workflow.get("schema") == SCHEMA and workflow.get("policy") == POLICY, "invalid evidence workflow")
-    al.require(set(workflow) == {"schema", "suite", "policy", "route", "model", "account_id", "replicates",
-                                "planned", "rounds", "evidence_digest"}, "unknown workflow fields; derived state must not be retained")
+    allowed = {"schema", "suite", "policy", "route", "model", "account_id", "replicates", "planned", "rounds", "evidence_digest"}
+    al.require(set(workflow) in (allowed, allowed | {"query_mode"})
+               and workflow.get("query_mode", "adaptive") in ("adaptive", "read-all"),
+               "unknown workflow fields/query mode; derived state must not be retained")
     _check_seal(workflow)
     evidence.validate_suite(workflow["suite"])
+    if "schema_design" in workflow["suite"]:
+        from .schema_inquiry import inspect_suite
+        inspect_suite(workflow["suite"])
     al.require(workflow["planned"] == evidence.planned_episodes(workflow["suite"], POLICY, workflow["replicates"]),
                "workflow planned identities changed")
     al.require(isinstance(workflow["rounds"], list), "rounds must be a list")
@@ -233,19 +257,20 @@ def apply_round(workflow, source):
     return result
 
 
-def demo(suite, *, route="decisions", model=None, account_id=None, replicates=1, policy="optimal"):
+def demo(suite, *, route="decisions", model=None, account_id=None, replicates=1, policy="optimal", query_mode="adaptive"):
     """Run a named synthetic control through native round records, with no transport.
 
     Actions read only the serialized native body. Probability/confidence values
     are deterministic format fixtures, never estimated model confidence/usage.
     """
     al.require(policy in evidence.POLICIES, "demo requires a built-in synthetic policy")
-    workflow = start(suite, route=route, model=model, account_id=account_id, replicates=replicates)
+    workflow = start(suite, route=route, model=model, account_id=account_id, replicates=replicates, query_mode=query_mode)
     while (manifest := prepare_round(workflow)) is not None:
         entries = []
         for request in manifest["requests"]:
             body = request["body"]
             visible = json.loads(body["input" if route == "decisions" else "state"])
+            visible.pop("source_text", None)  # finite oracle reads the same public state; source is redundant after all queries
             action = evidence.choose_action(visible, visible, policy)
             question = al.native_questions(body, route)["action"]
             values = ([choice["value"] for choice in question["choices"]] if route == "decisions"
@@ -273,7 +298,8 @@ def _sum_usage(values):
     keys = set(values[0])
     if not all(set(v) == keys for v in values):
         return None
-    result = {k: _sum_numbers([v[k] for v in values]) for k in sorted(keys)}
+    result = {k: (_sum_usage([v[k] for v in values]) if isinstance(values[0][k], dict)
+                  else _sum_numbers([v[k] for v in values])) for k in sorted(keys)}
     return result if all(v is not None for v in result.values()) else None
 
 
@@ -323,9 +349,19 @@ def report(workflow):
                         "usage": _sum_usage([m["usage"] for m in metrics]),
                         "cost": _sum_costs([m["cost"] for m in metrics]), "requests": metrics,
                         "live_verified": False}
+    if "query_mode" in workflow:
+        result["query_mode"] = workflow["query_mode"]
+        result["query_mode_note"] = "Every local synthetic query is revealed and charged before the first native decision. These source reads are not provider calls."
     for row in result["episodes"]:
         row["native_requests"] = [{"round": m["round"], "request_id": m["request_id"]}
                                   for m in metrics if m["episode_id"] == row["id"]]
+    if "schema_design" in workflow["suite"]:
+        from . import schema_inquiry
+        result["schema_audit"] = schema_inquiry.inspect_suite(workflow["suite"])
+        for row in result["episodes"]:
+            row["schema_evidence"] = schema_inquiry.episode_evidence(
+                workflow["suite"], row, source_visible=workflow.get("query_mode") == "read-all")
+        result["schema_weighting"] = "Condition on each schema projection group, then weight scenarios equally. Changing fields changes that conditional design; do not pool or compare across schemas."
     return result
 
 

@@ -43,7 +43,7 @@
   function renderConditions() {
     const kind=draft.kind, frozen=study.state==='frozen';
     const policies=kind==='api-lab'?[['perfect','精确 oracle'],['uniform','均匀控制'],['wrong','错误控制']]:kind==='active-evidence'?[['stop','立即停止'],['checklist','固定检查表'],['myopic','一步 VOI'],['optimal','多步 oracle']]:[['oracle','oracle'],['wrong-field','字段错误'],['wrong-evidence','证据错误'],['wrong-version','版本错误'],['wrong-decision','决策错误']];
-    $('conditions').innerHTML=draft.conditions.map((c,i)=>`<div class="condition" data-index="${i}"><strong>${esc(c.id)}</strong><label>条件名称<input data-field="label" value="${esc(c.label)}" required></label><label>原生路线<select data-field="route">${options([['decisions','Decisions'],['jev','Jev'],['openrouter-decisions','OpenRouter Decisions'],['clef','Clef'],['clef-flash','Clef Flash']],c.route)}</select></label><label>离线控制<select data-field="policy">${options(policies,c.policy)}</select></label><button type="button" data-remove="${i}" aria-label="移除条件 ${esc(c.id)}"${draft.conditions.length<=2||frozen?' disabled':''}>×</button><div class="condition-extra"><label>模型（留空使用该路线默认值）<input data-field="model" value="${esc(c.model||'')}" placeholder="默认模型"></label>${c.route.startsWith('clef')?`<label>Cloudflare account ID<input data-field="account_id" value="${esc(c.account_id||'')}" autocomplete="off"></label>`:''}${kind==='typed-dag'?`<label>证据表示<select data-field="arm">${options([['direct','完整原文'],['fields-only','仅字段'],['source-linked','字段＋来源']],c.arm)}</select></label><label>Gold 干预<select data-field="intervention">${options([['','无'],['extraction','抽取'],['calculation','计算'],['retrieval','来源回查']],c.intervention||'')}</select></label>`:''}</div></div>`).join('');
+    $('conditions').innerHTML=draft.conditions.map((c,i)=>`<div class="condition" data-index="${i}"><strong title="${esc(c.id)}" aria-label="条件 ${esc(c.id)}">${String.fromCharCode(65+i)}</strong><label>条件名称<input data-field="label" value="${esc(c.label)}" required></label><label>原生路线<select data-field="route">${options([['decisions','Decisions'],['jev','Jev'],['openrouter-decisions','OpenRouter Decisions'],['clef','Clef'],['clef-flash','Clef Flash']],c.route)}</select></label><label>离线控制<select data-field="policy">${options(policies,c.policy)}</select></label><button type="button" data-remove="${i}" aria-label="移除条件 ${esc(c.id)}"${draft.conditions.length<=2||frozen?' disabled':''}>×</button><div class="condition-extra"><label>模型（留空使用该路线默认值）<input data-field="model" value="${esc(c.model||'')}" placeholder="默认模型"></label>${c.route.startsWith('clef')?`<label>Cloudflare account ID<input data-field="account_id" value="${esc(c.account_id||'')}" autocomplete="off"></label>`:''}${kind==='active-evidence'?`<label>材料开放方式<select data-field="query_mode">${options([['adaptive','逐轮按需核查'],['read-all','先读取全部材料']],c.query_mode||'adaptive')}</select></label>`:''}${kind==='typed-dag'?`<label>证据表示<select data-field="arm">${options([['direct','完整原文'],['fields-only','仅字段'],['source-linked','字段＋来源']],c.arm)}</select></label><label>Gold 干预<select data-field="intervention">${options([['','无'],['extraction','抽取'],['calculation','计算'],['retrieval','来源回查']],c.intervention||'')}</select></label>`:''}</div></div>`).join('');
     $('conditions').querySelectorAll('input,select').forEach(el=>el.disabled=frozen);
   }
   function readDraft() {
@@ -51,7 +51,24 @@
     for(const key of ['title','question','hypotheses']) value[key]=form.elements[key].value;
     value.replicates=Number(form.elements.replicates.value);
     document.querySelectorAll('.condition').forEach(row=>row.querySelectorAll('[data-field]').forEach(el=>{value.conditions[Number(row.dataset.index)][el.dataset.field]=el.value||null;}));
+    if(value.schema_design)value.schema_design.fields=[...document.querySelectorAll('[data-schema-field]:checked')].map(el=>el.dataset.schemaField);
     return value;
+  }
+  function renderSchemaAudit(report) {
+    const target=$('schema-audit-result');
+    if(!report){target.innerHTML='<p class="local-note">选择需要保留的字段，再查找反例。搜索使用有限题本真值，不调用模型。</p>';return;}
+    target.innerHTML=`<p class="schema-verdict">${report.insufficient_groups} / ${report.groups.length} 组仍缺少共同最优行动 · ${report.rows} 个有限世界</p><p class="local-note">相同字段不一定足以决定。以下结论仅覆盖当前合成题本；重复次数不增加独立世界。</p>`+report.groups.map((g,index)=>`<details${!g.sufficient&&index===report.groups.findIndex(item=>!item.sufficient)?' open':''}><summary>${esc(g.title||g.source_family)} · ${g.sufficient?'已有共同最优行动':'找到反例'}</summary><p>共同字段</p><pre>${esc(json(g.projection))}</pre>${g.sufficient?`<p>共同最优行动：${esc(g.common_optimal_actions.join(' / '))}</p>`:`<div class="schema-witnesses">${g.witness.map(w=>`<article><strong>${esc(w.id)}</strong><pre>${esc(w.source||json(w.values))}</pre><p>此世界的最优行动：<b>${esc(w.optimal_actions.join(' / '))}</b></p></article>`).join('')}</div><p>${g.minimal_repairs.length?'补入这些字段可区分本组：'+esc(g.minimal_repairs.map(r=>r.join(' + ')).join(' 或 ')):'当前可观察字段都不足以区分；需要新增可得证据，或保留不确定。'}</p>`}</details>`).join('');
+  }
+  function renderSchemaDesign() {
+    const design=draft.schema_design;$('schema-design').hidden=!design;if(!design)return;
+    const names={entity:'目标实体',status:'登记状态',current_version:'现行版本号',current_policy:'现行条款',archive_policy:'旧版条款'};
+    $('schema-fields').innerHTML=Object.entries(names).map(([name,label])=>`<label><input type="checkbox" data-schema-field="${name}"${design.fields.includes(name)?' checked':''}${study.state==='frozen'?' disabled':''}>${label}<small>${name}</small></label>`).join('');
+    const report=study.analyses.at(-1)?.result.conditions[study.definition.conditions[0].id]?.report.schema_audit;
+    renderSchemaAudit(study.state==='frozen'?report:null);
+  }
+  function schemaTrace(row) {
+    const e=row.schema_evidence;if(!e)return '';
+    return `<section class="schema-trace"><h3>字段 → 核查 → 决定</h3><pre>${esc(json(e.projected_fields))}</pre><ol>${e.steps.map(s=>{const choice=s.chosen,observation=choice.observation?JSON.parse(choice.observation):null;return `<li><p>${s.compatible_hypotheses.length} 个世界仍相容 · 剩余预算 ${s.remaining_budget}</p><p>${s.common_optimal_actions.length?'共同最优行动：'+esc(s.common_optimal_actions.join(' / ')):'尚无共同最优行动'}</p><strong>${esc(choice.action||choice.failure)}</strong>${observation?`<blockquote>${esc(observation.quote)}</blockquote><small>${esc(observation.entity)} · v${esc(observation.version)} · ${observation.available?'来源可得':'来源缺失'} · ${esc(observation.locator.source)} [${observation.locator.start}, ${observation.locator.end})</small>`:''}</li>`;}).join('')}</ol><details><summary>本机复核原材料</summary><pre>${esc(e.source)}</pre><p class="local-note">${e.source_visible_to_model?'此条件已读取全部可得材料；完整原文进入模型终局请求，读取成本已计入。':'此条件的完整原文仅在本机检视；模型每轮看到投影字段、有限假设表与已经揭示的观察。'}</p></details></section>`;
   }
   function render() {
     $('welcome').hidden=!!study; $('study-view').hidden=!study;if(!study)return;
@@ -60,10 +77,10 @@
     $('save-state').textContent=`${study.state==='draft'?'草稿':'设计已冻结'} · REV ${study.revision}`;
     const frozen=study.state==='frozen', form=$('design-form');
     for(const key of ['title','question','hypotheses','replicates']) { form.elements[key].value=draft[key]??'';form.elements[key].disabled=frozen; }
-    renderConditions();$('definition-json').value=json(draft);$('definition-json').disabled=frozen;
+    renderConditions();renderSchemaDesign();$('definition-json').value=json(draft);$('definition-json').disabled=frozen;
     for(const id of ['save-design','freeze-design','add-condition','apply-json']) $(id).hidden=frozen;
     $('fork-study').hidden=!frozen;$('freeze-note').textContent=frozen?'设计已固定。派生新研究可以修改条件，旧证据仍保留。':'冻结保留任务、条件和解释器版本。';
-    const count=draft.cases?.length || draft.suite?.cases?.length || draft.suite?.scenarios?.length;
+    const count=draft.cases?.length || draft.suite?.cases?.length || draft.suite?.scenarios?.length || draft.schema_design?.families?.length;
     $('task-count').textContent=`${count??'—'} 个题目／机制 · ${draft.replicates} 次重复`;
     showTab(tab);renderEvidence();renderAnalysis();renderNotes();
   }
@@ -104,7 +121,7 @@
       request={projected_body:row.body,stages:stages.map(s=>({stage:s.stage,requests:s.requests}))};
       response=stages.map(s=>({stage:s.stage,provenance:s.source.provenance,synthetic:s.source.synthetic,responses:s.requests.flatMap(r=>nativeResponses(s.source,r.id,r.case_id))}));
     }
-    $('sample-detail').innerHTML=`<span class="eyebrow">SAMPLE ${String(sampleIndex+1).padStart(2,'0')}</span><h3>${esc(row.id)}</h3><p class="outcome">${esc(row.outcome)} · loss ${esc(fmt(row.loss))} · correct ${esc(fmt(row.correct))}</p><button class="text-button" id="capture-example">把此样本带到笔记 ↗</button><details open><summary>答案与测量定义</summary><pre>${esc(json(row))}</pre></details><details><summary>保留请求 / rubric</summary><pre>${esc(json(request))}</pre></details><details><summary>原生回答 / 阶段记录</summary><pre>${esc(json(response))}</pre></details>`;
+    $('sample-detail').innerHTML=`<span class="eyebrow">SAMPLE ${String(sampleIndex+1).padStart(2,'0')}</span><h3>${esc(row.id)}</h3><p class="outcome">${esc(row.outcome)} · loss ${esc(fmt(row.loss))} · correct ${esc(fmt(row.correct))}</p><button class="text-button" id="capture-example">把此样本带到笔记 ↗</button>${schemaTrace(row)}<details open><summary>答案与测量定义</summary><pre>${esc(json(row))}</pre></details><details><summary>保留请求 / rubric</summary><pre>${esc(json(request))}</pre></details><details><summary>原生回答 / 阶段记录</summary><pre>${esc(json(response))}</pre></details>`;
     $('capture-example').onclick=()=>{$('note-example').value=`${key} / ${row.id}`;showTab('notes');$('note-text').focus();};
   }
   function summary(key,evaluated){
@@ -116,7 +133,7 @@
       const readings=[...groups.values()].map(g=>({...g,main:g.values.length?g.values.reduce((a,b)=>a+b,0)/g.values.length:null,n:g.values.length}));
       return {planned:r.coverage.expected_questions,missing:r.coverage.missing_question_slots,main:measures.length===1&&losses.length?losses.reduce((a,b)=>a+b,0)/losses.length:null,unit:measures.join(' / '),readings,rows:[['ok',r.coverage.ok],['unknown',r.coverage.unknown],['refusal',r.coverage.refusal],['error',r.coverage.error]],note:'各读数为对应测量中已定义且 ok 样本的均值；完整 planned 与失败代价见下方配对报告。'};
     }
-    if(kind==='active-evidence')return {planned:r.summary.planned,missing:r.summary.missing,main:r.summary.prior_weighted_mean_total_loss,unit:'prior-weighted total loss',rows:[['查询成本',r.summary.query_cost],['业务暂缓',r.summary.abstained],['API failure',r.summary.api_failed]],note:'主读数按 scenario prior 加权；配对报告另保留 family 等权与等 world 口径。'};
+    if(kind==='active-evidence')return {planned:r.summary.planned,missing:r.summary.missing,main:r.summary.prior_weighted_mean_total_loss,unit:'prior-weighted total loss',rows:[['查询成本',r.summary.query_cost],['业务暂缓',r.summary.abstained],['API failure',r.summary.api_failed],['模型调用',r.synthetic===true?0:r.native?.call_count],['输入 tokens',r.native?.usage?.input_tokens]],note:'主读数按 scenario prior 加权；配对报告另保留 family 等权与等 world 口径。'};
     return {planned:r.planned,missing:r.counts.missing,main:r.loss.total,unit:'terminal loss · total',rows:[['完整终局',r.counts.terminal],['正确决定',r.counts.correct],['与确定性 policy 一致',r.counts.honest_under_projection],['Gold 干预',r.gold_intervention||'无']],note:'policy 一致不代表诚实度或语义充分。原生来源与 gold 干预分开阅读；缺失使总损失保持未知。'};
   }
   function renderAnalysis(){
@@ -143,6 +160,8 @@
     if(b.dataset.plan)perform(async()=>{const plan=await api(`/api/studies/${study.id}/plan/${b.dataset.plan}`,undefined,true);if(plan.trim()==='null')throw new Error('此条件已终局，没有下一轮请求。');download(plan,`${study.id}-${b.dataset.plan}-plan.json`);},'当前原生请求已下载；发送仍使用已有 CLI 和显式预算。');
   });
   $('new-study').onclick=()=>{if(!abandon())return;study=null;draft=null;dirty=false;history.replaceState(null,'','#research-studio');render();refreshShelf().catch(e=>notice(e.message,true));};
+  $('audit-schema').onclick=()=>perform(async()=>{draft=readDraft();renderSchemaAudit(await api('/api/action/audit-schema',{design:draft.schema_design}));},'有限世界搜索完成；没有 provider 调用。');
+  $('schema-fields').addEventListener('change',()=>{draft=readDraft();dirty=true;renderSchemaAudit(null);});
   $('design-form').addEventListener('input',()=>{dirty=true;$('save-state').textContent='草稿有未保存修改';});
   $('conditions').addEventListener('change',()=>{draft=readDraft();dirty=true;renderConditions();});
   $('add-condition').onclick=()=>{draft=readDraft();if(draft.conditions.length>=8)return notice('最多8个条件',true);const id='abcdefgh'.split('').find(x=>!draft.conditions.some(c=>c.id===x));draft.conditions.push({...draft.conditions.at(-1),id,label:'新条件'});dirty=true;renderConditions();};

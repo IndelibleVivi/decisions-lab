@@ -2,7 +2,7 @@
 
 **Make decisions and typed values inspectable.**
 
-[中文](README.md) · [Research programme](docs/research-programme.md) · [Local Studio](docs/studio.md) · [Active evidence](experiments/active-evidence/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
+[中文](README.md) · [Research programme](docs/research-programme.md) · [Local Studio](docs/studio.md) · [Active evidence](experiments/active-evidence/README.md) · [Schema inquiry](experiments/schema-inquiry/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
 
 Decisions Lab studies decision models and typed value extraction: selecting actions, extracting fields, computing values, and estimating unknown outcomes. It examines their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
 
@@ -40,6 +40,15 @@ The [typed-DAG experiment](experiments/typed-dag/README.md) connects original so
 python3 -m decision_lab research typed-dag-demo --output runs/typed-dag-demo.json
 python3 -m decision_lab research typed-dag-report runs/typed-dag-demo.json
 ```
+
+[Schema inquiry](experiments/schema-inquiry/README.md) adds a field selector, minimal counterexamples with incompatible optimal actions, and cost-aware source verification to the same Studio. Four authored mechanisms and eight finite worlds reuse native E2 rounds. Fields are synthetic oracle projections; observations retain entity, version, quote and document locator. The separate [October 30 Luna study](experiments/schema-inquiry/pilot-2026-10-30.md) completed 48 requests and 16 episodes in each of two conditions. Adaptive inquiry and full-source reading made no wrong commitments and each abstained four times. Mean total loss was 1.75 versus 2.75, with 1.25 for the exact control. Adaptive inquiry saved source-reading cost but required more model requests, and still queried unavailable evidence unnecessarily.
+
+```bash
+python3 -m decision_lab research schema-design --output runs/schema-design.json
+python3 -m decision_lab research schema-audit runs/schema-design.json
+python3 -m decision_lab research schema-suite runs/schema-design.json --output runs/schema-suite.json
+```
+
 
 ## Research infrastructure
 

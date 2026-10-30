@@ -11,7 +11,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from decision_lab import api_lab as al, collection, interpretation, studio
+from decision_lab import api_lab as al, collection, interpretation, studio, typed_dag as td
 
 
 class StudyTests(unittest.TestCase):
@@ -96,6 +96,29 @@ class StudyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'source changed'):
             self.act(study, 'reproduce', analysis=original['id'])
         self.assertEqual(len(self.store.get(study['id'])['analyses']), 1)
+
+    def test_historical_dag_bundle_keeps_projection_when_imported_and_rerun(self):
+        definition = studio.template('typed-dag')
+        initial = studio.initial_records(definition)
+        for record in initial.values():
+            record.pop('projection_revision')
+            td._seal(record)
+        with patch.object(studio, 'initial_records', return_value=initial):
+            old = self.frozen()
+        old = self.act(old, 'run')
+        imported = self.store.command('import-bundle', {'bundle': self.store.export(old['id'])})
+        imported = self.act(imported, 'run')
+        self.assertEqual(imported['analyses'][-1]['result'], old['analyses'][-1]['result'])
+        self.assertNotIn('projection_revision', imported['runs']['a'][-1]['record'])
+        current = td.demo(definition['suite'])
+        with self.assertRaisesRegex(ValueError, 'projection_revision'):
+            studio.bind_import(initial['a'], initial['a'], current)
+        forged = copy.deepcopy(self.store.export(old['id']))
+        retained = forged['study']['frozen']['initial']['a']
+        retained['projection_revision'] = 999
+        td._seal(retained); studio.seal(forged['study'])
+        with self.assertRaisesRegex(ValueError, 'projection_revision'):
+            self.store.command('import-bundle', {'bundle': forged})
 
     def test_import_has_no_executable_snapshot_and_retains_source_claim(self):
         study = self.act(self.frozen(), 'run')
