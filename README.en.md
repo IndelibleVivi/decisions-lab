@@ -2,7 +2,7 @@
 
 **Make decisions and typed values inspectable.**
 
-[中文](README.md) · [Research programme](docs/research-programme.md) · [Local Studio](docs/studio.md) · [Active evidence](experiments/active-evidence/README.md) · [Schema inquiry](experiments/schema-inquiry/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
+[中文](README.md) · [Research programme](docs/research-programme.md) · [Local Studio](docs/studio.md) · [Active evidence](experiments/active-evidence/README.md) · [Counterevidence](experiments/counterevidence/README.md) · [Schema inquiry](experiments/schema-inquiry/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [Research infrastructure](docs/research-infrastructure.md) · [API experiments](experiments/api-capabilities/README.md) · [Typed values](docs/typed-values.md) · [Playbook](docs/playbook.md)
 
 Decisions Lab studies decision models and typed value extraction: selecting actions, extracting fields, computing values, and estimating unknown outcomes. It examines their contracts, failure modes, and place in workflows that remain accountable to people and code. Chinese is the primary documentation language; this entry covers setup, supported behavior and limitations in English.
 
@@ -49,6 +49,14 @@ python3 -m decision_lab research schema-audit runs/schema-design.json
 python3 -m decision_lab research schema-suite runs/schema-design.json --output runs/schema-suite.json
 ```
 
+
+[Counterevidence inquiry](experiments/counterevidence/README.md) studies auditing and stopping when a provisional conclusion may rely on stale, wrong-entity, incomplete or unsupported sources. It reuses native E2 rounds while exposing only the initial dossier, public query options and revealed evidence to the model. Full hypotheses, exact posteriors and the oracle remain local. The same Studio supports immediate decisions, adaptive inquiry and reading every source, with inspectable source traces. The finite oracle has additional environment information; its results are not an equal-information model comparison. The [dated pilot](experiments/counterevidence/pilot-2026-11-06.md) stopped after 15 successful official Luna calls and HTTP 503 on attempt 16. It provides no three-condition effectiveness result.
+
+```bash
+python3 -m decision_lab research counterevidence-design --output runs/counterevidence/design.json
+python3 -m decision_lab research counterevidence-suite runs/counterevidence/design.json --output runs/counterevidence/suite.json
+python3 -m decision_lab research evidence-demo --suite runs/counterevidence/suite.json --output runs/counterevidence/oracle.json
+```
 
 ## Research infrastructure
 

@@ -51,6 +51,40 @@ class StudyTests(unittest.TestCase):
             self.act(study, 'save', definition=study['definition'])
         self.assertEqual(self.store.get(study['id']), current)
 
+    def test_counterevidence_lifecycle_and_condition_binding(self):
+        study = self.frozen('counterevidence')
+        initial = copy.deepcopy(study['frozen']['initial'])
+        self.assertEqual(initial['immediate']['query_mode'], 'no-query')
+        self.assertEqual(initial['full']['query_mode'], 'read-all')
+        with patch('socket.socket', side_effect=AssertionError('provider network forbidden')):
+            study = self.act(study, 'run')
+        for condition, evaluated in study['analyses'][-1]['result']['conditions'].items():
+            self.assertEqual(evaluated['report']['summary']['planned'], 12)
+            self.assertEqual(evaluated['report']['summary']['missing'], 0)
+            self.assertTrue(evaluated['report']['synthetic'])
+        for condition in ('immediate', 'full'):
+            self.assertEqual(len(study['runs'][condition][-1]['record']['rounds']), 1)
+        before = self.store.get(study['id'])
+        with self.assertRaisesRegex(ValueError, 'query_mode'):
+            self.act(study, 'import-record', condition='immediate',
+                     record=study['runs']['adaptive'][-1]['record'])
+        self.assertEqual(self.store.get(study['id']), before)
+        study = self.act(study, 'reproduce', analysis=study['analyses'][-1]['id'])
+        self.assertTrue(study['analyses'][-1]['diff']['equal'])
+        imported = self.store.command('import-bundle', {'bundle': self.store.export(study['id'])})
+        self.assertEqual(imported['definition'], study['definition'])
+        self.assertEqual(imported['analyses'][-1]['result'], study['analyses'][-1]['result'])
+
+    def test_counterevidence_has_one_authoring_owner(self):
+        definition = studio.template('counterevidence')
+        definition['suite'] = {}
+        with self.assertRaisesRegex(ValueError, 'another design or suite'):
+            studio.initial_records(definition)
+        definition.pop('suite')
+        definition['schema_design'] = {}
+        with self.assertRaisesRegex(ValueError, 'another design or suite'):
+            studio.initial_records(definition)
+
     def test_eight_conditions_keep_every_planned_run_and_reject_a_ninth(self):
         definition = studio.template('typed-dag')
         base = definition['conditions'][0]

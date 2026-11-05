@@ -22,6 +22,7 @@ PAGES = (
     'experiments/active-evidence/pilot-2026-10-28.md', 'experiments/typed-dag/README.md',
     'experiments/typed-dag/pilot-2026-10-30.md',
     'experiments/schema-inquiry/README.md', 'experiments/schema-inquiry/pilot-2026-10-30.md',
+    'experiments/counterevidence/README.md', 'experiments/counterevidence/pilot-2026-11-06.md',
     'experiments/generated/README.md', 'experiments/comparison/README.md',
     'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md', 'docs/api-capabilities.md',
     'experiments/next-action/README.md',

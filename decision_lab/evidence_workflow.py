@@ -41,15 +41,20 @@ def _read(value):
 
 def start(suite, *, route, model=None, account_id=None, replicates=1, query_mode="adaptive"):
     evidence.validate_suite(suite)
-    al.require(query_mode in ("adaptive", "read-all"), "invalid query mode")
+    al.require(query_mode in ("adaptive", "read-all", "no-query"), "invalid query mode")
+    al.require(query_mode != "no-query" or "counterevidence_design" in suite,
+               "no-query is reserved for counterevidence suites")
     if "schema_design" in suite:
         from .schema_inquiry import inspect_suite
+        inspect_suite(suite)
+    if "counterevidence_design" in suite:
+        from .counterevidence import inspect_suite
         inspect_suite(suite)
     value = {"schema": SCHEMA, "suite": copy.deepcopy(suite), "policy": POLICY,
              "route": route, "model": al.route_model(route, model), "account_id": account_id,
              "replicates": replicates, "planned": evidence.planned_episodes(suite, POLICY, replicates),
              "rounds": []}
-    if query_mode == "read-all":
+    if query_mode != "adaptive":
         value["query_mode"] = query_mode
     _manifest(value, _initial(value), 0)  # validate native route/config before retaining a workflow
     return _seal(value)
@@ -73,12 +78,18 @@ def _initial(workflow):
 
 def _manifest(workflow, states, turn):
     scenarios = {s["id"]: s for s in workflow["suite"]["scenarios"]}
+    query_mode = workflow.get("query_mode", "adaptive")
+    counterevidence = "counterevidence_design" in workflow["suite"]
     rows = []
     for index, plan in enumerate(workflow["planned"]):
         state = states[plan["id"]]
         if state["terminal"] is not None:
             continue
-        visible = evidence.visible_state(scenarios[plan["scenario_id"]], state)
+        scenario = scenarios[plan["scenario_id"]]
+        visible = evidence.visible_state(scenario, state)
+        if counterevidence:
+            from .counterevidence import visible_state as counterevidence_visible
+            visible = counterevidence_visible(scenario, state, query_mode=query_mode)
         if workflow.get("query_mode") == "read-all" and "schema_design" in workflow["suite"]:
             from .schema_inquiry import episode_evidence
             visible["source_text"] = episode_evidence(workflow["suite"], {**plan, "history": []})["source"]
@@ -87,10 +98,18 @@ def _manifest(workflow, states, turn):
         choices.append({"value": "unknown", "description": "API unknown: cannot return an action; distinct from business abstain."})
         # The public finite design includes all hypothetical observations/losses.
         # Neither the selected actual hypothesis nor local episode/trial IDs enter body.
+        instructions = ("Choose the next legal action to minimize total query cost plus terminal loss. "
+                        "Query reveals only its local synthetic observation. commit ends the episode; "
+                        "abstain is a business decision. unknown is API failure. Return one listed action.")
+        if counterevidence:
+            instructions = ("Choose the next legal action. Initial claims can be wrong. Original source "
+                            "scope, authority, effective time, and conditions govern. Query reveals only "
+                            "the selected local synthetic source. commit ends the episode; abstain is a "
+                            "business decision, not an API failure. Return one listed action.")
         rows.append({"id": f"e{index:04d}.t{turn:04d}", "experiment": "active-evidence",
                      "input": json.dumps(visible, ensure_ascii=False, sort_keys=True),
                      "questions": [{"id": "action", "type": "choice",
-                         "instructions": "Choose the next legal action to minimize total query cost plus terminal loss. Query reveals only its local synthetic observation. commit ends the episode; abstain is a business decision. unknown is API failure. Return one listed action.",
+                         "instructions": instructions,
                          "choices": choices}],
                      "rubric": {"questions": {"action": {"kind": "choice", "acceptable": list(actions)}}},
                      "trial": {"unit_id": plan["id"], "source_family": plan["source_family"],
@@ -213,13 +232,19 @@ def _rebuild(value):
     al.require(workflow.get("schema") == SCHEMA and workflow.get("policy") == POLICY, "invalid evidence workflow")
     allowed = {"schema", "suite", "policy", "route", "model", "account_id", "replicates", "planned", "rounds", "evidence_digest"}
     al.require(set(workflow) in (allowed, allowed | {"query_mode"})
-               and workflow.get("query_mode", "adaptive") in ("adaptive", "read-all"),
+               and workflow.get("query_mode", "adaptive") in ("adaptive", "read-all", "no-query"),
                "unknown workflow fields/query mode; derived state must not be retained")
     _check_seal(workflow)
     evidence.validate_suite(workflow["suite"])
     if "schema_design" in workflow["suite"]:
         from .schema_inquiry import inspect_suite
         inspect_suite(workflow["suite"])
+    if "counterevidence_design" in workflow["suite"]:
+        from .counterevidence import inspect_suite
+        inspect_suite(workflow["suite"])
+    al.require(workflow.get("query_mode") != "no-query"
+               or "counterevidence_design" in workflow["suite"],
+               "no-query is reserved for counterevidence suites")
     al.require(workflow["planned"] == evidence.planned_episodes(workflow["suite"], POLICY, workflow["replicates"]),
                "workflow planned identities changed")
     al.require(isinstance(workflow["rounds"], list), "rounds must be a list")
@@ -233,8 +258,13 @@ def _rebuild(value):
             ident = item["episode_id"]
             state = states[ident]
             scenario = scenarios[state["scenario_id"]]
-            states[ident] = (evidence.finish_failure(scenario, state, item["failure"]) if item["failure"]
-                             else evidence.step(scenario, state, item["action"]))
+            if item["failure"]:
+                states[ident] = evidence.finish_failure(scenario, state, item["failure"])
+            else:
+                al.require((workflow.get("query_mode") != "no-query"
+                            or not item["action"].startswith("query:")),
+                           "no-query episode cannot execute a query")
+                states[ident] = evidence.step(scenario, state, item["action"])
             metrics.append({"round": turn, **item["native"]})
     return workflow, states, metrics
 
@@ -260,8 +290,10 @@ def apply_round(workflow, source):
 def demo(suite, *, route="decisions", model=None, account_id=None, replicates=1, policy="optimal", query_mode="adaptive"):
     """Run a named synthetic control through native round records, with no transport.
 
-    Actions read only the serialized native body. Probability/confidence values
-    are deterministic format fixtures, never estimated model confidence/usage.
+    Generic controls read the serialized native body. Counterevidence controls
+    additionally know the retained finite environment; this is an informational
+    advantage over native models. Probability/confidence values are format
+    fixtures, never estimated model confidence/usage.
     """
     al.require(policy in evidence.POLICIES, "demo requires a built-in synthetic policy")
     workflow = start(suite, route=route, model=model, account_id=account_id, replicates=replicates, query_mode=query_mode)
@@ -271,7 +303,12 @@ def demo(suite, *, route="decisions", model=None, account_id=None, replicates=1,
             body = request["body"]
             visible = json.loads(body["input" if route == "decisions" else "state"])
             visible.pop("source_text", None)  # finite oracle reads the same public state; source is redundant after all queries
-            action = evidence.choose_action(visible, visible, policy)
+            if "counterevidence_design" in suite:
+                scenario = _demo_scenario(workflow, request["trial"]["unit_id"])
+                control = "stop" if query_mode == "no-query" else policy
+                action = evidence.choose_action(scenario, _demo_generic_visible(scenario, visible), control)
+            else:
+                action = evidence.choose_action(visible, visible, policy)
             question = al.native_questions(body, route)["action"]
             values = ([choice["value"] for choice in question["choices"]] if route == "decisions"
                       else list(question["criteria"]))
@@ -286,6 +323,18 @@ def demo(suite, *, route="decisions", model=None, account_id=None, replicates=1,
             entries.append({"request_id": request["id"], "http_status": 200, "response": response})
         workflow = apply_round(workflow, al.build_record(manifest, entries, provenance="synthetic"))
     return workflow
+
+def _demo_plan(workflow, unit_id):
+    al.require(isinstance(unit_id, str), "demo request lacks trial identity")
+    return next(plan for plan in workflow["planned"] if plan["id"] == unit_id)
+
+def _demo_scenario(workflow, unit_id):
+    plan = _demo_plan(workflow, unit_id)
+    return next(s for s in workflow["suite"]["scenarios"] if s["id"] == plan["scenario_id"])
+
+def _demo_generic_visible(scenario, visible):
+    """Reconstruct the generic public view from the counterevidence public body."""
+    return evidence.visible_from_history(scenario, visible.get("history"))
 
 
 def _sum_numbers(values):
@@ -351,7 +400,11 @@ def report(workflow):
                         "live_verified": False}
     if "query_mode" in workflow:
         result["query_mode"] = workflow["query_mode"]
-        result["query_mode_note"] = "Every local synthetic query is revealed and charged before the first native decision. These source reads are not provider calls."
+        result["query_mode_note"] = (
+            "The immediate-decision control sends the initial dossier without audit actions or synthetic source reads."
+            if workflow["query_mode"] == "no-query" else
+            "Every local synthetic query is revealed and charged before the first native decision. "
+            "These source reads are not provider calls.")
     for row in result["episodes"]:
         row["native_requests"] = [{"round": m["round"], "request_id": m["request_id"]}
                                   for m in metrics if m["episode_id"] == row["id"]]
@@ -362,6 +415,16 @@ def report(workflow):
             row["schema_evidence"] = schema_inquiry.episode_evidence(
                 workflow["suite"], row, source_visible=workflow.get("query_mode") == "read-all")
         result["schema_weighting"] = "Condition on each schema projection group, then weight scenarios equally. Changing fields changes that conditional design; do not pool or compare across schemas."
+    if "counterevidence_design" in workflow["suite"]:
+        from . import counterevidence
+        result["counterevidence_audit"] = counterevidence.inspect_suite(workflow["suite"])
+        for row in result["episodes"]:
+            row["counterevidence_evidence"] = counterevidence.episode_evidence(
+                workflow["suite"], row, source_visible=workflow.get("query_mode") == "read-all")
+        result["counterevidence_weighting"] = (
+            "Finite-world prior weighting within each source family; repeats are not independent sources. "
+            "The finite oracle has more information than the model-facing material view."
+        )
     return result
 
 

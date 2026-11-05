@@ -15,7 +15,7 @@ import tempfile
 import uuid
 
 from . import api_lab as al, api_tasks, collection, evidence, evidence_workflow as ew, typed_dag as td
-from . import interpretation, schema_inquiry
+from . import interpretation, schema_inquiry, counterevidence
 
 SCHEMA = "decisions-lab.study/1"
 BUNDLE_SCHEMA = "decisions-lab.study-bundle/1"
@@ -53,6 +53,15 @@ def imported_json(data, key):
 
 def template(kind):
     common = {"kind": kind, "replicates": 1, "hypotheses": "", "next_question": ""}
+    if kind == "counterevidence":
+        return {**common, "kind": "active-evidence", "title": "这条结论，凭什么成立？",
+                "question": "来源冲突时，按需核查能否减少错误承诺，并在证据不可得时停止？",
+                "counterevidence_design": counterevidence.build_design(),
+                "hypotheses": "H1：核对原始来源的效力、实体与适用条件能纠正初步结论。\nH2：全部读取可能增加成本；不可得或无关查询不能消除不确定。\n有限 oracle 知道环境模型，原生模型只看材料，不是同信息条件。",
+                "conditions": [{"id": "immediate", "label": "立即决定", "route": "decisions", "policy": "stop", "query_mode": "no-query"},
+                               {"id": "adaptive", "label": "按需核查", "route": "decisions", "policy": "optimal"},
+                               {"id": "full", "label": "全部读取", "route": "decisions", "policy": "optimal", "query_mode": "read-all"},
+                               {"id": "oracle", "label": "已知环境 · 有限 oracle", "route": "decisions", "policy": "optimal"}]}
     if kind == "schema-inquiry":
         return {**common, "kind": "active-evidence", "title": "这些字段，还缺什么？",
                 "question": "相同表示能否支持共同的最优行动；若不能，下一条证据值得查吗？",
@@ -92,7 +101,11 @@ def initial_records(definition, *, retained=None):
         al.require(len(definition[field]) <= 2000, f"{field} is too long")
     reps = definition.get("replicates")
     al.require(type(reps) is int and 1 <= reps <= 10, "replicates must be 1–10")
-    if "schema_design" in definition:
+    if "counterevidence_design" in definition:
+        al.require(kind == "active-evidence" and "suite" not in definition and "schema_design" not in definition,
+                   "counterevidence owns its compiled suite; do not supply another design or suite")
+        suite = counterevidence.compile_suite(definition["counterevidence_design"])
+    elif "schema_design" in definition:
         al.require(kind == "active-evidence" and "suite" not in definition,
                    "schema inquiry owns its compiled suite; do not supply a second suite")
         suite = schema_inquiry.compile_suite(definition["schema_design"])

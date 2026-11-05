@@ -40,6 +40,8 @@ confidence 另有带 route/primitive 的 `selection_signal`。当前投影明确
 
 `research compare` 需要预先定义的 loss 或 boolean correctness；不能把 forecast/estimate 或任意 score 自动变成正确率。没有可比较的 loss 时会明确拒绝。next-action 的旧 `replay` 仍检查当前 adapter；跨默认模型历史读取使用 `research ledger` 的只读兼容器，检查支持的旧请求结构与保留的 requested model，不改变历史文件。api-lab 的 Cloudflare route 同时记录 URL 中的 `@cf/cloudflare/clef[-flash]` 与 Body selector；账本保留 `requested_model`、`model_id`，OpenRouter 的实际 upstream/返回模型另列。成功 HTTP wrapper、`result` 是否存在、`result.model` 是否匹配以及逐题 typed answer 是四层独立检查。
 
+[反证调查](../experiments/counterevidence/README.md)使用相同 E2 原生记录与 collector，但只投影材料、已读观察和合法动作，不公开完整环境。`evidence-start/demo --query-mode no-query` 提供一次终局请求的立即决定条件；`read-all` 预先记入全部材料读取。两者和 `adaptive` 可以在同一冻结 suite 上配对，完整 oracle 作为额外信息参照。数据身份、局部材料成本与真实调用计量仍分别保留。
+
 ## 有预算的采集与恢复
 
 先准备固定请求，再计划、检查预算，最后由操作者明确选择是否调用。下面前两步均离线：

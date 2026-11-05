@@ -2,7 +2,7 @@
 
 **把判断与取值，变成可以检查的实验。**
 
-[English](README.en.md) · [研究主线](docs/research-programme.md) · [本地研究台](docs/studio.md) · [主动取证](experiments/active-evidence/README.md) · [Schema 反例](experiments/schema-inquiry/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
+[English](README.en.md) · [研究主线](docs/research-programme.md) · [本地研究台](docs/studio.md) · [主动取证](experiments/active-evidence/README.md) · [反证调查](experiments/counterevidence/README.md) · [Schema 反例](experiments/schema-inquiry/README.md) · [Typed DAG](experiments/typed-dag/README.md) · [研究基础设施](docs/research-infrastructure.md) · [API 能力实验](experiments/api-capabilities/README.md) · [类型化输出](docs/typed-values.md) · [妙妙玩法](docs/playbook.md) · [当前状态](docs/current-state.md)
 
 Decisions Lab 研究 decision models 与类型化取值：从证据中选择动作、提取字段、计算数值，或估计尚未确定的结果。我们关心接口承诺了什么、错误发生在哪里，以及怎样把判断接入一个仍由人和代码负责的工作流。
 
@@ -49,6 +49,14 @@ python3 -m decision_lab research schema-audit runs/schema-design.json
 python3 -m decision_lab research schema-suite runs/schema-design.json --output runs/schema-suite.json
 ```
 
+[反证调查台](experiments/counterevidence/README.md)研究初步结论遇到过期、错实体、遗漏例外或效力不明来源时，模型如何核查和停止。它复用 E2 原生回合，但只把初始材料、公开核查入口和已揭示证据送入模型；完整假设表、精确后验和 oracle 留在本机。研究台支持立即决定、按需核查与全部读取三种条件，保存实际来源轨迹。有限 oracle 拥有额外环境信息，与原生模型分开解释。[首轮官方 Luna](experiments/counterevidence/pilot-2026-11-06.md)在 15 次成功后第 16 次 HTTP503，按协议中止，尚无三条件效果结论。
+
+```bash
+python3 -m decision_lab research counterevidence-design --output runs/counterevidence/design.json
+python3 -m decision_lab research counterevidence-suite runs/counterevidence/design.json --output runs/counterevidence/suite.json
+python3 -m decision_lab research evidence-demo --suite runs/counterevidence/suite.json --output runs/counterevidence/oracle.json
+```
+
 ## 能力研究与日期依据
 
 [10-22 核查](research/2026-10-22/README.md)把 API 能力接到可证伪的实验：一次 Choice 编译布尔规则、比较概率的粗细分类与联合关系、用参考图片重定义 Jev criteria。独立的 `api-lab` CLI 处理原生多问题请求、离线响应导入、分题评分与反例报告。题本真值来自穷举、已知世界和几何生成规则；synthetic demo 不代表模型表现，历史题本保留 `NOT_RUN` authoring 状态，新的真实运行独立留证。[能力方法章](docs/api-capabilities.md)保留 7 个研究方向的对照与实现边界；[能力索引](catalog/capabilities.json)可以离线查询来源、假设、指标和请求覆盖。
@@ -87,6 +95,7 @@ python3 -m decision_lab research rule-replay runs/rule-repair.json
 | --- | --- |
 | 理解整体目标与下一阶段研究 | [研究主线与能力边界](docs/research-programme.md) |
 | 比较何时追问、问什么和最终损失 | [主动取证：完整多轮实验](experiments/active-evidence/README.md) |
+| 研究初步结论、冲突来源、核查与停止 | [反证调查台](experiments/counterevidence/README.md) |
 | 查找字段遗漏，并比较来源核查是否值得 | [Schema 反例与主动核查](experiments/schema-inquiry/README.md) |
 | 定位抽取、计算和下游决定之间的信息损失 | [Typed DAG：依赖链与阶段干预](experiments/typed-dag/README.md) |
 | 研究 API 能力、准备原生多问题实验 | [能力方法](docs/api-capabilities.md) → [规则编译、概率组合、视觉判据](experiments/api-capabilities/README.md) |

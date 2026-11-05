@@ -381,7 +381,15 @@ def _cmd_api_replay(args):
 def _cmd_research(args):
     from . import collection, comparison, generators, ledger, rule_workflow
     command = args.research_command
-    if command.startswith("schema-"):
+    if command.startswith("counterevidence-"):
+        from . import counterevidence
+        if command == "counterevidence-design":
+            result = counterevidence.build_design(seed=args.seed)
+        elif command == "counterevidence-suite":
+            result = counterevidence.compile_suite(al.read_json(args.design))
+        else:
+            raise al.ApiLabError("unknown counterevidence command")
+    elif command.startswith("schema-"):
         from . import schema_inquiry
         if command == "schema-design":
             result = schema_inquiry.build_design(seed=args.seed)
@@ -649,6 +657,10 @@ def build_parser() -> argparse.ArgumentParser:
         parser.add_argument("--output", help="new local JSON file; source tree restricted to runs/")
         parser.set_defaults(func=_cmd_research)
         return parser
+    sp = research_parser("counterevidence-design")
+    sp.add_argument("--seed", type=int, default=20261106)
+    sp = research_parser("counterevidence-suite")
+    sp.add_argument("design", help="finite counterevidence inquiry design JSON")
     sp = research_parser("schema-design")
     sp.add_argument("--seed", type=int, default=20261030)
     for name in ("schema-audit", "schema-suite"):
@@ -686,7 +698,7 @@ def build_parser() -> argparse.ArgumentParser:
         if name in ("evidence-run", "evidence-demo"):
             sp.add_argument("--policy", choices=("checklist", "stop", "myopic", "optimal"), default="optimal")
         if name != "evidence-run":
-            sp.add_argument("--query-mode", choices=("adaptive", "read-all"), default="adaptive")
+            sp.add_argument("--query-mode", choices=("adaptive", "read-all", "no-query"), default="adaptive")
             sp.add_argument("--route", required=name == "evidence-start", default="decisions", choices=al.ROUTES)
             sp.add_argument("--model")
             sp.add_argument("--account-id")

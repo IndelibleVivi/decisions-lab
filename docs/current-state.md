@@ -1,6 +1,8 @@
 # 当前状态
 
-更新时间：2026-10-30。
+更新时间：2026-11-06。
+
+- **反证调查台已实现，首轮实采中止**：[原创题本与方法](../experiments/counterevidence/README.md)在既有 E2 / Studio 中增加六类来源核查任务，支持立即决定、按需核查、全部读取与逐样本来源轨迹。模型仅看到初始材料和已揭示证据，有限 oracle 的额外信息单独解释。[11-06 官方 Luna 实采](../experiments/counterevidence/pilot-2026-11-06.md)实际发送 16 次，前 15 次 HTTP200、第 16 次 HTTP503 后按协议停止，无重试／fallback。尚未发送的首轮请求 56 个；不完整 collection 未部分应用，72 planned episodes 仍待处理，无三条件效果结论。462 个 Python tests、JS／37 页构建及桌面／手机浏览器检查通过；源码与本机功能不等于公开部署。
 
 - **本地研究会话已接入源码**：[研究台](studio.md)直接延伸原首页的实验 D，支持 E1/E2/E3 设计、冻结、离线控制、原生证据导入、逐样本检查、结论/反例、重开、派生和研究包。历史解释器复现与当前重分析分别留存；研究状态只在本机，不进入静态站。measurement 与显式 scientific pairing 保留数值误差、原生身份、来源和不同信号语义。研究台仍只在本机保存证据；10-30 的独立 E3 实采见下文，没有发布或部署。
 - **Schema 反例与来源核查已贯通**：[新题本](../experiments/schema-inquiry/README.md)复用文档生成器与 E2 原生回合，在原研究台内勾选字段、搜索最小反例、冻结并检视来源轨迹。默认 3 组无共同最优行动，加入现行条款字段后剩不可得来源 1 组；字段是合成 oracle，不是模型抽取。[10-30 Luna 实采](../experiments/schema-inquiry/pilot-2026-10-30.md)完成 48 次请求、32/32 episodes：按需与全部读取均无错误承诺，各暂缓 4 次，总损失均值 1.75／2.75，精确控制 1.25。按需使用更多模型请求，在不可得证据上仍有无效查询。真实原始记录与账户计量保留本机；nested usage 汇总修复后另存重分析，冻结报告和损失不变。
@@ -26,7 +28,7 @@
 - **历史可复算**：随包 1,000 个案例、4,000 条概率记录的复算与基准结果一致，14 项作者汇总核对一致。原始输入不随项目分发。
 - **离线实验已实现**：25 个原创合成 next-action 用例、确定性 baseline、含错误和 unknown 的 demo、记录与完整性校验 replay。
 - **next-action API adapter 候选**：TypeSafe Jev 与 OpenAI Decisions 原生 contract；继续固定 `jev-1.13.0` / `gpt-6-luna` 的现有文本 Choice profile。增量文档不自动启用 Box、图像、cache 或新版模型。文档核对与 mock 测试不等于真实 API 可用，live 推理未运行。
-- **阅读站源码已更新**：35 页从 Markdown/catalog 构建；首轮、Luna 补测、角色实验、主动取证及 Typed DAG 页进入显式 allowlist，运行记录保持排除。首屏粒子作品和标题直接操控保留；下方由像素卡带、稀疏信号场、PLAY 招牌轮播和自托管字体构成。unknown 从编号动作中独立出来，ok／unknown／refusal／error 的文字、画面与结果读数同步；后两类为明确标注的离线示例，没有选中动作或实际请求，不产生概率与 confidence。分类、搜索、fragment、任务 JSON 复制、项目入口、概率示意、历史矩阵与三例练习均保留。下方共享暂停联动招牌、图标、信号场和实验动态；减少动态、后台、离屏停止，静态选路与读数仍可操作。无 Canvas／JavaScript 保留各自可用的静态阅读路径。仍为本地构建产物，未部署；客观验证与 owner 视觉接受分别报告。
+- **阅读站源码已更新**：37 页从 Markdown/catalog 构建；首轮、Luna 补测、角色实验、主动取证及 Typed DAG 页进入显式 allowlist，运行记录保持排除。首屏粒子作品和标题直接操控保留；下方由像素卡带、稀疏信号场、PLAY 招牌轮播和自托管字体构成。unknown 从编号动作中独立出来，ok／unknown／refusal／error 的文字、画面与结果读数同步；后两类为明确标注的离线示例，没有选中动作或实际请求，不产生概率与 confidence。分类、搜索、fragment、任务 JSON 复制、项目入口、概率示意、历史矩阵与三例练习均保留。下方共享暂停联动招牌、图标、信号场和实验动态；减少动态、后台、离屏停止，静态选路与读数仍可操作。无 Canvas／JavaScript 保留各自可用的静态阅读路径。仍为本地构建产物，未部署；客观验证与 owner 视觉接受分别报告。
 - **生产接入未开始**：有界合成实验已有真实结果，角色旧 block 仍保留 missing；当前关口是修正后的 E3 独立实测、来源不可得时的停止机制，以及公开资料效度。表示敏感性、schema 盲点与缺失值错误继续分别研究。私人上下文旁路需要单独确定输入边界，没有自动执行、日续跑、充值或部署。
 
 命令以 [README](../README.md)、[next-action 说明](../experiments/next-action/README.md)、[typed-values 说明](../experiments/typed-values/README.md)和 [API 能力实验说明](../experiments/api-capabilities/README.md)为准。不要将 source、测试、真实推理或生产状态混为一谈。

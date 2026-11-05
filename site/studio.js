@@ -42,8 +42,10 @@
   function options(values, selected) {return values.map(([value,label])=>`<option value="${esc(value)}"${String(value)===String(selected)?' selected':''}>${esc(label)}</option>`).join('');}
   function renderConditions() {
     const kind=draft.kind, frozen=study.state==='frozen';
+    const queryModes=[['adaptive','逐轮按需核查'],['read-all','先读取全部材料']];
+    if(draft.counterevidence_design)queryModes.push(['no-query','只看初始材料 · 立即决定']);
     const policies=kind==='api-lab'?[['perfect','精确 oracle'],['uniform','均匀控制'],['wrong','错误控制']]:kind==='active-evidence'?[['stop','立即停止'],['checklist','固定检查表'],['myopic','一步 VOI'],['optimal','多步 oracle']]:[['oracle','oracle'],['wrong-field','字段错误'],['wrong-evidence','证据错误'],['wrong-version','版本错误'],['wrong-decision','决策错误']];
-    $('conditions').innerHTML=draft.conditions.map((c,i)=>`<div class="condition" data-index="${i}"><strong title="${esc(c.id)}" aria-label="条件 ${esc(c.id)}">${String.fromCharCode(65+i)}</strong><label>条件名称<input data-field="label" value="${esc(c.label)}" required></label><label>原生路线<select data-field="route">${options([['decisions','Decisions'],['jev','Jev'],['openrouter-decisions','OpenRouter Decisions'],['clef','Clef'],['clef-flash','Clef Flash']],c.route)}</select></label><label>离线控制<select data-field="policy">${options(policies,c.policy)}</select></label><button type="button" data-remove="${i}" aria-label="移除条件 ${esc(c.id)}"${draft.conditions.length<=2||frozen?' disabled':''}>×</button><div class="condition-extra"><label>模型（留空使用该路线默认值）<input data-field="model" value="${esc(c.model||'')}" placeholder="默认模型"></label>${c.route.startsWith('clef')?`<label>Cloudflare account ID<input data-field="account_id" value="${esc(c.account_id||'')}" autocomplete="off"></label>`:''}${kind==='active-evidence'?`<label>材料开放方式<select data-field="query_mode">${options([['adaptive','逐轮按需核查'],['read-all','先读取全部材料']],c.query_mode||'adaptive')}</select></label>`:''}${kind==='typed-dag'?`<label>证据表示<select data-field="arm">${options([['direct','完整原文'],['fields-only','仅字段'],['source-linked','字段＋来源']],c.arm)}</select></label><label>Gold 干预<select data-field="intervention">${options([['','无'],['extraction','抽取'],['calculation','计算'],['retrieval','来源回查']],c.intervention||'')}</select></label>`:''}</div></div>`).join('');
+    $('conditions').innerHTML=draft.conditions.map((c,i)=>`<div class="condition" data-index="${i}"><strong title="${esc(c.id)}" aria-label="条件 ${esc(c.id)}">${String.fromCharCode(65+i)}</strong><label>条件名称<input data-field="label" value="${esc(c.label)}" required></label><label>原生路线<select data-field="route">${options([['decisions','Decisions'],['jev','Jev'],['openrouter-decisions','OpenRouter Decisions'],['clef','Clef'],['clef-flash','Clef Flash']],c.route)}</select></label><label>离线控制<select data-field="policy">${options(policies,c.policy)}</select></label><button type="button" data-remove="${i}" aria-label="移除条件 ${esc(c.id)}"${draft.conditions.length<=2||frozen?' disabled':''}>×</button><div class="condition-extra"><label>模型（留空使用该路线默认值）<input data-field="model" value="${esc(c.model||'')}" placeholder="默认模型"></label>${c.route.startsWith('clef')?`<label>Cloudflare account ID<input data-field="account_id" value="${esc(c.account_id||'')}" autocomplete="off"></label>`:''}${kind==='active-evidence'?`<label>材料开放方式<select data-field="query_mode">${options(queryModes,c.query_mode||'adaptive')}</select></label>`:''}${kind==='typed-dag'?`<label>证据表示<select data-field="arm">${options([['direct','完整原文'],['fields-only','仅字段'],['source-linked','字段＋来源']],c.arm)}</select></label><label>Gold 干预<select data-field="intervention">${options([['','无'],['extraction','抽取'],['calculation','计算'],['retrieval','来源回查']],c.intervention||'')}</select></label>`:''}</div></div>`).join('');
     $('conditions').querySelectorAll('input,select').forEach(el=>el.disabled=frozen);
   }
   function readDraft() {
@@ -70,17 +72,24 @@
     const e=row.schema_evidence;if(!e)return '';
     return `<section class="schema-trace"><h3>字段 → 核查 → 决定</h3><pre>${esc(json(e.projected_fields))}</pre><ol>${e.steps.map(s=>{const choice=s.chosen,observation=choice.observation?JSON.parse(choice.observation):null;return `<li><p>${s.compatible_hypotheses.length} 个世界仍相容 · 剩余预算 ${s.remaining_budget}</p><p>${s.common_optimal_actions.length?'共同最优行动：'+esc(s.common_optimal_actions.join(' / ')):'尚无共同最优行动'}</p><strong>${esc(choice.action||choice.failure)}</strong>${observation?`<blockquote>${esc(observation.quote)}</blockquote><small>${esc(observation.entity)} · v${esc(observation.version)} · ${observation.available?'来源可得':'来源缺失'} · ${esc(observation.locator.source)} [${observation.locator.start}, ${observation.locator.end})</small>`:''}</li>`;}).join('')}</ol><details><summary>本机复核原材料</summary><pre>${esc(e.source)}</pre><p class="local-note">${e.source_visible_to_model?'此条件已读取全部可得材料；完整原文进入模型终局请求，读取成本已计入。':'此条件的完整原文仅在本机检视；模型每轮看到投影字段、有限假设表与已经揭示的观察。'}</p></details></section>`;
   }
+  function counterevidenceTrace(row) {
+    const e=row.counterevidence_evidence;if(!e)return '';
+    const action=value=>({'commit:allow':'允许','commit:hold':'不批准',abstain:'保留不确定 / 暂缓'}[value]||value);
+    const excerpt=o=>o.available===false?`<p class="source-unavailable">${esc(o.notice)}</p>`:`<blockquote>${esc(o.excerpt)}</blockquote><small>${esc(o.source_id)} · ${esc(o.entity)} · ${esc(o.authority)} · ${esc(o.effective_from)}—${esc(o.effective_to??'持续有效')} · ${esc(o.scope)}<br>${esc(o.locator.source)} [${esc(o.locator.start)}, ${esc(o.locator.end)}) · Unicode code points</small>`;
+    const initial=e.initial_dossier, d=e.diagnostics;
+    return `<section class="schema-trace counterevidence-trace"><h3>材料 → 核查 → 决定</h3><div class="initial-dossier"><small>初步结论 · ${esc(action('commit:'+e.initial_claim))}</small><p>${esc(initial.excerpt)}</p>${initial.attached_sources.map(excerpt).join('')}</div>${e.read_all_control?'<p class="local-note">全部读取条件：以下材料读取在第一次模型请求前按设计执行，成本已计入；并非模型逐条选择。</p>':''}<ol>${e.steps.map(s=>{const choice=s.chosen, observation=choice.observation?JSON.parse(choice.observation):null;return `<li><p class="trace-step-label">${choice.failure?'API / 记录状态：'+esc(choice.failure):esc(action(choice.action))}<span>剩余预算 ${esc(s.remaining_budget)}</span></p>${observation?excerpt(observation):''}</li>`;}).join('')}</ol><details><summary>本机诊断与隐藏材料</summary><p class="local-note">以下包含评分真值与未向模型开放的材料，仅供本机复核。有限 oracle 知道完整环境，信息条件不同。</p><p>最终业务动作与初步结论不同：${d.acted_against_initial_claim==null?'尚无业务动作':d.acted_against_initial_claim?'是':'否'}。这不代表模型内在信念变化。</p><p>未缩小有限假设集合的读取：${esc(d.no_information_query_count)} 次。该诊断不表示模型事先知道这些读取无用。</p><p>本世界的真值：${esc(action(e.correct_terminal))}</p>${Object.values(e.source_documents).map(s=>`<article><h4>${esc(s.title)} · ${s.available?'可取得':'模型不可取得'}</h4><blockquote>${esc(s.text)}</blockquote><small>${esc(s.id)} · ${esc(s.entity)} · ${esc(s.authority)} · ${esc(s.effective_from)}—${esc(s.effective_to??'持续有效')}</small></article>`).join('')}</details></section>`;
+  }
   function render() {
     $('welcome').hidden=!!study; $('study-view').hidden=!study;if(!study)return;
-    $('study-kind').textContent=families[study.definition.kind];$('study-title').textContent=study.definition.title;
+    $('study-kind').textContent=study.definition.counterevidence_design?'E2 / COUNTEREVIDENCE':families[study.definition.kind];$('study-title').textContent=study.definition.title;
     $('research-question').textContent=study.definition.question;
     $('save-state').textContent=`${study.state==='draft'?'草稿':'设计已冻结'} · REV ${study.revision}`;
     const frozen=study.state==='frozen', form=$('design-form');
     for(const key of ['title','question','hypotheses','replicates']) { form.elements[key].value=draft[key]??'';form.elements[key].disabled=frozen; }
-    renderConditions();renderSchemaDesign();$('definition-json').value=json(draft);$('definition-json').disabled=frozen;
+    renderConditions();renderSchemaDesign();$('counterevidence-design').hidden=!draft.counterevidence_design;$('definition-json').value=json(draft);$('definition-json').disabled=frozen;
     for(const id of ['save-design','freeze-design','add-condition','apply-json']) $(id).hidden=frozen;
     $('fork-study').hidden=!frozen;$('freeze-note').textContent=frozen?'设计已固定。派生新研究可以修改条件，旧证据仍保留。':'冻结保留任务、条件和解释器版本。';
-    const count=draft.cases?.length || draft.suite?.cases?.length || draft.suite?.scenarios?.length || draft.schema_design?.families?.length;
+    const count=draft.cases?.length || draft.suite?.cases?.length || draft.suite?.scenarios?.length || draft.schema_design?.families?.length || draft.counterevidence_design?.families?.length;
     $('task-count').textContent=`${count??'—'} 个题目／机制 · ${draft.replicates} 次重复`;
     showTab(tab);renderEvidence();renderAnalysis();renderNotes();
   }
@@ -94,7 +103,7 @@
   function samples(key){
     const record=latestRecord(key), evaluated=currentReport(key); if(!record||!evaluated)return [];
     if(study.definition.kind==='api-lab')return evaluated.ledger.trials.map(t=>({...t,id:t.request_id+'/'+t.question_id}));
-    if(study.definition.kind==='active-evidence')return evaluated.report.episodes.map(t=>({...t,outcome:t.missing?'missing':t.failure_status||'ok',loss:t.total_loss,correct:t.wrong_commit?false:null}));
+    if(study.definition.kind==='active-evidence')return evaluated.report.episodes.map(t=>({...t,outcome:t.missing?'missing':t.failure_status||'ok',loss:t.total_loss,correct:t.counterevidence_evidence&&t.history.at(-1)?.action?.startsWith('commit:')?!t.wrong_commit:t.wrong_commit?false:null}));
     return evaluated.report.rows.map(t=>({...t,outcome:t.terminal?t.decision_outcome:'missing',loss:t.terminal_loss}));
   }
   function renderEvidence(){
@@ -121,7 +130,7 @@
       request={projected_body:row.body,stages:stages.map(s=>({stage:s.stage,requests:s.requests}))};
       response=stages.map(s=>({stage:s.stage,provenance:s.source.provenance,synthetic:s.source.synthetic,responses:s.requests.flatMap(r=>nativeResponses(s.source,r.id,r.case_id))}));
     }
-    $('sample-detail').innerHTML=`<span class="eyebrow">SAMPLE ${String(sampleIndex+1).padStart(2,'0')}</span><h3>${esc(row.id)}</h3><p class="outcome">${esc(row.outcome)} · loss ${esc(fmt(row.loss))} · correct ${esc(fmt(row.correct))}</p><button class="text-button" id="capture-example">把此样本带到笔记 ↗</button>${schemaTrace(row)}<details open><summary>答案与测量定义</summary><pre>${esc(json(row))}</pre></details><details><summary>保留请求 / rubric</summary><pre>${esc(json(request))}</pre></details><details><summary>原生回答 / 阶段记录</summary><pre>${esc(json(response))}</pre></details>`;
+    $('sample-detail').innerHTML=`<span class="eyebrow">SAMPLE ${String(sampleIndex+1).padStart(2,'0')}</span><h3>${esc(row.id)}</h3><p class="outcome">${esc(row.outcome)} · loss ${esc(fmt(row.loss))} · correct ${esc(fmt(row.correct))}</p><button class="text-button" id="capture-example">把此样本带到笔记 ↗</button>${schemaTrace(row)}${counterevidenceTrace(row)}<details${row.counterevidence_evidence?'':' open'}><summary>答案与测量定义</summary><pre>${esc(json(row))}</pre></details><details><summary>保留请求 / rubric</summary><pre>${esc(json(request))}</pre></details><details><summary>原生回答 / 阶段记录</summary><pre>${esc(json(response))}</pre></details>`;
     $('capture-example').onclick=()=>{$('note-example').value=`${key} / ${row.id}`;showTab('notes');$('note-text').focus();};
   }
   function summary(key,evaluated){
@@ -133,7 +142,7 @@
       const readings=[...groups.values()].map(g=>({...g,main:g.values.length?g.values.reduce((a,b)=>a+b,0)/g.values.length:null,n:g.values.length}));
       return {planned:r.coverage.expected_questions,missing:r.coverage.missing_question_slots,main:measures.length===1&&losses.length?losses.reduce((a,b)=>a+b,0)/losses.length:null,unit:measures.join(' / '),readings,rows:[['ok',r.coverage.ok],['unknown',r.coverage.unknown],['refusal',r.coverage.refusal],['error',r.coverage.error]],note:'各读数为对应测量中已定义且 ok 样本的均值；完整 planned 与失败代价见下方配对报告。'};
     }
-    if(kind==='active-evidence')return {planned:r.summary.planned,missing:r.summary.missing,main:r.summary.prior_weighted_mean_total_loss,unit:'prior-weighted total loss',rows:[['查询成本',r.summary.query_cost],['业务暂缓',r.summary.abstained],['API failure',r.summary.api_failed],['模型调用',r.synthetic===true?0:r.native?.call_count],['输入 tokens',r.native?.usage?.input_tokens]],note:'主读数按 scenario prior 加权；配对报告另保留 family 等权与等 world 口径。'};
+    if(kind==='active-evidence')return {planned:r.summary.planned,missing:r.summary.missing,main:r.summary.prior_weighted_mean_total_loss,unit:'prior-weighted total loss',rows:[['查询成本',r.summary.query_cost],['业务暂缓',r.summary.abstained],['API failure',r.summary.api_failed],['模型调用',r.synthetic===true?0:r.native?.call_count],['输入 tokens',r.native?.usage?.input_tokens]],note:study.definition.counterevidence_design?'按有限题本先验加权。原生模型只看材料；synthetic oracle 知道完整环境，信息条件不同。':'主读数按 scenario prior 加权；配对报告另保留 family 等权与等 world 口径。'};
     return {planned:r.planned,missing:r.counts.missing,main:r.loss.total,unit:'terminal loss · total',rows:[['完整终局',r.counts.terminal],['正确决定',r.counts.correct],['与确定性 policy 一致',r.counts.honest_under_projection],['Gold 干预',r.gold_intervention||'无']],note:'policy 一致不代表诚实度或语义充分。原生来源与 gold 干预分开阅读；缺失使总损失保持未知。'};
   }
   function renderAnalysis(){
