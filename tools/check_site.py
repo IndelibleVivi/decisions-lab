@@ -1,4 +1,4 @@
-"""Validate built local links, fragments and the explicit publication boundary."""
+"""Validate built links, fragments, CSP-compatible tables and publication boundaries."""
 from html.parser import HTMLParser
 import json
 from pathlib import Path
@@ -88,9 +88,10 @@ def check_preview():
 
 class Links(HTMLParser):
     def __init__(self):
-        super().__init__(); self.links=[]; self.ids=set()
+        super().__init__(); self.links=[]; self.ids=set(); self.inline_table_styles=[]
     def handle_starttag(self, tag, attrs):
         a=dict(attrs)
+        if tag in ('th', 'td') and 'style' in a: self.inline_table_styles.append(a['style'])
         if 'id' in a: self.ids.add(a['id'])
         for field in ('href','src'):
             if field in a: self.links.append(a[field])
@@ -101,6 +102,8 @@ def main():
         parser=Links(); parser.feed(page.read_text(encoding='utf-8')); pages[page]=parser
     failures=[]
     for page, parser in pages.items():
+        if parser.inline_table_styles:
+            failures.append(f'{page.relative_to(ROOT)}: inline table styles violate Studio CSP')
         for link in parser.links:
             u=urlsplit(link)
             if u.scheme or u.netloc: continue

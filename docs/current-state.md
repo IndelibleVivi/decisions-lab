@@ -1,8 +1,8 @@
 # 当前状态
 
-更新时间：2026-11-06。
+更新时间：2026-11-07。
 
-- **反证调查台已实现，首轮实采中止**：[原创题本与方法](../experiments/counterevidence/README.md)在既有 E2 / Studio 中增加六类来源核查任务，支持立即决定、按需核查、全部读取与逐样本来源轨迹。模型仅看到初始材料和已揭示证据，有限 oracle 的额外信息单独解释。[11-06 官方 Luna 实采](../experiments/counterevidence/pilot-2026-11-06.md)实际发送 16 次，前 15 次 HTTP200、第 16 次 HTTP503 后按协议停止，无重试／fallback。尚未发送的首轮请求 56 个；不完整 collection 未部分应用，72 planned episodes 仍待处理，无三条件效果结论。462 个 Python tests、JS／37 页构建及桌面／手机浏览器检查通过；源码与本机功能不等于公开部署。
+- **反证调查台及三条件续采已完成**：[原创题本与方法](../experiments/counterevidence/README.md)在既有 E2 / Studio 中支持六类来源核查任务、三种读取条件及逐样本轨迹。模型只看初始材料和已揭示证据，有限 oracle 的额外信息分开解释。[11-06 中止记录](../experiments/counterevidence/pilot-2026-11-06.md)保持；[11-07 续采](../experiments/counterevidence/continuation-2026-11-07.md)新增 92 次 HTTP200，继承原 15 次成功和 1 次 HTTP503，无重试／fallback。72 个 planned episodes 均有终局记录，含 1 个旧 API failure，missing 为 0。immediate／adaptive／full 总损失为 69／54／58；adaptive 与 full 的终局动作逐样本相同，读取 36／40 次、原生调用 60／24 次，不能据材料成本推出 API 成本优势。原始记录逐项核对，逐轮 prepare、终局报告和配对比较复算一致；本机 Studio 派生研究保留旧研究并通过历史解释器复现。跨日期与有限机制限制见报告；没有公开部署。
 
 - **本地研究会话已接入源码**：[研究台](studio.md)直接延伸原首页的实验 D，支持 E1/E2/E3 设计、冻结、离线控制、原生证据导入、逐样本检查、结论/反例、重开、派生和研究包。历史解释器复现与当前重分析分别留存；研究状态只在本机，不进入静态站。measurement 与显式 scientific pairing 保留数值误差、原生身份、来源和不同信号语义。研究台仍只在本机保存证据；10-30 的独立 E3 实采见下文，没有发布或部署。
 - **Schema 反例与来源核查已贯通**：[新题本](../experiments/schema-inquiry/README.md)复用文档生成器与 E2 原生回合，在原研究台内勾选字段、搜索最小反例、冻结并检视来源轨迹。默认 3 组无共同最优行动，加入现行条款字段后剩不可得来源 1 组；字段是合成 oracle，不是模型抽取。[10-30 Luna 实采](../experiments/schema-inquiry/pilot-2026-10-30.md)完成 48 次请求、32/32 episodes：按需与全部读取均无错误承诺，各暂缓 4 次，总损失均值 1.75／2.75，精确控制 1.25。按需使用更多模型请求，在不可得证据上仍有无效查询。真实原始记录与账户计量保留本机；nested usage 汇总修复后另存重分析，冻结报告和损失不变。

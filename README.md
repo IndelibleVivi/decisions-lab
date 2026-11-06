@@ -49,7 +49,7 @@ python3 -m decision_lab research schema-audit runs/schema-design.json
 python3 -m decision_lab research schema-suite runs/schema-design.json --output runs/schema-suite.json
 ```
 
-[反证调查台](experiments/counterevidence/README.md)研究初步结论遇到过期、错实体、遗漏例外或效力不明来源时，模型如何核查和停止。它复用 E2 原生回合，但只把初始材料、公开核查入口和已揭示证据送入模型；完整假设表、精确后验和 oracle 留在本机。研究台支持立即决定、按需核查与全部读取三种条件，保存实际来源轨迹。有限 oracle 拥有额外环境信息，与原生模型分开解释。[首轮官方 Luna](experiments/counterevidence/pilot-2026-11-06.md)在 15 次成功后第 16 次 HTTP503，按协议中止，尚无三条件效果结论。
+[反证调查台](experiments/counterevidence/README.md)研究初步结论遇到过期、错实体、遗漏例外或效力不明来源时，模型如何核查和停止。它复用 E2 原生回合，但只把初始材料、公开核查入口和已揭示证据送入模型；完整假设表、精确后验和 oracle 留在本机。研究台支持立即决定、按需核查与全部读取三种条件，保存实际来源轨迹。有限 oracle 拥有额外环境信息，与原生模型分开解释。[首轮官方 Luna](experiments/counterevidence/pilot-2026-11-06.md)因 HTTP503 中止后，[11-07 续采](experiments/counterevidence/continuation-2026-11-07.md)保留旧失败、补齐未发送请求，完成 72 个终局记录。按需与全部读取得到逐样本相同的终局动作，前者少读 4 次材料，却使用 60／24 次模型调用；不把材料成本优势当作 API 成本优势。
 
 ```bash
 python3 -m decision_lab research counterevidence-design --output runs/counterevidence/design.json

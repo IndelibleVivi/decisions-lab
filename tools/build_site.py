@@ -23,6 +23,7 @@ PAGES = (
     'experiments/typed-dag/pilot-2026-10-30.md',
     'experiments/schema-inquiry/README.md', 'experiments/schema-inquiry/pilot-2026-10-30.md',
     'experiments/counterevidence/README.md', 'experiments/counterevidence/pilot-2026-11-06.md',
+    'experiments/counterevidence/continuation-2026-11-07.md',
     'experiments/generated/README.md', 'experiments/comparison/README.md',
     'docs/maintenance.md', 'docs/current-state.md', 'docs/typed-values.md', 'docs/api-capabilities.md',
     'experiments/next-action/README.md',
@@ -65,6 +66,12 @@ def render_markdown(source, current):
     toc, used = [], set()
     title = 'Decisions Lab'
     for i, token in enumerate(tokens):
+        if token.type in ('th_open', 'td_open'):
+            # Keep Markdown alignment compatible with Studio's style-src 'self'.
+            alignment = token.attrGet('style')
+            if alignment in ('text-align:left', 'text-align:center', 'text-align:right'):
+                token.attrs.pop('style')
+                token.attrJoin('class', 'align-' + alignment.removeprefix('text-align:'))
         if token.type == 'heading_open':
             label = tokens[i+1].content
             anchor = slug(label)

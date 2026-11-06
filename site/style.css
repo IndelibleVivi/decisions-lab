@@ -185,6 +185,7 @@ article img { display:block; max-width:100%; height:auto; margin:25px 0; }
 .table-wrap { max-width:100%; overflow-x:auto; border:1px solid var(--line); background:var(--panel); margin:26px 0; }
 article table { border-collapse:collapse; min-width:100%; font-size:12px; line-height:1.8; margin:0; }
 article td,article th { padding:13px 16px; border-bottom:1px solid var(--line); min-width:115px; text-align:left; vertical-align:top; }
+article .align-left { text-align:left; }article .align-center { text-align:center; }article .align-right { text-align:right; }
 article th { font-size:11px; font-weight:600; white-space:nowrap; background:var(--soft); color:var(--muted); }
 article td:first-child { min-width:155px; }article td code { font-size:10px; }article tr:last-child td { border-bottom:0; }article tbody tr:hover { background:var(--soft); }
 .table-wrap tr:target { background:var(--wash); }
