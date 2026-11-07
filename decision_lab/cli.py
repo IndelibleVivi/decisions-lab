@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from . import __version__
 from .cases import ALLOWED_ACTIONS, CaseError, load_suite
@@ -381,7 +382,25 @@ def _cmd_api_replay(args):
 def _cmd_research(args):
     from . import collection, comparison, generators, ledger, rule_workflow
     command = args.research_command
-    if command.startswith("counterevidence-"):
+    if command.startswith("framing-"):
+        from . import inquiry_framing
+        if command == "framing-design":
+            result = inquiry_framing.build_design(seed=args.seed)
+        elif command in ("framing-start", "framing-demo"):
+            design = al.read_json(args.design) if args.design else inquiry_framing.build_design(seed=args.seed)
+            operation = inquiry_framing.start if command == "framing-start" else inquiry_framing.demo
+            extra = {"policy": args.policy} if command == "framing-demo" else {}
+            result = operation(design, route=args.route, model=args.model, replicates=args.replicates, **extra)
+        elif command == "framing-prepare":
+            result = inquiry_framing.prepare_round(al.read_json(args.record))
+        elif command == "framing-apply":
+            source = collection.load_collection(args.source) if Path(args.source).is_dir() else al.read_json(args.source)
+            result = inquiry_framing.apply_round(al.read_json(args.record), source)
+        elif command == "framing-report":
+            result = inquiry_framing.report(al.read_json(args.record))
+        else:
+            raise al.ApiLabError("unknown inquiry framing command")
+    elif command.startswith("counterevidence-"):
         from . import counterevidence
         if command == "counterevidence-design":
             result = counterevidence.build_design(seed=args.seed)
@@ -657,6 +676,22 @@ def build_parser() -> argparse.ArgumentParser:
         parser.add_argument("--output", help="new local JSON file; source tree restricted to runs/")
         parser.set_defaults(func=_cmd_research)
         return parser
+    sp = research_parser("framing-design")
+    sp.add_argument("--seed", type=int, default=20261107)
+    for name in ("framing-start", "framing-demo"):
+        sp = research_parser(name)
+        sp.add_argument("--design", help="retained inquiry framing design JSON")
+        sp.add_argument("--seed", type=int, default=20261107)
+        sp.add_argument("--replicates", type=int, default=2)
+        sp.add_argument("--route", choices=("decisions",), default="decisions")
+        sp.add_argument("--model")
+        if name == "framing-demo":
+            sp.add_argument("--policy", choices=("oracle", "always-query", "stop"), default="oracle")
+    for name in ("framing-prepare", "framing-apply", "framing-report"):
+        sp = research_parser(name)
+        sp.add_argument("record", help="retained inquiry framing workflow JSON")
+        if name == "framing-apply":
+            sp.add_argument("source", help="native record JSON or retained collection directory")
     sp = research_parser("counterevidence-design")
     sp.add_argument("--seed", type=int, default=20261106)
     sp = research_parser("counterevidence-suite")

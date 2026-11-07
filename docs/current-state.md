@@ -2,6 +2,8 @@
 
 更新时间：2026-11-07。
 
+- **材料 × 待核实提示实验已完成**：[独立 CLI、题本与方法](../experiments/inquiry-framing/README.md)提供八组新题、两世界、两重复及四条件。[11-07 实采](../experiments/inquiry-framing/pilot-2026-11-07.md)完成官方 Luna 144 次 HTTP200、128/128 个业务终局，API failure／missing／uncertain／本机重试均为 0。充分材料下两组首次查询均为 0/32；缺关键事实时无警告 0/32、有警告 16/32，查询交互为 +50 个百分点。四格错误终局为 8／2／10／8，不能把警告或查询当作通用修复。逐题差异、原始记录审计和冻结报告复算已完成；调用封套已关闭。专用两轮 workflow 复用原生 collector，未增加 Studio 研究类型或公开部署。
+
 - **反证调查台及三条件续采已完成**：[原创题本与方法](../experiments/counterevidence/README.md)在既有 E2 / Studio 中支持六类来源核查任务、三种读取条件及逐样本轨迹。模型只看初始材料和已揭示证据，有限 oracle 的额外信息分开解释。[11-06 中止记录](../experiments/counterevidence/pilot-2026-11-06.md)保持；[11-07 续采](../experiments/counterevidence/continuation-2026-11-07.md)新增 92 次 HTTP200，继承原 15 次成功和 1 次 HTTP503，无重试／fallback。72 个 planned episodes 均有终局记录，含 1 个旧 API failure，missing 为 0。immediate／adaptive／full 总损失为 69／54／58；adaptive 与 full 的终局动作逐样本相同，读取 36／40 次、原生调用 60／24 次，不能据材料成本推出 API 成本优势。原始记录逐项核对，逐轮 prepare、终局报告和配对比较复算一致；本机 Studio 派生研究保留旧研究并通过历史解释器复现。跨日期与有限机制限制见报告；没有公开部署。
 
 - **本地研究会话已接入源码**：[研究台](studio.md)直接延伸原首页的实验 D，支持 E1/E2/E3 设计、冻结、离线控制、原生证据导入、逐样本检查、结论/反例、重开、派生和研究包。历史解释器复现与当前重分析分别留存；研究状态只在本机，不进入静态站。measurement 与显式 scientific pairing 保留数值误差、原生身份、来源和不同信号语义。研究台仍只在本机保存证据；10-30 的独立 E3 实采见下文，没有发布或部署。
@@ -28,7 +30,7 @@
 - **历史可复算**：随包 1,000 个案例、4,000 条概率记录的复算与基准结果一致，14 项作者汇总核对一致。原始输入不随项目分发。
 - **离线实验已实现**：25 个原创合成 next-action 用例、确定性 baseline、含错误和 unknown 的 demo、记录与完整性校验 replay。
 - **next-action API adapter 候选**：TypeSafe Jev 与 OpenAI Decisions 原生 contract；继续固定 `jev-1.13.0` / `gpt-6-luna` 的现有文本 Choice profile。增量文档不自动启用 Box、图像、cache 或新版模型。文档核对与 mock 测试不等于真实 API 可用，live 推理未运行。
-- **阅读站源码已更新**：37 页从 Markdown/catalog 构建；首轮、Luna 补测、角色实验、主动取证及 Typed DAG 页进入显式 allowlist，运行记录保持排除。首屏粒子作品和标题直接操控保留；下方由像素卡带、稀疏信号场、PLAY 招牌轮播和自托管字体构成。unknown 从编号动作中独立出来，ok／unknown／refusal／error 的文字、画面与结果读数同步；后两类为明确标注的离线示例，没有选中动作或实际请求，不产生概率与 confidence。分类、搜索、fragment、任务 JSON 复制、项目入口、概率示意、历史矩阵与三例练习均保留。下方共享暂停联动招牌、图标、信号场和实验动态；减少动态、后台、离屏停止，静态选路与读数仍可操作。无 Canvas／JavaScript 保留各自可用的静态阅读路径。仍为本地构建产物，未部署；客观验证与 owner 视觉接受分别报告。
+- **阅读站源码已更新**：40 页从 Markdown/catalog 构建；日期实验及材料 × 待核实提示页面进入显式 allowlist，运行记录保持排除。首屏粒子作品和标题直接操控保留；下方由像素卡带、稀疏信号场、PLAY 招牌轮播和自托管字体构成。unknown 从编号动作中独立出来，ok／unknown／refusal／error 的文字、画面与结果读数同步；后两类为明确标注的离线示例，没有选中动作或实际请求，不产生概率与 confidence。分类、搜索、fragment、任务 JSON 复制、项目入口、概率示意、历史矩阵与三例练习均保留。下方共享暂停联动招牌、图标、信号场和实验动态；减少动态、后台、离屏停止，静态选路与读数仍可操作。无 Canvas／JavaScript 保留各自可用的静态阅读路径。仍为本地构建产物，未部署；客观验证与 owner 视觉接受分别报告。
 - **生产接入未开始**：有界合成实验已有真实结果，角色旧 block 仍保留 missing；当前关口是修正后的 E3 独立实测、来源不可得时的停止机制，以及公开资料效度。表示敏感性、schema 盲点与缺失值错误继续分别研究。私人上下文旁路需要单独确定输入边界，没有自动执行、日续跑、充值或部署。
 
 命令以 [README](../README.md)、[next-action 说明](../experiments/next-action/README.md)、[typed-values 说明](../experiments/typed-values/README.md)和 [API 能力实验说明](../experiments/api-capabilities/README.md)为准。不要将 source、测试、真实推理或生产状态混为一谈。

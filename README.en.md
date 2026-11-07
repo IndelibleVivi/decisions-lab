@@ -58,6 +58,8 @@ python3 -m decision_lab research counterevidence-suite runs/counterevidence/desi
 python3 -m decision_lab research evidence-demo --suite runs/counterevidence/suite.json --output runs/counterevidence/oracle.json
 ```
 
+[Evidence sufficiency × caution framing](experiments/inquiry-framing/README.md) crosses critical-fact visibility with a caution bundle using eight newly authored item templates. The `research framing-*` CLI prepares native requests, issues a terminal round only after an actual query choice, and replays synthetic controls and paired first-action reports. API failures and missing slots remain in the planned denominator; warning, evidence and interaction contrasts stay distinct. The closed query contract does not establish open-ended investigation ability. See the [dated protocol and results](experiments/inquiry-framing/pilot-2026-11-07.md). The November 7 official Luna run completed 144 requests and all 128 episodes: neither sufficient-evidence cell queried, while the missing-evidence warning cell queried in 16/32 episodes versus 0/32 without the warning. Wrong decisions remained; the report preserves per-template differences and limits on generalization.
+
 ## Research infrastructure
 
 The [first native-provider protocol](experiments/provider-pilot/README.md) fixes the Clef versus Clef Flash primary comparison, with Jev, Luna and two free OpenRouter routes as task references. It separates numeric probability accuracy from representation effects, checks complete Boolean functions, and studies Clairic fields and downstream judgments. Inputs, repetitions, failure denominators and budgets are fixed before live collection; contract probes are not model-quality results.

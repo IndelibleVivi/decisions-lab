@@ -42,6 +42,8 @@ confidence 另有带 route/primitive 的 `selection_signal`。当前投影明确
 
 [反证调查](../experiments/counterevidence/README.md)使用相同 E2 原生记录与 collector，但只投影材料、已读观察和合法动作，不公开完整环境。`evidence-start/demo --query-mode no-query` 提供一次终局请求的立即决定条件；`read-all` 预先记入全部材料读取。两者和 `adaptive` 可以在同一冻结 suite 上配对，完整 oracle 作为额外信息参照。数据身份、局部材料成本与真实调用计量仍分别保留。
 
+[材料与提示四条件](../experiments/inquiry-framing/README.md)使用同一 api-lab／collector 原生记录，以专用两轮 workflow 绑定首选与实际查询后的终局。`framing-report` 从冻结设计重新核对每个条件、世界和重复，报告首次动作及预定配对差异；不能将首轮选择和查询后的子集混成一个错误率。此 workflow 不经过通用 ledger 二元评分，缺失／失败不会被补为没有查询。
+
 ## 有预算的采集与恢复
 
 先准备固定请求，再计划、检查预算，最后由操作者明确选择是否调用。下面前两步均离线：

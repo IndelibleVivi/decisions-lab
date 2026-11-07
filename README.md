@@ -57,6 +57,8 @@ python3 -m decision_lab research counterevidence-suite runs/counterevidence/desi
 python3 -m decision_lab research evidence-demo --suite runs/counterevidence/suite.json --output runs/counterevidence/oracle.json
 ```
 
+[材料充分性 × 待核实提示](experiments/inquiry-framing/README.md)以八组原创新题交叉控制关键事实是否可见、是否附带警告包。`research framing-*` 提供四条件原生请求、仅实际查询后追加终局的两轮工作流、离线控制及首次行动配对报告。完整分母保留 API failure／missing，警告差、材料差与交互分开；有限封闭查询下的结果不外推为开放调查能力。[日期协议与结果](experiments/inquiry-framing/pilot-2026-11-07.md)独立留存。11-07 官方 Luna 已完成 144 次请求、128 个 episode：充分材料下两种提示均不查询；缺事实时警告组查询 16/32、无警告组 0/32。完整结果仍含错误决定，逐题差异与有限外推边界见报告。
+
 ## 能力研究与日期依据
 
 [10-22 核查](research/2026-10-22/README.md)把 API 能力接到可证伪的实验：一次 Choice 编译布尔规则、比较概率的粗细分类与联合关系、用参考图片重定义 Jev criteria。独立的 `api-lab` CLI 处理原生多问题请求、离线响应导入、分题评分与反例报告。题本真值来自穷举、已知世界和几何生成规则；synthetic demo 不代表模型表现，历史题本保留 `NOT_RUN` authoring 状态，新的真实运行独立留证。[能力方法章](docs/api-capabilities.md)保留 7 个研究方向的对照与实现边界；[能力索引](catalog/capabilities.json)可以离线查询来源、假设、指标和请求覆盖。
